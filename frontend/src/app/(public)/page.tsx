@@ -20,10 +20,12 @@ export const metadata: Metadata = {
 async function fetchAll() {
   const base = getServerApiUrl()
 
+  const signal = () => AbortSignal.timeout(5000)
+
   const [projectsRes, reviewsRes, videosRes] = await Promise.allSettled([
-    fetch(`${base}/projects?featured=true&limit=3`, { next: { revalidate: 300 } }),
-    fetch(`${base}/reviews?featured=true&limit=6`, { next: { revalidate: 300 } }),
-    fetch(`${base}/videos?limit=3`, { next: { revalidate: 300 } }),
+    fetch(`${base}/projects?featured=true&limit=3`, { next: { revalidate: 300 }, signal: signal() }),
+    fetch(`${base}/reviews?featured=true&limit=6`, { next: { revalidate: 300 }, signal: signal() }),
+    fetch(`${base}/videos?limit=3`, { next: { revalidate: 300 }, signal: signal() }),
   ])
 
   const projectsRaw: Project[] = projectsRes.status === 'fulfilled' && projectsRes.value.ok

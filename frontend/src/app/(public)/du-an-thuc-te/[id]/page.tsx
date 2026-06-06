@@ -19,7 +19,7 @@ const PROVINCE_LABELS: Record<string, string> = {
 
 async function getProject(id: string): Promise<Project | null> {
   try {
-    const res = await fetch(`${getServerApiUrl()}/projects/${id}`, { next: { revalidate: 300 } })
+    const res = await fetch(`${getServerApiUrl()}/projects/${id}`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(5000) })
     if (!res.ok) return null
     return getResponseData<Project>(await res.json())
   } catch {

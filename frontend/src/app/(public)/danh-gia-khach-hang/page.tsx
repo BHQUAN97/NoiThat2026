@@ -23,6 +23,7 @@ async function getReviews(): Promise<Review[]> {
   try {
     const res = await fetch(`${getServerApiUrl()}/reviews?active=true`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return FALLBACK_REVIEWS
     const data = getListData<Review>(await res.json())

@@ -17,6 +17,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   try {
     const res = await fetch(`${getServerApiUrl()}/products/${slug}`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return null
     return getResponseData<Product>(await res.json())

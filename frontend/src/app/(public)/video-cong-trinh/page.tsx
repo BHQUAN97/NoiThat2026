@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 async function getVideos(): Promise<Video[]> {
   try {
     const apiUrl = getServerApiUrl()
-    const res = await fetch(`${apiUrl}/videos`, { next: { revalidate: 300 } })
+    const res = await fetch(`${apiUrl}/videos`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(5000) })
     if (!res.ok) return []
     return getListData<Video>(await res.json())
   } catch {
