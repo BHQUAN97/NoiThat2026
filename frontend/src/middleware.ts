@@ -3,14 +3,10 @@ import { jwtVerify } from 'jose'
 
 /**
  * Middleware thuc hien 2 nhiem vu:
- * 1) Sinh nonce ngau nhien moi request va gan Content-Security-Policy header
- *    (nonce-based CSP + strict-dynamic) — thay the cho CSP tinh o nginx.
- *    Nonce duoc truyen vao page qua request header `x-nonce` de server components
- *    co the doc qua `headers()` va gan vao bat ky inline <script> nao (vi du JSON-LD).
+ * 1) Dat Content-Security-Policy header (unsafe-inline, nhat quan voi next.config.js)
+ *    — Next.js 15 inject inline bootstrap scripts nen strict-dynamic/nonce bi block.
  * 2) Verify chu ky JWT trong cookie `auth_session` cho route /admin/*
  *    — defense-in-depth, BE van re-validate JWT tren moi API call.
- *
- * Tham khao: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
  */
 const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || ''
 
@@ -19,22 +15,16 @@ function getSecretKey(): Uint8Array | null {
   return new TextEncoder().encode(JWT_SECRET)
 }
 
-/**
- * Build CSP header string voi nonce hien tai.
- * Note: 'strict-dynamic' cho phep script co nonce tu load them script khac
- * — Next.js chunk loader dua vao co che nay.
- *
- * 'unsafe-eval' van giu vi Next.js 14 App Router van su dung eval cho mot so
- * dynamic import / RSC payload parsing. Neu sau nay Next.js loai bo thi co the go.
- */
-function buildCsp(nonce: string): string {
+// CSP nhat quan voi next.config.js — dung unsafe-inline vi Next.js 15 inject inline bootstrap scripts
+// Nonce-based strict-dynamic bi loai bo vi framework chua propagate nonce dung cach trong v15
+function buildCsp(): string {
   const directives = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval'`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `img-src 'self' data: blob: https://*.r2.dev https://*.r2.cloudflarestorage.com https://bhquan.site https://bhquan.store https://images.unsplash.com https://picsum.photos`,
     `font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com`,
-    `connect-src 'self' wss: ws: https://*.r2.dev`,
+    `connect-src 'self' wss: ws: https://*.r2.dev https://bhquan.site https://bhquan.store`,
     `media-src 'self' data: blob: https://*.r2.dev https://*.r2.cloudflarestorage.com`,
     `frame-src 'none'`,
     `frame-ancestors 'self'`,
@@ -48,13 +38,9 @@ function buildCsp(nonce: string): string {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // ── 1. Sinh nonce + dat CSP header ──────────────────────────
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const csp = buildCsp(nonce)
-
-  // Gan nonce vao request header de layout/page server component co the doc qua headers()
+  // ── 1. Dat CSP header ───────────────────────────────────────
+  const csp = buildCsp()
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
   requestHeaders.set('Content-Security-Policy', csp)
 
   // ── 2. Admin auth check ─────────────────────────────────────
