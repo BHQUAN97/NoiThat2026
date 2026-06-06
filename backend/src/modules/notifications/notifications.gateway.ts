@@ -1,108 +1,74 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { UserRole } from '../users/entities/user.entity';
-import { ActionLogger } from '../../common/helpers/logger.helper';
+} from '@nestjs/websockets'
+import { Server, Socket } from 'socket.io'
+import { Logger } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+
+export interface FormNotification {
+  id: string
+  form_type: 'quote' | 'contact'
+  name: string
+  phone: string
+  created_at: string
+}
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:8082'],
     credentials: true,
   },
-  namespace: '/',
-  transports: ['websocket', 'polling'],
+  namespace: '/notifications',
 })
-export class NotificationsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server!: Server;
+  server!: Server
 
-  private readonly actionLogger = new ActionLogger('NotificationsGateway');
+  private readonly logger = new Logger(NotificationsGateway.name)
+  private adminSockets = new Set<string>()
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly jwtService: JwtService,
-  ) {}
-
-  afterInit() {
-    // Redis adapter được set qua RedisIoAdapter trong main.ts
-    this.actionLogger.log('Socket.io server initialized');
-  }
+  constructor(private readonly jwtService: JwtService) {}
 
   async handleConnection(client: Socket) {
+    // Validate JWT từ handshake auth
+    const token = client.handshake.auth?.token as string | undefined
+    if (!token) {
+      client.disconnect()
+      return
+    }
+
     try {
-      // Extract JWT from handshake auth or cookie
-      const token =
-        client.handshake.auth?.token ||
-        this.extractTokenFromCookie(client.handshake.headers.cookie);
-
-      if (!token) {
-        this.actionLogger.warn(`Client ${client.id} disconnected: no token`);
-        client.disconnect();
-        return;
+      const payload = this.jwtService.verify(token)
+      const role = payload?.role as string | undefined
+      if (role !== 'admin' && role !== 'super_admin') {
+        client.disconnect()
+        return
       }
-
-      const payload = this.jwtService.verify(token, {
-        secret: this.configService.get<string>('jwt.secret'),
-      });
-
-      // Attach user data to socket
-      (client as any).user = payload;
-
-      // Join user-specific room
-      await client.join(`user:${payload.sub}`);
-
-      // Join admin room if user is admin/super_admin
-      if (payload.role === UserRole.ADMIN || payload.role === UserRole.SUPER_ADMIN) {
-        await client.join('admin');
-      }
-
-      this.actionLogger.log(
-        `Client connected: ${client.id} (user: ${payload.sub}, role: ${payload.role})`,
-      );
+      client.join('admin-room')
+      this.adminSockets.add(client.id)
+      this.logger.log(`Admin connected: ${client.id} (${payload.email})`)
     } catch {
-      this.actionLogger.warn(`Client ${client.id} disconnected: invalid token`);
-      client.disconnect();
+      client.disconnect()
     }
   }
 
   handleDisconnect(client: Socket) {
-    this.actionLogger.log(`Client disconnected: ${client.id}`);
+    this.adminSockets.delete(client.id)
+    this.logger.log(`Client disconnected: ${client.id}`)
+  }
+
+  // Gọi từ FormsService khi có form mới
+  notifyNewForm(data: FormNotification) {
+    this.server.to('admin-room').emit('new-form', data)
+    this.logger.log(`Notified admin-room: new ${data.form_type} from ${data.name}`)
   }
 
   @SubscribeMessage('ping')
-  handlePing(): { event: string; data: string } {
-    return { event: 'pong', data: 'ok' };
-  }
-
-  /**
-   * Emit event to the admin room (all admin/super_admin users).
-   */
-  emitToAdmin(event: string, data: unknown): void {
-    this.server.to('admin').emit(event, data);
-  }
-
-  /**
-   * Emit event to a specific user.
-   */
-  emitToUser(userId: string, event: string, data: unknown): void {
-    this.server.to(`user:${userId}`).emit(event, data);
-  }
-
-  private extractTokenFromCookie(
-    cookieHeader: string | undefined,
-  ): string | null {
-    if (!cookieHeader) return null;
-    const match = cookieHeader.match(/access_token=([^;]+)/);
-    return match ? match[1] : null;
+  handlePing(client: Socket) {
+    client.emit('pong', { time: Date.now() })
   }
 }

@@ -1,164 +1,141 @@
 import type { Config } from 'tailwindcss'
 
+// NoiThat2026 — "Craft & Trust" theme cho Nội Thất Duy Mạnh
 const config: Config = {
   content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx,vue,mdx}',
+    './frontend/src/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   darkMode: 'class',
   theme: {
     extend: {
-      // ─── Material Design 3 Color Tokens ─────────────────────────
       colors: {
-        // Primary
-        'primary':                    '#553722',
-        'primary-container':          '#6F4E37',
-        'on-primary':                 '#FFFFFF',
-        'on-primary-container':       '#EEC1A4',
+        // ── Brand Primary: Warm Amber (thủ công, tin cậy) ──────────
+        brand: {
+          50:  '#FFF7ED',
+          100: '#FFEDD5',
+          200: '#FED7AA',
+          300: '#FDBA74',
+          400: '#FB923C',
+          500: '#F97316',
+          600: '#EA580C',
+          700: '#C2410C',   // primary CTA
+          800: '#9A3412',
+          900: '#7C2D12',
+          DEFAULT: '#B45309', // amber-700 — main brand
+        },
 
-        // Secondary
-        'secondary':                  '#6D5B4F',
-        'secondary-container':        '#F7DECF',
-        'on-secondary':               '#FFFFFF',
-        'on-secondary-container':     '#736155',
+        // ── Neutral: Charcoal Stone (cao cấp) ──────────────────────
+        stone: {
+          50:  '#FAFAF9',
+          100: '#F5F5F4',
+          200: '#E7E5E4',
+          300: '#D6D3D1',
+          400: '#A8A29E',
+          500: '#78716C',
+          600: '#57534E',
+          700: '#44403C',
+          800: '#292524',
+          900: '#1C1917', // charcoal — text, dark backgrounds
+          950: '#0C0A09',
+          DEFAULT: '#1C1917',
+        },
 
-        // Tertiary
-        'tertiary':                   '#24434B',
-        'tertiary-container':         '#3C5A63',
-        'on-tertiary':                '#FFFFFF',
-        'on-tertiary-container':      '#B0D0DB',
+        // ── Accent: Warm Cream (nền nhẹ, luxury feel) ──────────────
+        cream: {
+          50:  '#FEFCE8',
+          100: '#FEF9C3',
+          200: '#FEF08A',
+          300: '#FDE047',
+          DEFAULT: '#FBF5EB', // cream background
+        },
 
-        // Error
-        'error':                      '#BA1A1A',
-        'error-container':            '#FFDAD6',
-        'on-error':                   '#FFFFFF',
-        'on-error-container':         '#93000A',
+        // ── Success / Error (form states) ──────────────────────────
+        success: '#15803D',
+        danger:  '#DC2626',
 
-        // Surface hierarchy
-        'surface':                    '#FCF9F7',
-        'surface-bright':             '#FCF9F7',
-        'surface-dim':                '#DCD9D8',
-        'surface-container-lowest':   '#FFFBF8',
-        'surface-container-low':      '#F6F3F1',
-        'surface-container':          '#F0EDEB',
-        'surface-container-high':     '#EAE8E6',
-        'surface-container-highest':  '#E5E2E0',
-        'surface-variant':            '#E5E2E0',
-        'surface-tint':               '#79573F',
-
-        // On-surface
-        'on-surface':                 '#1B1C1B',
-        'on-surface-variant':         '#50453E',
-        'on-background':              '#1B1C1B',
-
-        // Outline
-        'outline':                    '#82746D',
-        'outline-variant':            '#D4C3BA',
-
-        // Inverse
-        'inverse-surface':            '#30302F',
-        'inverse-on-surface':         '#F3F0EE',
-        'inverse-primary':            '#EABDA0',
-
-        // Fixed tones
-        'primary-fixed':              '#FFDCC6',
-        'primary-fixed-dim':          '#EABDA0',
-        'on-primary-fixed':           '#2D1604',
-        'on-primary-fixed-variant':   '#5F402A',
-
-        'secondary-fixed':            '#F7DECF',
-        'secondary-fixed-dim':        '#DAC2B4',
-        'on-secondary-fixed':         '#261910',
-        'on-secondary-fixed-variant': '#544339',
-
-        'tertiary-fixed':             '#C8E8F3',
-        'tertiary-fixed-dim':         '#ACCCD6',
-        'on-tertiary-fixed':          '#001F27',
-        'on-tertiary-fixed-variant':  '#2D4B54',
-
-        // Background alias
-        'background':                 '#FCF9F7',
+        // ── Semantic aliases ────────────────────────────────────────
+        primary: '#B45309',
+        'primary-dark': '#92400E',
+        'primary-light': '#FBBF24',
+        background: '#FAFAF9',
+        surface: '#FFFFFF',
+        'on-surface': '#1C1917',
+        muted: '#78716C',
+        border: '#E7E5E4',
       },
 
-      // ─── Font Families ──────────────────────────────────────────
       fontFamily: {
-        'headline': ['"Noto Serif"', 'Georgia', 'serif'],
-        'body':     ['"Manrope"', 'system-ui', 'sans-serif'],
-        'label':    ['"Manrope"', 'system-ui', 'sans-serif'],
+        // Heading: Merriweather — gợi cảm thủ công truyền thống
+        'heading': ['"Merriweather"', 'Georgia', 'serif'],
+        // Body: Inter — dễ đọc, hiện đại
+        'body':    ['"Inter"', 'system-ui', 'sans-serif'],
+        'sans':    ['"Inter"', 'system-ui', 'sans-serif'],
+        'serif':   ['"Merriweather"', 'Georgia', 'serif'],
       },
 
-      // ─── Font Size Scale (Design System tokens) ─────────────────
       fontSize: {
-        'display-lg':  ['3.5rem',   { lineHeight: '1.1',  fontWeight: '700', letterSpacing: '-0.025em' }],
-        'display-md':  ['3rem',     { lineHeight: '1.1',  fontWeight: '700', letterSpacing: '-0.025em' }],
-        'headline-lg': ['2.5rem',   { lineHeight: '1.2',  fontWeight: '700', letterSpacing: '-0.025em' }],
-        'headline-md': ['1.75rem',  { lineHeight: '1.3',  fontWeight: '700' }],
-        'headline-sm': ['1.25rem',  { lineHeight: '1.4',  fontWeight: '700' }],
-        'title-lg':    ['1.375rem', { lineHeight: '1.4',  fontWeight: '600' }],
-        'title-md':    ['1rem',     { lineHeight: '1.5',  fontWeight: '600' }],
-        'body-lg':     ['1.125rem', { lineHeight: '1.6',  fontWeight: '400' }],
-        'body-md':     ['1rem',     { lineHeight: '1.5',  fontWeight: '400' }],
-        'body-sm':     ['0.875rem', { lineHeight: '1.5',  fontWeight: '400' }],
-        'label-lg':    ['0.75rem',  { lineHeight: '1.3',  fontWeight: '700', letterSpacing: '0.1em' }],
-        'label-md':    ['0.625rem', { lineHeight: '1.3',  fontWeight: '700', letterSpacing: '0.1em' }],
-        'label-sm':    ['0.6rem',   { lineHeight: '1.3',  fontWeight: '700', letterSpacing: '0.2em' }],
+        'display':     ['3.5rem',  { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.02em' }],
+        'h1':          ['2.5rem',  { lineHeight: '1.2', fontWeight: '700' }],
+        'h2':          ['2rem',    { lineHeight: '1.25', fontWeight: '700' }],
+        'h3':          ['1.5rem',  { lineHeight: '1.3', fontWeight: '600' }],
+        'h4':          ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
+        'body-lg':     ['1.125rem',{ lineHeight: '1.6', fontWeight: '400' }],
+        'body-md':     ['1rem',    { lineHeight: '1.5', fontWeight: '400' }],
+        'body-sm':     ['0.875rem',{ lineHeight: '1.5', fontWeight: '400' }],
+        'label':       ['0.75rem', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '0.08em' }],
+        'label-sm':    ['0.625rem',{ lineHeight: '1.3', fontWeight: '600', letterSpacing: '0.12em' }],
       },
 
-      // ─── Border Radius (from prototype config) ─────────────────
       borderRadius: {
-        'DEFAULT': '0.125rem',   // 2px  -- minimum rounding
-        'sm':      '0.125rem',   // 2px
-        'md':      '0.25rem',    // 4px  -- subtle
-        'lg':      '0.25rem',    // 4px  -- subtle rounding
-        'xl':      '0.5rem',     // 8px  -- standard cards/images/inputs
-        '2xl':     '1rem',       // 16px -- promotional blocks, testimonials
-        '3xl':     '1.5rem',     // 24px -- bottom nav top rounding
-        'full':    '0.75rem',    // 12px -- buttons, pills, prominent elements
+        DEFAULT: '0.25rem',
+        sm:      '0.125rem',
+        md:      '0.375rem',
+        lg:      '0.5rem',
+        xl:      '0.75rem',
+        '2xl':   '1rem',
+        full:    '9999px',
       },
 
-      // ─── Box Shadows (brown-tinted ambient) ────────────────────
       boxShadow: {
-        'ambient':       '0 24px 48px rgba(85, 55, 34, 0.06)',
-        'ambient-sm':    '0 12px 24px rgba(85, 55, 34, 0.04)',
-        'ambient-lg':    '0 32px 64px rgba(85, 55, 34, 0.08)',
-        'ambient-up':    '0 -4px 24px rgba(85, 55, 34, 0.06)',
-        'hero-cta':      '0 20px 40px rgba(85, 55, 34, 0.20)',
-        'testimonial':   '0 24px 48px rgba(85, 55, 34, 0.06)',
-        'bottom-nav':    '0 -4px 24px rgba(85, 55, 34, 0.06)',
+        card:    '0 2px 12px rgba(28, 25, 23, 0.08)',
+        'card-hover': '0 8px 24px rgba(28, 25, 23, 0.14)',
+        cta:     '0 4px 16px rgba(180, 83, 9, 0.35)',
+        'cta-hover': '0 6px 24px rgba(180, 83, 9, 0.5)',
+        float:   '0 4px 20px rgba(28, 25, 23, 0.2)',
+        header:  '0 2px 16px rgba(28, 25, 23, 0.1)',
       },
 
-      // ─── Spacing extras ────────────────────────────────────────
       maxWidth: {
-        'content': '80rem',     // max-w-7xl alias
-        'bleed':   '1920px',    // full-bleed desktop
+        content: '80rem',
+        wide:    '96rem',
       },
 
-      // ─── Letter Spacing (Identity Gap pattern) ─────────────────
-      letterSpacing: {
-        'label-wide': '0.2em',
-        'label-wider': '0.3em',
-      },
-
-      // ─── Transitions ──────────────────────────────────────────
       transitionDuration: {
+        '250': '250ms',
         '400': '400ms',
       },
 
-      // ─── Keyframes & Animation ─────────────────────────────────
       keyframes: {
-        'custom-pulse': {
+        'fade-up': {
+          '0%':   { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'pulse-soft': {
           '0%, 100%': { transform: 'scale(1)' },
-          '50%':      { transform: 'scale(1.05)' },
+          '50%':      { transform: 'scale(1.04)' },
         },
       },
       animation: {
-        'widget-pulse': 'custom-pulse 3s infinite ease-in-out',
+        'fade-up':    'fade-up 0.5s ease forwards',
+        'pulse-soft': 'pulse-soft 2.5s infinite ease-in-out',
       },
 
-      // ─── Aspect Ratios (product cards) ─────────────────────────
       aspectRatio: {
-        '4/5': '4 / 5',
-        '3/4': '3 / 4',
+        '4/3':  '4 / 3',
+        '16/9': '16 / 9',
+        '3/2':  '3 / 2',
+        '1/1':  '1 / 1',
       },
     },
   },

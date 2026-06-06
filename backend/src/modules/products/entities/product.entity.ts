@@ -1,122 +1,46 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  BeforeInsert,
-  Index,
-} from 'typeorm';
-import { generateUlid } from '../../../common/helpers/ulid.helper';
-import { Category } from '../../projects/entities/category.entity';
-import { Media } from '../../media/entities/media.entity';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 
-export enum ProductStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-}
-
-// Indexes for list queries + filter by status/published_at (slug already unique via @Column)
-@Index('IDX_products_published_at', ['published_at'])
-@Index('IDX_products_status_published_at', ['status', 'published_at'])
-@Index('IDX_products_scheduled_publish_at', ['scheduled_publish_at'])
 @Entity('products')
 export class Product {
   @PrimaryColumn({ type: 'char', length: 26 })
-  id!: string;
+  id!: string
 
-  @Column({ type: 'varchar', length: 255 })
-  name!: string;
+  @Column({ length: 200 })
+  name!: string
 
-  @Column({ type: 'varchar', length: 255, unique: true })
-  slug!: string;
+  @Column({ length: 200, unique: true })
+  slug!: string
+
+  @Column({ type: 'char', length: 26 })
+  category_id!: string
 
   @Column({ type: 'text', nullable: true })
-  description!: string | null;
+  short_description?: string
 
-  @Column({ type: 'char', length: 26, nullable: true })
-  category_id!: string | null;
+  @Column({ type: 'longtext', nullable: true })
+  description?: string
 
-  @ManyToOne(() => Category, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'category_id' })
-  category!: Category | null;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  material_type!: string | null;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  finish!: string | null;
+  @Column({ length: 500, nullable: true })
+  thumbnail_url?: string
 
   @Column({ type: 'json', nullable: true })
-  dimensions!: Record<string, unknown> | null;
+  gallery_urls?: string[]
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  price_range!: string | null;
+  @Column({ type: 'json', nullable: true })
+  specs?: Record<string, string>
 
-  @Column({ type: 'char', length: 26, nullable: true })
-  cover_image_id!: string | null;
+  @Column({ default: 0 })
+  sort_order!: number
 
-  @ManyToOne(() => Media, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'cover_image_id' })
-  cover_image!: Media | null;
+  @Column({ default: true })
+  is_active!: boolean
 
-  @Column({
-    type: 'enum',
-    enum: ProductStatus,
-    default: ProductStatus.DRAFT,
-  })
-  status!: ProductStatus;
+  @Column({ default: false })
+  is_featured!: boolean
 
-  @Column({ type: 'timestamp', nullable: true })
-  published_at!: Date | null;
+  @CreateDateColumn()
+  created_at!: Date
 
-  // Lich dang: khi scheduled_publish_at <= NOW() va status='draft', cron se tu dong publish
-  @Column({ type: 'timestamp', nullable: true })
-  scheduled_publish_at!: Date | null;
-
-  @Column({ type: 'tinyint', width: 1, default: false })
-  is_new!: boolean;
-
-  @Column({ type: 'tinyint', width: 1, default: false })
-  is_featured!: boolean;
-
-  @Column({ type: 'int', default: 0 })
-  display_order!: number;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  seo_title!: string | null;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  seo_description!: string | null;
-
-  @Column({ type: 'char', length: 26, nullable: true })
-  og_image_id!: string | null;
-
-  @ManyToOne(() => Media, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'og_image_id' })
-  og_image!: Media | null;
-
-  @CreateDateColumn({ type: 'timestamp' })
-  created_at!: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
-  updated_at!: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  deleted_at!: Date | null;
-
-  @Column({ type: 'char', length: 26, nullable: true })
-  created_by!: string | null;
-
-  @Column({ type: 'char', length: 26, nullable: true })
-  updated_by!: string | null;
-
-  @BeforeInsert()
-  generateId() {
-    if (!this.id) {
-      this.id = generateUlid();
-    }
-  }
+  @UpdateDateColumn()
+  updated_at!: Date
 }

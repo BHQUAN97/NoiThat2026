@@ -1,40 +1,57 @@
-export const SITE_NAME = 'VietNet Interior'
-export const SITE_DESCRIPTION = 'Nội thất cao cấp cho không gian sống tinh tế'
+export const SITE_NAME = 'Nội Thất Duy Mạnh'
+export const SITE_DESCRIPTION = 'Xưởng sản xuất và thi công tủ bếp, nội thất gia đình tại Vân Nam - Phúc Thọ - Hà Nội'
+
+export const CONTACT = {
+  hotline: '094.872.8091',
+  hotlineRaw: '0948728091',
+  address: 'Vân Nam - Phúc Thọ - Hà Nội',
+  workHours: '8h00 - 18h00',
+  zaloUrl: process.env.NEXT_PUBLIC_ZALO_URL || 'https://zalo.me/0948728091',
+  facebookUrl: process.env.NEXT_PUBLIC_FACEBOOK_URL || 'https://facebook.com/duymanhnoithat',
+  email: 'duymanhnoithat@gmail.com',
+  mapsEmbedUrl: '',
+} as const
 
 export const NAV_LINKS = [
-  { label: 'Trang chủ', href: '/' },
-  { label: 'Dự án', href: '/projects' },
-  { label: 'Sản phẩm', href: '/catalog' },
-  { label: 'Bài viết', href: '/articles' },
-  { label: 'Tư vấn', href: '/contact' },
-] as const
-
-export const BOTTOM_NAV_ITEMS = [
-  { label: 'Trang chủ', href: '/', icon: 'Home' },
-  { label: 'Dự án', href: '/projects', icon: 'Briefcase' },
-  { label: 'Sản phẩm', href: '/catalog', icon: 'Package' },
-  { label: 'Tư vấn', href: '/contact', icon: 'MessageCircle' },
-  { label: 'Menu', href: '#menu', icon: 'Menu' },
+  { label: 'Trang Chủ', href: '/' },
+  { label: 'Giới Thiệu', href: '/gioi-thieu' },
+  { label: 'Tủ Bếp', href: '/tu-bep' },
+  { label: 'Nội Thất Khác', href: '/noi-that-khac' },
+  { label: 'Dự Án Thực Tế', href: '/du-an-thuc-te' },
+  { label: 'Video Công Trình', href: '/video-cong-trinh' },
+  { label: 'Báo Giá', href: '/bao-gia' },
+  { label: 'Tin Tức', href: '/tin-tuc' },
+  { label: 'Liên Hệ', href: '/lien-he' },
 ] as const
 
 export const ADMIN_NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: 'LayoutDashboard' },
-  { label: 'Trang', href: '/admin/pages', icon: 'FileText' },
-  { label: 'Dự án', href: '/admin/projects', icon: 'Briefcase' },
-  { label: 'Bài viết', href: '/admin/articles', icon: 'Newspaper' },
-  { label: 'Sản phẩm', href: '/admin/products', icon: 'Package' },
-  { label: 'Danh mục', href: '/admin/categories', icon: 'Tags' },
-  { label: 'Tư vấn', href: '/admin/consultations', icon: 'MessageCircle' },
-  { label: 'Phân tích', href: '/admin/analytics', icon: 'BarChart3' },
-  { label: 'System Log', href: '/admin/logs', icon: 'ScrollText' },
-  { label: 'Người dùng', href: '/admin/users', icon: 'Users' },
-  { label: 'Cài đặt', href: '/admin/settings', icon: 'Settings' },
+  { label: 'Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard' },
+  { label: 'Form Yêu Cầu', href: '/admin/forms', icon: 'FileText' },
+  { label: 'Sản Phẩm', href: '/admin/products', icon: 'Package' },
+  { label: 'Danh Mục SP', href: '/admin/categories', icon: 'Tag' },
+  { label: 'Dự Án', href: '/admin/projects', icon: 'Building2' },
+  { label: 'Video', href: '/admin/videos', icon: 'Video' },
+  { label: 'Tin Tức', href: '/admin/news', icon: 'Newspaper' },
+  { label: 'Bảng Giá', href: '/admin/pricing', icon: 'DollarSign' },
+  { label: 'Đánh Giá', href: '/admin/reviews', icon: 'Star' },
+  { label: 'Cài Đặt', href: '/admin/settings', icon: 'Settings' },
+  { label: 'Người Dùng', href: '/admin/users', icon: 'Users' },
 ] as const
 
-export const BREAKPOINTS = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  '2xl': 1536,
-} as const
+export const PRODUCT_CATEGORIES = [
+  { label: 'Tủ Bếp Inox 304', slug: 'tu-bep-inox-304', href: '/tu-bep/tu-bep-inox-304' },
+  { label: 'Tủ Bếp Cánh Kính', slug: 'tu-bep-canh-kinh', href: '/tu-bep/tu-bep-canh-kinh' },
+  { label: 'Tủ Bếp Acrylic', slug: 'tu-bep-acrylic', href: '/tu-bep/tu-bep-acrylic' },
+  { label: 'Tủ Quần Áo', slug: 'tu-quan-ao', href: '/noi-that-khac/tu-quan-ao' },
+  { label: 'Vách Tivi', slug: 'vach-tivi', href: '/noi-that-khac/vach-tivi' },
+  { label: 'Nội Thất Phòng Ngủ', slug: 'noi-that-phong-ngu', href: '/noi-that-khac/noi-that-phong-ngu' },
+] as const
+
+export const PROVINCES = [
+  { label: 'Tất Cả', value: '' },
+  { label: 'Hà Nội', value: 'Hà Nội' },
+  { label: 'Phúc Thọ', value: 'Phúc Thọ' },
+  { label: 'Sơn Tây', value: 'Sơn Tây' },
+  { label: 'Hoà Bình', value: 'Hoà Bình' },
+  { label: 'Vĩnh Phúc', value: 'Vĩnh Phúc' },
+] as const

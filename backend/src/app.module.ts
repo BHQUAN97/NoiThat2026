@@ -6,7 +6,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 import { databaseConfig } from './config/database.config';
-import { redisConfig } from './config/redis.config';
 import { jwtConfig } from './config/jwt.config';
 import { r2Config } from './config/r2.config';
 import { mailConfig } from './config/mail.config';
@@ -14,27 +13,26 @@ import { mailConfig } from './config/mail.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './modules/users/users.module';
-import { ProjectsModule } from './modules/projects/projects.module';
-import { ProductsModule } from './modules/products/products.module';
 import { MediaModule } from './modules/media/media.module';
-import { ConsultationsModule } from './modules/consultations/consultations.module';
-import { PagesModule } from './modules/pages/pages.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SettingsModule } from './modules/settings/settings.module';
-import { ArticlesModule } from './modules/articles/articles.module';
-import { RevalidateModule } from './modules/revalidate/revalidate.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { QueuesModule } from './queues/queues.module';
-import { CronModule } from './modules/cron/cron.module';
-import { LogsModule } from './modules/logs/logs.module';
 import { ServicesModule } from './common/services/services.module';
-import { RedisModule } from './common/modules/redis.module';
+
+// NoiThat2026 modules
+import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
+import { ProductsModule } from './modules/products/products.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { VideosModule } from './modules/videos/videos.module';
+import { NewsModule } from './modules/news/news.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { FormsModule } from './modules/forms/forms.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig, r2Config, mailConfig],
+      load: [databaseConfig, jwtConfig, r2Config, mailConfig],
       envFilePath: ['.env'],
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
@@ -56,8 +54,6 @@ import { RedisModule } from './common/modules/redis.module';
     }),
 
     ThrottlerModule.forRoot([
-      // Global fallback: 60 req/phut/IP. Scale 300 users/ngay du,
-      // endpoints nhay cam (auth, upload) override bang @Throttle rieng.
       {
         ttl: 60000,
         limit: 60,
@@ -67,21 +63,18 @@ import { RedisModule } from './common/modules/redis.module';
     AuthModule,
     HealthModule,
     UsersModule,
-    ProjectsModule,
-    ProductsModule,
     MediaModule,
-    ConsultationsModule,
-    PagesModule,
-    AnalyticsModule,
     SettingsModule,
-    ArticlesModule,
-    RevalidateModule,
-    NotificationsModule,
-    QueuesModule,
-    CronModule,
-    LogsModule,
     ServicesModule,
-    RedisModule,
+    ProductCategoriesModule,
+    ProductsModule,
+    ProjectsModule,
+    VideosModule,
+    NewsModule,
+    PricingModule,
+    ReviewsModule,
+    FormsModule,
+    NotificationsModule,
   ],
   providers: [
     {

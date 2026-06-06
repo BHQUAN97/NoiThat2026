@@ -22,7 +22,6 @@ export function validateEnv(): void {
     'DB_USERNAME',
     'DB_PASSWORD',
     'DB_NAME',
-    'REDIS_HOST',
     'JWT_SECRET',
   ];
 

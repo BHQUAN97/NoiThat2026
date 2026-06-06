@@ -1,0 +1,59 @@
+name: Deploy NoiThat2026
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-noithat
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          timeout: 300s
+          script: |
+            set -e
+            echo "=== Deploy NoiThat2026 ==="
+            cd /srv/noithat2026
+
+            echo "--- Git pull ---"
+            git pull origin main
+
+            echo "--- Docker build + up ---"
+            docker compose pull --quiet 2>/dev/null || true
+            docker compose up -d --build --remove-orphans
+
+            echo "--- Wait for backend healthy ---"
+            for i in $(seq 1 12); do
+              if curl -sf http://localhost:5202/api/health > /dev/null; then
+                echo "Backend healthy"
+                break
+              fi
+              echo "Waiting... ($i/12)"
+              sleep 5
+            done
+
+            echo "--- Run migrations ---"
+            docker compose exec -T noithat-api npm run migration:run:prod 2>/dev/null || \
+              docker compose exec -T backend npm run migration:run:prod 2>/dev/null || \
+              echo "Migration skipped (no migration:run:prod script)"
+
+            echo "--- Cleanup old images ---"
+            docker image prune -f
+
+            echo "=== Deploy done: $(date) ==="

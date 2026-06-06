@@ -1,56 +1,29 @@
-import { Controller, Get, Put, Param, Body, Req } from '@nestjs/common';
-import { Request } from 'express';
-import { SettingsService } from './settings.service';
-import { UpsertSettingDto } from './dto/upsert-setting.dto';
-import { AdminOnly } from '../../common/decorators/admin-only.decorator';
-import { ok } from '../../common/helpers/response.helper';
+import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common'
+import { SettingsService } from './settings.service'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { Roles } from '../../common/decorators/roles.decorator'
+import { UserRole } from '../users/entities/user.entity'
 
 @Controller('settings')
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(private readonly service: SettingsService) {}
 
-  /**
-   * GET /api/settings
-   * Admin only — get all settings grouped by setting_group.
-   */
-  @AdminOnly()
+  @Get('public')
+  getPublic() {
+    return this.service.getAll()
+  }
+
   @Get()
-  async findAll() {
-    const grouped = await this.settingsService.findAllGrouped();
-    return ok(grouped);
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  getAll() {
+    return this.service.getAll()
   }
 
-  /**
-   * GET /api/settings/:group
-   * Admin only — get all settings for a specific group.
-   */
-  @AdminOnly()
-  @Get(':group')
-  async findByGroup(@Param('group') group: string) {
-    const settings = await this.settingsService.findByGroup(group);
-    return ok(settings);
-  }
-
-  /**
-   * PUT /api/settings/:key
-   * Admin only — upsert a setting by key.
-   */
-  @AdminOnly()
-  @Put(':key')
-  async upsert(
-    @Param('key') key: string,
-    @Body() dto: UpsertSettingDto,
-    @Req() req: Request,
-  ) {
-    const userId = (req as any).user?.id as string | undefined;
-
-    const setting = await this.settingsService.upsert(
-      key,
-      dto.value,
-      dto.group,
-      userId,
-    );
-
-    return ok(setting, 'Setting updated');
+  @Put()
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  setMany(@Body() body: Array<{ key: string; value: string; type?: string }>) {
+    return this.service.setMany(body)
   }
 }

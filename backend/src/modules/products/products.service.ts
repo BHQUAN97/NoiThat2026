@@ -1,123 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository, DeepPartial } from 'typeorm';
-import Redis from 'ioredis';
-import { Product } from './entities/product.entity';
-import { ProductImage } from './entities/product-image.entity';
-import { PublishableService } from '../../common/base/base-publishable.service';
-import { PaginationDto } from '../../common/dto/pagination.dto';
-import { MediaAssociation } from '../../common/services/base-media-association.service';
-import { Cacheable, CacheEvict, InjectRedis } from '../../common/decorators/cacheable.decorator';
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { ulid } from 'ulid'
+import { Product } from './entities/product.entity'
 
 @Injectable()
-export class ProductsService extends PublishableService<Product> {
-  // ─── Config ──────────────────────────────────────────────────
-  protected readonly slugSourceField = 'name' as const;
-  protected readonly queryAlias = 'product';
-  protected readonly defaultRelations = ['category', 'cover_image'];
-  protected readonly detailRelations = ['category', 'cover_image', 'og_image'];
-  protected readonly sortAllowlist = {
-    name: 'product.name',
-    created_at: 'product.created_at',
-    updated_at: 'product.updated_at',
-    price: 'product.price',
-    status: 'product.status',
-    published_at: 'product.published_at',
-    display_order: 'product.display_order',
-  };
-  // Products khong co HTML content field
-  protected readonly sanitizeContent = false;
-
+export class ProductsService {
   constructor(
     @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>,
-    @InjectRepository(ProductImage)
-    private readonly productImagesRepository: Repository<ProductImage>,
-    @InjectDataSource()
-    private readonly dataSource: DataSource,
-    @InjectRedis() protected readonly redisClient: Redis,
-  ) {
-    super(productsRepository, 'Product');
+    private readonly repo: Repository<Product>,
+  ) {}
+
+  findAll(opts: { categoryId?: string; featured?: boolean; active?: boolean } = {}) {
+    const qb = this.repo.createQueryBuilder('p').orderBy('p.sort_order', 'ASC')
+    if (opts.categoryId) qb.andWhere('p.category_id = :categoryId', { categoryId: opts.categoryId })
+    if (opts.featured) qb.andWhere('p.is_featured = true')
+    if (opts.active !== undefined) qb.andWhere('p.is_active = :active', { active: opts.active })
+    return qb.getMany()
   }
 
-  @Cacheable({
-    key: (...args: unknown[]) => `product:slug:${args[0] as string}`,
-    ttl: 300,
-  })
-  async findPublishedBySlug(slug: string): Promise<Product> {
-    return super.findPublishedBySlug(slug);
+  async findOne(id: string) {
+    const item = await this.repo.findOne({ where: { id } })
+    if (!item) throw new NotFoundException('Product not found')
+    return item
   }
 
-  @CacheEvict({ pattern: 'product:*' })
-  async update(id: string, data: DeepPartial<Product>): Promise<Product> {
-    return super.update(id, data);
+  async findBySlug(slug: string) {
+    const item = await this.repo.findOne({ where: { slug } })
+    if (!item) throw new NotFoundException('Product not found')
+    return item
   }
 
-  @CacheEvict({ pattern: 'product:*' })
-  async softDelete(id: string): Promise<void> {
-    return super.softDelete(id);
+  async create(data: Partial<Product>) {
+    const item = this.repo.create({ id: ulid(), ...data })
+    return this.repo.save(item)
   }
 
-  @CacheEvict({ pattern: 'product:*' })
-  async publish(id: string): Promise<Product> {
-    return super.publish(id);
+  async update(id: string, data: Partial<Product>) {
+    await this.findOne(id)
+    await this.repo.update(id, data)
+    return this.findOne(id)
   }
 
-  // ─── Admin list voi LIKE search ──────────────────────────────
-
-  async findAllAdmin(
-    pagination: PaginationDto,
-    filters?: Record<string, unknown>,
-    search?: string,
-  ) {
-    const qb = this.createBaseQuery(this.queryAlias);
-
-    for (const rel of this.defaultRelations) {
-      qb.leftJoinAndSelect(`${this.queryAlias}.${rel}`, rel);
-    }
-
-    // LIKE search tren name va description
-    if (search?.trim()) {
-      const searchTerm = `%${search.trim()}%`;
-      qb.andWhere(
-        `(${this.queryAlias}.name LIKE :search OR ${this.queryAlias}.description LIKE :search)`,
-        { search: searchTerm },
-      );
-    }
-
-    return this.executeWithDefaultSort(qb, pagination, filters);
-  }
-
-  // ─── Create voi images ───────────────────────────────────────
-
-  async createWithImages(data: DeepPartial<Product> & { image_ids?: string[] }): Promise<Product> {
-    const { image_ids, ...productData } = data as any;
-
-    // Wrap trong transaction: neu sync images fail thi rollback product
-    return this.dataSource.transaction(async () => {
-      const product = await this.create(productData);
-      if (image_ids && image_ids.length > 0) {
-        await this.updateImages(product.id, image_ids);
-      }
-      return product;
-    });
-  }
-
-  // ─── Image management (dung MediaAssociation helper) ──────────
-
-  async updateImages(productId: string, mediaIds: string[]): Promise<void> {
-    await this.findById(productId);
-    await MediaAssociation.sync(this.productImagesRepository, {
-      entityIdField: 'product_id',
-      entityId: productId,
-      mediaIds,
-    }, { withPrimary: true });
-  }
-
-  async getImages(productId: string): Promise<ProductImage[]> {
-    return MediaAssociation.getMedia(this.productImagesRepository, {
-      entityIdField: 'product_id',
-      entityId: productId,
-    });
+  async remove(id: string) {
+    await this.findOne(id)
+    await this.repo.delete(id)
   }
 }

@@ -6,13 +6,13 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   FileText,
-  Briefcase,
+  Building2,
   Newspaper,
   Package,
-  Tags,
-  MessageCircle,
-  BarChart3,
-  ScrollText,
+  Tag,
+  DollarSign,
+  Star,
+  Video,
   Users,
   Settings,
   LogOut,
@@ -22,17 +22,18 @@ import {
 import { cn } from '@/lib/utils'
 import { ADMIN_NAV_ITEMS, SITE_NAME } from '@/lib/constants'
 import { useAuth } from '@/contexts/auth.context'
+import { useNotificationsContext } from '@/contexts/notifications.context'
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   FileText,
-  Briefcase,
+  Building2,
   Newspaper,
   Package,
-  Tags,
-  MessageCircle,
-  BarChart3,
-  ScrollText,
+  Tag,
+  DollarSign,
+  Star,
+  Video,
   Users,
   Settings,
 }
@@ -41,6 +42,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { unreadCount } = useNotificationsContext()
 
   const sidebarContent = (
     <>
@@ -70,9 +72,8 @@ export function AdminSidebar() {
           {ADMIN_NAV_ITEMS.map((item) => {
             const Icon = iconMap[item.icon]
             const isActive =
-              item.href === '/admin'
-                ? pathname === '/admin'
-                : pathname.startsWith(item.href)
+              pathname === item.href ||
+              (item.href !== '/admin/dashboard' && pathname.startsWith(item.href))
 
             return (
               <li key={item.href}>
@@ -88,7 +89,12 @@ export function AdminSidebar() {
                 >
                   {Icon && <Icon className={cn('h-[18px] w-[18px]', isActive && 'text-primary')} />}
                   {item.label}
-                  {isActive && (
+                  {item.href === '/admin/forms' && unreadCount > 0 && (
+                    <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                  {isActive && unreadCount === 0 && (
                     <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                   )}
                 </Link>

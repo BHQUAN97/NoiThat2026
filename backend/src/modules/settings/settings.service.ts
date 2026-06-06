@@ -1,84 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Setting } from './entities/setting.entity';
-import { BaseService } from '../../common/base/base.service';
+import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { SiteConfig } from './entities/site-config.entity'
 
 @Injectable()
-export class SettingsService extends BaseService<Setting> {
+export class SettingsService {
   constructor(
-    @InjectRepository(Setting)
-    private readonly settingRepo: Repository<Setting>,
-  ) {
-    super(settingRepo, 'Setting');
+    @InjectRepository(SiteConfig)
+    private readonly repo: Repository<SiteConfig>,
+  ) {}
+
+  async get(key: string): Promise<string | null> {
+    const item = await this.repo.findOne({ where: { key } })
+    return item?.value ?? null
   }
 
-  /**
-   * Find a setting by its unique key.
-   */
-  async findByKey(key: string): Promise<Setting | null> {
-    return this.settingRepo.findOne({
-      where: { setting_key: key },
-    });
+  async getAll(): Promise<Record<string, string>> {
+    const items = await this.repo.find()
+    return Object.fromEntries(items.map((i) => [i.key, i.value]))
   }
 
-  /**
-   * Find all settings within a group.
-   */
-  async findByGroup(group: string): Promise<Setting[]> {
-    return this.settingRepo.find({
-      where: { setting_group: group },
-      order: { setting_key: 'ASC' },
-    });
+  async set(key: string, value: string, type = 'string') {
+    await this.repo.save({ key, value, type })
+    return { key, value }
   }
 
-  /**
-   * Get all settings, grouped by setting_group.
-   */
-  async findAllGrouped(): Promise<Record<string, Setting[]>> {
-    const all = await this.settingRepo.find({
-      order: { setting_group: 'ASC', setting_key: 'ASC' },
-    });
-
-    const grouped: Record<string, Setting[]> = {};
-    for (const setting of all) {
-      if (!grouped[setting.setting_group]) {
-        grouped[setting.setting_group] = [];
-      }
-      grouped[setting.setting_group].push(setting);
-    }
-
-    return grouped;
-  }
-
-  /**
-   * Insert or update a setting by key.
-   * If key exists, update value and group. Otherwise, create new.
-   */
-  async upsert(
-    key: string,
-    value: string,
-    group: string,
-    updatedBy?: string,
-  ): Promise<Setting> {
-    const existing = await this.findByKey(key);
-
-    if (existing) {
-      existing.setting_value = value;
-      existing.setting_group = group;
-      if (updatedBy) {
-        existing.updated_by = updatedBy;
-      }
-      return this.settingRepo.save(existing);
-    }
-
-    const setting = this.settingRepo.create({
-      setting_key: key,
-      setting_value: value,
-      setting_group: group,
-      updated_by: updatedBy || null,
-    });
-
-    return this.settingRepo.save(setting);
+  async setMany(entries: Array<{ key: string; value: string; type?: string }>) {
+    const records = entries.map((e) => ({ key: e.key, value: e.value, type: e.type ?? 'string' }))
+    await this.repo.save(records)
   }
 }

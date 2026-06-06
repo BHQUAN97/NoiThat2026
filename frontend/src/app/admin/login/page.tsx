@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
           Đăng nhập
         </h1>
         <p className="mt-2 text-center text-body-sm text-on-surface-variant">
-          Đăng nhập vào hệ thống quản trị VietNet Interior
+          Đăng nhập vào hệ thống quản trị Nội Thất Duy Mạnh
         </p>
 
         {error && (

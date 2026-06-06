@@ -4,8 +4,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, IsNull } from 'typeorm';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { BaseService } from '../../common/base/base.service';
 import { Media, MediaProcessingStatus } from './entities/media.entity';
 import { R2StorageService } from '../../common/services/r2-storage.service';
@@ -18,7 +16,6 @@ export class MediaService extends BaseService<Media> {
     @InjectRepository(Media)
     private readonly mediaRepo: Repository<Media>,
     private readonly r2Storage: R2StorageService,
-    @InjectQueue('image-processing') private readonly imageQueue: Queue,
   ) {
     super(mediaRepo, 'Media');
   }
@@ -55,35 +52,19 @@ export class MediaService extends BaseService<Media> {
       throw new BadRequestException('File upload failed. Please try again.');
     }
 
-    // Save to DB chi sau khi R2 upload thanh cong
+    // Save to DB sau khi R2 upload thanh cong — không queue (NoiThat simplified)
     const media = this.mediaRepo.create({
       original_filename: file.originalname,
       mime_type: file.mimetype,
       file_size: file.size,
       original_url: originalUrl,
-      processing_status: MediaProcessingStatus.PENDING,
+      processing_status: MediaProcessingStatus.COMPLETED,
       uploaded_by: uploadedBy,
     });
-    // Override auto-generated ID to match R2 key
     media.id = tempId;
     const saved = await this.mediaRepo.save(media);
 
-    // Enqueue IMAGE_JOB for processing
-    await this.imageQueue.add(
-      'process-image',
-      {
-        mediaId: saved.id,
-        r2Key,
-      },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: { age: 24 * 60 * 60 }, // 24 hours
-        removeOnFail: { age: 7 * 24 * 60 * 60 }, // 7 days
-      },
-    );
-
-    this.actionLogger.log(`Media ${saved.id} uploaded and queued for processing`);
+    this.actionLogger.log(`Media ${saved.id} uploaded`);
 
     return saved;
   }

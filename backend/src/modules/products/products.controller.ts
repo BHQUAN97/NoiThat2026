@@ -1,97 +1,66 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Body,
-  Query,
-} from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { UpdateImagesDto } from './dto/update-images.dto';
-import { QueryProductDto, QueryProductAdminDto } from './dto/query-product.dto';
-import { ok, paginated } from '../../common/helpers/response.helper';
-import { Public } from '../../common/decorators/public.decorator';
-import { AdminOnly } from '../../common/decorators/admin-only.decorator';
-import { ParseUlidPipe } from '../../common/pipes/parse-ulid.pipe';
-import { CrudController } from '../../common/base/base-crud.controller';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common'
+import { ProductsService } from './products.service'
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard'
+import { Public } from '../../common/decorators/public.decorator'
+import { Roles } from '../../common/decorators/roles.decorator'
+import { UserRole } from '../users/entities/user.entity'
 
 @Controller('products')
-export class ProductsController extends CrudController<any> {
-  protected readonly entityName = 'Product';
+export class ProductsController {
+  constructor(private readonly service: ProductsService) {}
 
-  constructor(protected readonly service: ProductsService) {
-    super();
-  }
-
-  // ─── Override: public list voi product-specific filters ──────
-
+  // Public route — active only; admin với token có thể lấy tất cả
   @Public()
   @Get()
-  async findPublished(@Query() query: QueryProductDto) {
-    // Loai bo status — findPublished da hardcode status = 'published'
-    const { category_id, material_type, finish, is_featured, status: _status, ...pagination } = query;
-    const filters = { category_id, material_type, finish, is_featured };
-    const result = await this.service.findPublished(pagination, filters);
-    return paginated(result.data, result.meta);
+  @UseGuards(OptionalJwtAuthGuard)
+  findAll(
+    @Request() req: { user?: { role: string } },
+    @Query('category') categoryId?: string,
+    @Query('featured') featured?: string,
+  ) {
+    const isAdmin = req.user?.role === UserRole.ADMIN || req.user?.role === UserRole.SUPER_ADMIN
+    return this.service.findAll({
+      categoryId,
+      featured: featured === 'true',
+      active: isAdmin ? undefined : true,
+    })
   }
 
-  // ─── Override: admin list voi product-specific filters ───────
-
-  @Get('admin/list')
-  @AdminOnly()
-  async findAllAdmin(@Query() query: QueryProductAdminDto) {
-    const { category_id, is_featured, status, search, material_type, finish, ...pagination } = query as any;
-    const filters = { category_id, material_type, finish, status, is_featured };
-    const result = await this.service.findAllAdmin(pagination, filters, search);
-    return paginated(result.data, result.meta);
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  findAllAdmin(
+    @Query('category') categoryId?: string,
+    @Query('featured') featured?: string,
+  ) {
+    return this.service.findAll({ categoryId, featured: featured === 'true' })
   }
-
-  // ─── Override: detail by slug voi images ─────────────────────
 
   @Public()
   @Get(':slug')
-  async findBySlug(@Param('slug') slug: string) {
-    const product = await this.service.findPublishedBySlug(slug);
-    const images = await this.service.getImages(product.id);
-    return ok({ ...product, images });
+  findBySlug(@Param('slug') slug: string) {
+    return this.service.findBySlug(slug)
   }
-
-  // ─── Override: create voi images ─────────────────────────────
 
   @Post()
-  @AdminOnly()
-  async create(@Body() dto: CreateProductDto) {
-    const product = await this.service.createWithImages(dto);
-    return ok(product, 'Product created successfully');
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  create(@Body() body: any) {
+    return this.service.create(body)
   }
 
-  // ─── Override: update voi images ─────────────────────────────
-
-  @Patch(':id')
-  @AdminOnly()
-  async update(@Param('id', ParseUlidPipe) id: string, @Body() dto: UpdateProductDto) {
-    const { image_ids, ...productData } = dto as CreateProductDto & Partial<CreateProductDto>;
-    const product = await this.service.update(id, productData);
-
-    if (image_ids !== undefined) {
-      await this.service.updateImages(product.id, image_ids);
-    }
-
-    return ok(product, 'Product updated successfully');
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.service.update(id, body)
   }
 
-  // ─── Product-specific: image management ──────────────────────
-
-  @Patch(':id/images')
-  @AdminOnly()
-  async updateImages(
-    @Param('id', ParseUlidPipe) id: string,
-    @Body() dto: UpdateImagesDto,
-  ) {
-    await this.service.updateImages(id, dto.image_ids);
-    return ok(null, 'Product images updated successfully');
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  remove(@Param('id') id: string) {
+    return this.service.remove(id)
   }
 }

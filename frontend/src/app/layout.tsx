@@ -1,26 +1,22 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { GlassNav } from '@/components/layout/GlassNav'
-import { Footer } from '@/components/layout/Footer'
-import { BottomNav } from '@/components/layout/BottomNav'
-import { FloatingWidgets } from '@/components/layout/FloatingWidgets'
-import { PublicShell } from '@/components/layout/PublicShell'
 
 export const metadata: Metadata = {
   title: {
-    default: 'VietNet Interior',
-    template: '%s | VietNet Interior',
+    default: 'Nội Thất Duy Mạnh — Tủ Bếp & Nội Thất Gia Đình',
+    template: '%s | Nội Thất Duy Mạnh',
   },
   description:
-    'Nội thất cao cấp cho không gian sống tinh tế. Thiết kế - Thi công - Nội thất trọn gói.',
+    'Xưởng sản xuất và thi công tủ bếp, nội thất gia đình tại Vân Nam - Phúc Thọ - Hà Nội. Tủ bếp Inox 304, Acrylic, Cánh Kính. Hotline: 094.872.8091',
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:8082'
   ),
   openGraph: {
     type: 'website',
     locale: 'vi_VN',
-    siteName: 'VietNet Interior',
+    siteName: 'Nội Thất Duy Mạnh',
   },
+  keywords: ['tủ bếp', 'nội thất', 'tủ bếp inox', 'tủ bếp acrylic', 'Phúc Thọ', 'Hà Nội', 'Duy Mạnh'],
 }
 
 export default function RootLayout({
@@ -31,22 +27,18 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        {/* Google Sans Flex — variable font for all text */}
+        {/* Merriweather (heading) + Inter (body) — Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&subset=latin,vietnamese&display=swap" rel="stylesheet" />
-        {/* Preconnect to R2 CDN for faster image loading */}
-        <link rel="preconnect" href="https://pub-vietnet.r2.dev" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://pub-vietnet.r2.dev" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        {/* Preconnect R2 CDN */}
+        <link rel="preconnect" href="https://pub-noithat.r2.dev" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-screen antialiased">
-        <GlassNav />
-        <PublicShell>
-          {children}
-        </PublicShell>
-        <Footer />
-        <BottomNav />
-        <FloatingWidgets />
+      <body className="min-h-screen antialiased font-body bg-background text-on-surface">
+        {children}
       </body>
     </html>
   )

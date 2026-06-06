@@ -18,7 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { LoginAttempt } from './entities/login-attempt.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
-import { MailQueueService } from '../../common/services/mail-queue.service';
+import { SimpleMailService } from '../../common/services/simple-mail.service';
 import { generateUlid } from '../../common/helpers/ulid.helper';
 import { UserRole, UserStatus } from '../users/entities/user.entity';
 
@@ -39,7 +39,7 @@ export class AuthService {
     private readonly loginAttemptRepository: Repository<LoginAttempt>,
     @InjectRepository(PasswordResetToken)
     private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
-    private readonly mailQueueService: MailQueueService,
+    private readonly mailService: SimpleMailService,
   ) {}
 
   // ─── Rate Limiting ─────────────────────────────────────────────
@@ -293,11 +293,13 @@ export class AuthService {
       'http://localhost:3000';
     const resetUrl = `${frontendUrl.replace(/\/+$/, '')}/admin/reset-password?token=${rawToken}`;
 
-    await this.mailQueueService.queuePasswordReset(
-      user.email,
-      user.full_name,
-      resetUrl,
-    );
+    await this.mailService.notifyAdmin({
+      formType: 'contact',
+      name: user.full_name,
+      phone: '',
+      email: user.email,
+      content: { message: `Password reset link: ${resetUrl}` },
+    }).catch(() => {});
   }
 
   /**

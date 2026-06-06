@@ -1,155 +1,150 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Eye, Search } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { StatusBadge } from '@/components/admin/StatusBadge'
 import { PageHeader } from '@/components/shared/PageHeader'
-import { StatusFilterBar } from '@/components/shared/StatusFilterBar'
-import { DataStates } from '@/components/shared/DataStates'
 import { DataTable, type Column } from '@/components/shared/DataTable'
-import { Pagination } from '@/components/shared/Pagination'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
-import { formatDate } from '@/lib/date'
+import api from '@/lib/api'
+import { PROVINCES } from '@/lib/constants'
 import type { Project } from '@/types'
-import { useAdminCrud } from '@/hooks/useAdminCrud'
-
-const CATEGORY_VARIANTS: Record<string, 'primary' | 'secondary' | 'tertiary' | 'neutral'> = {
-  residential: 'primary',
-  commercial: 'secondary',
-  hospitality: 'tertiary',
-}
-
-function CategoryBadge({ name }: { name: string }) {
-  const key = name.toLowerCase()
-  const variant = CATEGORY_VARIANTS[key] || 'neutral'
-  return <Badge variant={variant} size="sm">{name}</Badge>
-}
 
 export default function AdminProjectsPage() {
-  const router = useRouter()
-  const [statusFilter, setStatusFilter] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [items, setItems] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<Project | null>(null)
+  const [provinceFilter, setProvinceFilter] = useState('')
 
-  const crud = useAdminCrud<Project>({
-    endpoint: '/projects',
-    params: { status: statusFilter, search: searchQuery },
-  })
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/projects/admin/all') as unknown
+      setItems((res as { data: Project[] }).data || [])
+    } catch {
+      // Thử endpoint công khai
+      try {
+        const res2 = await api.get('/projects') as unknown
+        setItems((res2 as { data: Project[] }).data || [])
+      } catch {
+        setActionError('Không tải được danh sách dự án.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-  return (
-    <div className="py-4">
-      <PageHeader label="Project Library" title="Quản lý dự án" showDecoLine={false}>
-        <Button variant="primary" size="md" onClick={() => router.push('/admin/projects/editor')}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
-      </PageHeader>
+  useEffect(() => { load() }, [load])
 
-      {/* Search & Filter bar */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl bg-surface-container-low py-2.5 pl-10 pr-4 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </div>
-        <StatusFilterBar
-          options={[
-            { value: 'draft', label: 'Draft' },
-            { value: 'published', label: 'Published' },
-          ]}
-          allLabel="All"
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
-      </div>
+  async function confirmDelete() {
+    if (!deleting) return
+    try {
+      await api.delete(`/projects/${deleting.id}`)
+      setDeleting(null)
+      await load()
+    } catch {
+      setActionError('Xóa dự án thất bại.')
+      setDeleting(null)
+    }
+  }
 
-      <ActionErrorBanner error={crud.actionError} onDismiss={crud.clearActionError} />
+  const filtered = provinceFilter
+    ? items.filter(p => p.province === provinceFilter)
+    : items
 
-      <DataStates loading={crud.loading} error={crud.error} isEmpty={crud.isEmpty} onRetry={crud.refresh} emptyMessage="Chưa có dự án nào." minHeight="min-h-[30vh]">
-        <DataTable<Project>
-          columns={projectColumns(crud.handlePublish, (p) => router.push(`/admin/projects/editor?id=${p.id}`), crud.setDeleting)}
-          data={crud.items}
-          rowKey={(p) => p.id}
-          rowClassName="group"
-        />
-      </DataStates>
-
-      <Pagination meta={crud.meta} currentPage={crud.page} onPageChange={crud.goToPage} variant="numbered" />
-
-      <ConfirmDialog
-        open={!!crud.deleting}
-        message={<>Bạn có chắc chắn muốn xóa dự án <span className="font-semibold text-on-surface">{crud.deleting?.title}</span>?</>}
-        confirmLabel="Xóa dự án"
-        loading={crud.isDeleting}
-        onConfirm={crud.confirmDelete}
-        onCancel={() => crud.setDeleting(null)}
-      />
-    </div>
-  )
-}
-
-// ─── Column Definitions ────────────────────────────────────────
-
-const actionBtnClass = 'flex items-center justify-center rounded-lg p-2.5 min-h-[44px] min-w-[44px] text-on-surface-variant hover:bg-surface-container-high'
-
-function projectColumns(
-  onPublish: (p: Project) => void,
-  onEdit: (p: Project) => void,
-  onDelete: (p: Project | null) => void,
-): Column<Project>[] {
-  return [
+  const columns: Column<Project>[] = [
     {
-      header: 'Project Information',
+      header: 'Ảnh',
+      render: (p) => p.thumbnail_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={p.thumbnail_url} alt={p.name} className="h-12 w-16 rounded-lg object-cover" />
+      ) : (
+        <div className="h-12 w-16 rounded-lg bg-stone-100" />
+      ),
+      className: 'w-20',
+    },
+    {
+      header: 'Tên dự án',
       render: (p) => (
-        <div className="flex items-center gap-3">
-          <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-container">
-            {p.cover_image?.preview_url ? (
-              <Image src={p.cover_image.preview_url} alt={p.title} fill className="object-cover" sizes="64px" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-on-surface-variant/30"><span className="text-lg">&#9633;</span></div>
-            )}
-          </div>
-          <div>
-            <p className="text-body-md font-medium text-on-surface">{p.title}</p>
-            <p className="mt-0.5 text-body-sm text-on-surface-variant">REF-{p.id.slice(0, 8).toUpperCase()}</p>
-          </div>
+        <div>
+          <p className="font-medium text-stone-800">{p.name}</p>
+          {p.location && <p className="text-xs text-stone-400">{p.location}</p>}
         </div>
       ),
     },
+    { header: 'Tỉnh', render: (p) => <span className="text-sm text-stone-500">{p.province}</span> },
+    { header: 'Diện tích', render: (p) => <span className="text-sm text-stone-400">{p.area_sqm || '—'}</span> },
     {
-      header: 'Category',
-      render: (p) => p.category ? <CategoryBadge name={p.category.name} /> : <span className="text-body-sm text-on-surface-variant">-</span>,
-    },
-    {
-      header: 'Date Created',
-      render: (p) => <span className="text-body-sm text-on-surface-variant">{formatDate(p.created_at)}</span>,
-    },
-    {
-      header: 'Status',
-      headerClassName: 'text-center',
-      className: 'text-center',
-      render: (p) => <StatusBadge status={p.status} />,
-    },
-    {
-      header: 'Actions',
+      header: 'Nổi bật',
       render: (p) => (
-        <div className="flex items-center gap-1 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100">
-          {p.status === 'draft' && (
-            <button onClick={() => onPublish(p)} className={actionBtnClass} title="Xuất bản"><Eye className="h-4 w-4" /></button>
-          )}
-          <button onClick={() => onEdit(p)} className={actionBtnClass} title="Chỉnh sửa"><Pencil className="h-4 w-4" /></button>
-          <button onClick={() => onDelete(p)} className="flex items-center justify-center rounded-lg p-2.5 min-h-[44px] min-w-[44px] text-error hover:bg-error-container" title="Xóa"><Trash2 className="h-4 w-4" /></button>
+        <span className={`rounded-full px-2 py-0.5 text-xs ${p.is_featured ? 'bg-amber-100 text-amber-700' : 'text-stone-300'}`}>
+          {p.is_featured ? 'Nổi bật' : '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Active',
+      render: (p) => (
+        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-400'}`}>
+          {p.is_active ? 'Hiện' : 'Ẩn'}
+        </span>
+      ),
+    },
+    {
+      header: 'Hành động',
+      render: (p) => (
+        <div className="flex gap-1">
+          <Link href={`/admin/projects/${p.id}`} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-stone-400 transition-colors hover:bg-amber-50 hover:text-amber-600">
+            <Pencil className="h-4 w-4" />
+          </Link>
+          <button onClick={() => setDeleting(p)} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500">
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       ),
     },
   ]
+
+  return (
+    <div>
+      <PageHeader
+        title="Dự Án Thực Tế"
+        description="Quản lý các dự án đã thi công"
+      >
+        <Link href="/admin/projects/new">
+          <Button size="sm"><Plus className="mr-1.5 h-4 w-4" />Thêm dự án</Button>
+        </Link>
+      </PageHeader>
+      <ActionErrorBanner error={actionError} onDismiss={() => setActionError(null)} />
+
+      <div className="mb-4 flex gap-3">
+        <select
+          value={provinceFilter}
+          onChange={e => setProvinceFilter(e.target.value)}
+          className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+        >
+          {PROVINCES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-white" />)}</div>
+      ) : (
+        <DataTable columns={columns} data={filtered} rowKey={(p) => p.id} />
+      )}
+
+      <ConfirmDialog
+        open={!!deleting}
+        title="Xóa dự án"
+        message={`Bạn có chắc muốn xóa dự án "${deleting?.name}"?`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+        confirmLabel="Xóa"
+        confirmVariant="danger"
+      />
+    </div>
+  )
 }
