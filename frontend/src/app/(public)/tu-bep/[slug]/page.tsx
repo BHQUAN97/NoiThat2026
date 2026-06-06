@@ -6,6 +6,7 @@ import { CONTACT } from '@/lib/constants'
 import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getResponseData } from '@/lib/api-response'
 import { GalleryGrid } from '@/components/shared/GalleryGrid'
+import { ProductImagePanel } from '@/components/shared/ProductImagePanel'
 import type { Product } from '@/types'
 
 interface Props { params: Promise<{ slug: string }> }
@@ -73,37 +74,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-14">
 
             {/* Gallery */}
-            <div>
-              <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-surface-container shadow-card">
-                {gallery[0] ? (
-                  <img
-                    src={gallery[0]}
-                    alt={name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#efe5d9,#b7c7c2)]">
-                    <span className="font-label text-xs uppercase tracking-widest text-primary/50">Ảnh sản phẩm</span>
-                  </div>
-                )}
-              </div>
-              {gallery.length > 1 && (
-                <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 snap-x snap-mandatory lg:mx-0 lg:grid lg:grid-cols-4 lg:px-0">
-                  {gallery.slice(1, 5).map((url, i) => (
-                    <div key={i} className="h-20 w-20 shrink-0 snap-start overflow-hidden rounded-xl bg-surface-container shadow-card lg:h-auto lg:w-auto lg:aspect-square">
-                      <img src={url} alt={`${name} ${i + 2}`} className="h-full w-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {gallery.length === 0 && (
-                <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:grid-cols-4 lg:px-0">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-20 w-20 shrink-0 rounded-xl bg-surface-container lg:aspect-square lg:h-auto lg:w-auto" />
-                  ))}
-                </div>
-              )}
-            </div>
+            <ProductImagePanel gallery={gallery} name={name} />
 
             {/* Product info */}
             <div>

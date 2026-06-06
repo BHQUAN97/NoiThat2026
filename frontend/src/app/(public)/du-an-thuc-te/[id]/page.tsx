@@ -5,6 +5,7 @@ import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getResponseData } from '@/lib/api-response'
 import { CONTACT } from '@/lib/constants'
 import { GalleryGrid } from '@/components/shared/GalleryGrid'
+import { ClickableHeroImage } from '@/components/shared/ClickableHeroImage'
 import type { Project } from '@/types'
 
 type PageProps = { params: Promise<{ id: string }> }
@@ -140,10 +141,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {/* Right: main image — hangs below section edge on desktop */}
             <div className="overflow-hidden rounded-t-2xl bg-surface-container shadow-card lg:-mb-1">
               {gallery[0] ? (
-                <img
-                  src={gallery[0]}
+                <ClickableHeroImage
+                  images={gallery}
                   alt={project.name}
-                  className="aspect-[4/3] h-full w-full object-cover"
+                  className="aspect-[4/3] h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  wrapperClassName="block"
                 />
               ) : (
                 <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#efe5d9,#b7c7c2)]">
