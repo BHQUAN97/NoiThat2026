@@ -1,15 +1,6 @@
 name: Auto Deploy
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - '*.md'
-      - 'docs/**'
-      - '.github/workflows/ci.yml'
-      - '.github/workflows/cron.yml'
-      - '.github/workflows/restore.yml'
-      - '.github/workflows/vps-setup.yml'
   workflow_dispatch:
 
 concurrency:

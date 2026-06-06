@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: deploy-noithat
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -26,6 +26,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           timeout: 300s
+          command_timeout: 15m
           script: |
             set -e
             echo "=== Deploy NoiThat2026 ==="
