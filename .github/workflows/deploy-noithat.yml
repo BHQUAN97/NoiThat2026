@@ -29,14 +29,13 @@ jobs:
           script: |
             set -e
             echo "=== Deploy NoiThat2026 ==="
-            cd /srv/noithat2026
+            cd /opt/noithat2026
 
             echo "--- Git pull ---"
             git pull origin main
 
-            echo "--- Docker build + up ---"
-            docker compose pull --quiet 2>/dev/null || true
-            docker compose up -d --build --remove-orphans
+            echo "--- Docker build + up (prod) ---"
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
             echo "--- Wait for backend healthy ---"
             for i in $(seq 1 12); do
@@ -49,9 +48,12 @@ jobs:
             done
 
             echo "--- Run migrations ---"
-            docker compose exec -T noithat-api npm run migration:run:prod 2>/dev/null || \
-              docker compose exec -T backend npm run migration:run:prod 2>/dev/null || \
-              echo "Migration skipped (no migration:run:prod script)"
+            docker compose -f docker-compose.prod.yml exec -T backend \
+              npm run migration:run:prod || echo "Migration skipped"
+
+            echo "--- Reload nginx config ---"
+            cp nginx/conf.d/duymanh.bhquan.store.conf /opt/infra/nginx/conf.d/
+            docker exec shared-nginx nginx -s reload
 
             echo "--- Cleanup old images ---"
             docker image prune -f

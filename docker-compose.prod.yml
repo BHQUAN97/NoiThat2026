@@ -1,7 +1,7 @@
 # ============================================
-# VietNet2026 — PRODUCTION (Shared VPS)
-# Domain: bhquan.store
-# Dung chung MySQL (shared-mysql), Redis (shared-redis), Nginx (shared-nginx)
+# NoiThat Duy Manh 2026 — PRODUCTION (Shared VPS)
+# Domain: duymanh.bhquan.store
+# Dung chung MySQL (shared-mysql), Nginx (shared-nginx)
 # tu /opt/infra/docker-compose.yml
 # ============================================
 
@@ -12,25 +12,35 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vietnet-api
+    container_name: noithat-api
     restart: always
-    env_file:
-      - .env
+    ports:
+      - '127.0.0.1:5202:4000'
     environment:
       NODE_ENV: production
-      APP_PORT: 4000
+      PORT: 4000
       DB_HOST: shared-mysql
       DB_PORT: 3306
-      DB_NAME: vietnet
-      DB_USERNAME: vietnet
-      REDIS_HOST: shared-redis
-      REDIS_PORT: 6379
-      REDIS_PREFIX: "vn:"
-      APP_URL: https://bhquan.store
-      API_URL: https://bhquan.store/api
-      CORS_ORIGINS: https://bhquan.store
-    ports:
-      - '127.0.0.1:4100:4000'
+      DB_USERNAME: noithat
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: noithat2026
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 3600
+      REFRESH_TOKEN_EXPIRATION: 604800
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      R2_ACCESS_KEY: ${R2_ACCESS_KEY}
+      R2_SECRET_KEY: ${R2_SECRET_KEY}
+      R2_BUCKET_PRIVATE: ${R2_BUCKET_PRIVATE:-noithat-private}
+      R2_BUCKET_PUBLIC: ${R2_BUCKET_PUBLIC:-noithat-public}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      MAIL_FROM: ${MAIL_FROM:-Noi That Duy Manh <noreply@duymanhnoithat.vn>}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-duymanhnoithat@gmail.com}
+      ALLOWED_ORIGINS: https://duymanh.bhquan.store
+      FRONTEND_URL: https://duymanh.bhquan.store
+      LOG_LEVEL: info
+    volumes:
+      - noithat_uploads:/app/uploads
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://localhost:4000/api/health || exit 1']
       interval: 30s
@@ -44,7 +54,7 @@ services:
           memory: 1G
     networks:
       - webphoto_backend
-      - vietnet_frontend
+      - noithat_frontend
 
   # ─── Next.js Frontend ────────────────────
   frontend:
@@ -53,19 +63,19 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: /api
-        NEXT_PUBLIC_SITE_URL: https://bhquan.store
-    container_name: vietnet-frontend
+        NEXT_PUBLIC_SITE_URL: https://duymanh.bhquan.store
+    container_name: noithat-frontend
     restart: always
     ports:
-      - '127.0.0.1:3100:3000'
+      - '127.0.0.1:5200:3000'
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_SITE_URL: https://bhquan.store
-      INTERNAL_API_URL: http://vietnet-api:4000/api
+      NEXT_PUBLIC_SITE_URL: https://duymanh.bhquan.store
+      INTERNAL_API_URL: http://backend:4000/api
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://localhost:3000 || exit 1']
       interval: 30s
@@ -78,14 +88,18 @@ services:
           cpus: '1.0'
           memory: 1G
     networks:
-      - vietnet_frontend
+      - noithat_frontend
+
+volumes:
+  noithat_uploads:
+    name: noithat_uploads
 
 networks:
-  # Network rieng — shared-nginx join vao de proxy
-  vietnet_frontend:
-    name: vietnet_frontend
-    external: true
-  # Network chung — truy cap shared-mysql + shared-redis
+  # Network chung — truy cap shared-mysql
   webphoto_backend:
     name: webphoto_backend
+    external: true
+  # Network rieng — shared-nginx join vao de proxy
+  noithat_frontend:
+    name: noithat_frontend
     external: true
