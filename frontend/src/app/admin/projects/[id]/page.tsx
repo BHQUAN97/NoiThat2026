@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
 import { PROVINCES } from '@/lib/constants'
+import { getResponseData } from '@/lib/api-response'
 import type { Project } from '@/types'
 
 function toSlug(str: string) {
@@ -45,13 +46,14 @@ export default function ProjectEditorPage() {
     const load = async () => {
       try {
         const res = await api.get(`/projects/${id}`) as unknown
-        const p = (res as { data: Project }).data
+        const p = getResponseData<Project>(res)
+        if (!p) throw new Error('Project not found')
         setForm({
           name: p.name, slug: p.slug,
           province: p.province, location: p.location || '',
           area_sqm: p.area_sqm || '', description: p.description || '',
           thumbnail_url: p.thumbnail_url || '',
-          gallery_urls: p.gallery_urls || [],
+          gallery_urls: Array.isArray(p.gallery_urls) ? p.gallery_urls : [],
           sort_order: String(p.sort_order),
           is_active: p.is_active, is_featured: p.is_featured,
         })
@@ -144,11 +146,17 @@ export default function ProjectEditorPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-stone-700">Tỉnh/Thành phố</label>
-                <select value={form.province}
+                <input
+                  type="text"
+                  list="province-options"
+                  value={form.province}
                   onChange={e => setForm(p => ({ ...p, province: e.target.value }))}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none">
+                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+                  placeholder="Hà Nội"
+                />
+                <datalist id="province-options">
                   {PROVINCES.filter(p => p.value).map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                </select>
+                </datalist>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-stone-700">Khu vực</label>

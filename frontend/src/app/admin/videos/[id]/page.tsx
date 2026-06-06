@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
+import { getResponseData } from '@/lib/api-response'
 import type { Video } from '@/types'
 
 function extractYoutubeId(input: string): string {
@@ -49,7 +50,8 @@ export default function VideoEditorPage() {
     const load = async () => {
       try {
         const res = await api.get(`/videos/${id}`) as unknown
-        const v = (res as { data: Video }).data
+        const v = getResponseData<Video>(res)
+        if (!v) throw new Error('Video not found')
         setForm({
           title: v.title, video_type: v.video_type,
           youtube_id: v.youtube_id || '', video_url: v.video_url || '',

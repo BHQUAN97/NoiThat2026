@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData } from '@/lib/api-response'
 import type { Review } from '@/types'
 
 export default function AdminReviewsPage() {
@@ -21,12 +22,12 @@ export default function AdminReviewsPage() {
     setLoading(true)
     try {
       const res = await api.get('/reviews/admin/all') as unknown
-      setItems((res as { data: Review[] }).data || [])
+      setItems(getListData<Review>(res))
     } catch {
       // Fallback to public endpoint
       try {
         const res2 = await api.get('/reviews') as unknown
-        setItems((res2 as { data: Review[] }).data || [])
+        setItems(getListData<Review>(res2))
       } catch {
         setActionError('Không tải được danh sách đánh giá.')
       }

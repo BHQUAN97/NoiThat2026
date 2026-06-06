@@ -9,7 +9,8 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import { FormModal } from '@/components/shared/FormModal'
 import api from '@/lib/api'
-import type { ProductCategory, ApiResponse } from '@/types'
+import { getListData } from '@/lib/api-response'
+import type { ProductCategory } from '@/types'
 
 type FormData = {
   name: string
@@ -47,8 +48,8 @@ export default function AdminCategoriesPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await api.get('/product-categories') as unknown as { data: ProductCategory[] }
-      setItems(res.data || [])
+      const res = await api.get('/product-categories') as unknown
+      setItems(getListData<ProductCategory>(res))
     } catch {
       setActionError('Không tải được danh sách danh mục.')
     } finally {

@@ -56,13 +56,14 @@ export function VideoSection({ videos = [] }: VideoSectionProps) {
             const ytId = getYouTubeId(video.youtube_url)
             const thumbnail = video.thumbnail_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
 
+            const isPlayable = Boolean(video.youtube_url)
+            const CardTag = isPlayable ? 'a' : 'div'
+
             return (
-              <a
+              <CardTag
                 key={video.id}
-                href={video.youtube_url || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group overflow-hidden rounded-xl bg-stone-100 shadow-card hover:shadow-card-hover transition-shadow duration-300"
+                {...(isPlayable ? { href: video.youtube_url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="group overflow-hidden rounded-xl bg-stone-100 shadow-card transition-shadow duration-300 hover:shadow-card-hover"
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-stone-200 overflow-hidden">
@@ -94,7 +95,7 @@ export function VideoSection({ videos = [] }: VideoSectionProps) {
                     {video.title}
                   </h3>
                 </div>
-              </a>
+              </CardTag>
             )
           })}
         </div>

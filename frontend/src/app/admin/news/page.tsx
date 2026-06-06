@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import { Pagination } from '@/components/shared/Pagination'
 import api from '@/lib/api'
+import { getListData, getPaginationMeta } from '@/lib/api-response'
 import type { News, PaginationMeta } from '@/types'
 
 const STATUS_TABS = [
@@ -33,11 +34,8 @@ export default function AdminNewsPage() {
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       if (status) params.set('status', status)
       const res = await api.get(`/news/admin/all?${params}`) as unknown
-      const r = res as { data: News[]; total: number }
-      setItems(r.data || [])
-      if (r.total !== undefined) {
-        setMeta({ page, limit: 20, total: r.total, totalPages: Math.ceil(r.total / 20) })
-      }
+      setItems(getListData<News>(res))
+      setMeta(getPaginationMeta(res, { page, limit: 20 }))
     } catch {
       setActionError('Không tải được danh sách tin tức.')
     } finally {

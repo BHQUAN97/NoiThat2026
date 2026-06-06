@@ -16,8 +16,10 @@ export function SafeImage({ fallbackClassName, className, alt, ...props }: SafeI
 
   if (failed) {
     return (
-      <div className={`flex h-full w-full items-center justify-center bg-surface-container ${fallbackClassName ?? ''}`}>
-        <span className="text-4xl text-on-surface-variant/20">&#9633;</span>
+      <div className={`flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#efe5d9_0%,#d9c7b7_48%,#b7c7c2_100%)] ${fallbackClassName ?? ''}`}>
+        <span className="rounded-full border border-white/40 bg-white/35 px-3 py-1 font-label text-[10px] uppercase tracking-widest text-primary/60 backdrop-blur">
+          Noi That Duy Manh
+        </span>
       </div>
     )
   }

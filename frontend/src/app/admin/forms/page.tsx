@@ -6,6 +6,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { Pagination } from '@/components/shared/Pagination'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData, getPaginationMeta } from '@/lib/api-response'
 import type { FormSubmission, ApiResponse, PaginationMeta } from '@/types'
 
 const STATUS_TABS = [
@@ -46,8 +47,8 @@ export default function AdminFormsPage() {
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       if (status) params.set('status', status)
       const res = await api.get(`/forms/admin/submissions?${params}`) as ApiResponse<FormSubmission[]>
-      setItems((res as unknown as { data: FormSubmission[] }).data || [])
-      setMeta((res as unknown as { meta: PaginationMeta }).meta || null)
+      setItems(getListData<FormSubmission>(res))
+      setMeta(getPaginationMeta(res, { page, limit: 20 }))
     } catch {
       setActionError('Không tải được danh sách form.')
     } finally {

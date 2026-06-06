@@ -44,6 +44,8 @@ export function DataTable<T>({
   rowKey,
   rowClassName,
 }: DataTableProps<T>) {
+  const rows = Array.isArray(data) ? data : []
+
   return (
     <div className="overflow-x-auto rounded-xl bg-surface-container-lowest">
       <table className="w-full text-left">
@@ -60,7 +62,7 @@ export function DataTable<T>({
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => {
+          {rows.map((item) => {
             const cls = typeof rowClassName === 'function'
               ? rowClassName(item)
               : rowClassName

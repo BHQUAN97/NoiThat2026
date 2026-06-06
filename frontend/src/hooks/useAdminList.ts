@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import api from '@/lib/api'
+import { getListData, getPaginationMeta } from '@/lib/api-response'
 import { getErrorMessage } from '@/lib/error'
 import type { PaginationMeta } from '@/types'
 
@@ -67,8 +68,8 @@ export function useAdminList<T>(options: UseAdminListOptions): UseAdminListRetur
         }
       }
       const res: any = await api.get(endpoint, { params: apiParams })
-      setItems(res.data || [])
-      setMeta(res.meta || null)
+      setItems(getListData<T>(res))
+      setMeta(getPaginationMeta(res, { page, limit }))
     } catch (err) {
       setError(getErrorMessage(err))
       setItems([])

@@ -5,6 +5,7 @@ import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/shared/PageHeader'
 import api from '@/lib/api'
+import { getListData, getResponseData } from '@/lib/api-response'
 import type { SiteConfig } from '@/types'
 
 const SECTIONS = [
@@ -48,9 +49,15 @@ export default function AdminSettingsPage() {
     const load = async () => {
       try {
         const res = await api.get('/settings') as unknown
-        const configs = (res as { data: SiteConfig[] }).data || []
+        const configs = getListData<SiteConfig>(res)
+        const configMap = configs.length > 0 ? configs : Object.entries(getResponseData<Record<string, string>>(res) || {}).map(([key, value]) => ({
+          key,
+          value,
+          type: 'string',
+          updated_at: '',
+        }))
         const map: Record<string, string> = {}
-        configs.forEach((c: SiteConfig) => { map[c.key] = c.value })
+        configMap.forEach((c: SiteConfig) => { map[c.key] = c.value })
         setValues(map)
       } catch {
         setError('Không tải được cài đặt.')

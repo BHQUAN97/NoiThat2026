@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FileText, Package, Building2, Clock } from 'lucide-react'
 import api from '@/lib/api'
+import { getListData, getPaginationMeta } from '@/lib/api-response'
 import type { ApiResponse, FormSubmission, PaginationMeta } from '@/types'
 
 interface DashboardStats {
@@ -79,17 +80,19 @@ export default function AdminDashboardPage() {
           api.get('/projects') as Promise<ApiResponse<unknown[]>>,
         ])
 
-        const forms = formsRes as unknown as FormsResponse
-        const newFormsRes = allFormsRes as unknown as FormsResponse
-        const products = productsRes as unknown as { data: unknown[]; meta?: PaginationMeta }
-        const projects = projectsRes as unknown as { data: unknown[]; meta?: PaginationMeta }
+        const formsMeta = getPaginationMeta(formsRes)
+        const newFormsMeta = getPaginationMeta(allFormsRes)
+        const productsMeta = getPaginationMeta(productsRes)
+        const projectsMeta = getPaginationMeta(projectsRes)
+        const products = getListData<unknown>(productsRes)
+        const projects = getListData<unknown>(projectsRes)
 
-        setRecentForms((forms.data as FormSubmission[]) || [])
+        setRecentForms(getListData<FormSubmission>(formsRes))
         setStats({
-          totalForms: forms.meta?.total || 0,
-          newForms: newFormsRes.meta?.total || 0,
-          totalProducts: products.meta?.total || (Array.isArray(products.data) ? products.data.length : 0),
-          totalProjects: projects.meta?.total || (Array.isArray(projects.data) ? projects.data.length : 0),
+          totalForms: formsMeta?.total || 0,
+          newForms: newFormsMeta?.total || 0,
+          totalProducts: productsMeta?.total || products.length,
+          totalProjects: projectsMeta?.total || projects.length,
         })
       } catch {
         // Ignore errors — hiển thị zero values

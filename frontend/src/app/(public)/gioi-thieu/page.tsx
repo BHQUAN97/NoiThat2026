@@ -1,107 +1,132 @@
 import type { Metadata } from 'next'
-import { Award, Users, Clock, Shield, CheckCircle2, Factory } from 'lucide-react'
+import { Award, CheckCircle2, Clock, Shield } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Giới Thiệu — Nội Thất Duy Mạnh',
-  description: 'Xưởng sản xuất tủ bếp và nội thất gia đình Duy Mạnh tại Vân Nam, Phúc Thọ, Hà Nội. Hơn 10 năm kinh nghiệm, 500+ công trình hoàn thành.',
+  title: 'Giới thiệu - Nội Thất Duy Mạnh',
+  description:
+    'Xưởng sản xuất tủ bếp và nội thất gia đình Duy Mạnh tại Vân Nam, Phúc Thọ, Hà Nội. Hơn 10 năm kinh nghiệm, 500+ công trình hoàn thành.',
 }
 
+const HERO_IMAGE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAUH7WPHs7Hdu5hOLGrf6EuKO5To8WzIOMWY0x_WHYgsIPpL6374msknhNrOGdRNlhRyaNY_6C8yFyD9Jb9kwWt6BVl8UDmk2Puf5C5JOCEwpwqYOJpb_wivvrJlRnFjLg0bcPUtdLcdUXL_2ssmNkCOvFpNXVB841-MeAiLhnbdBO2N0MTcBKKNCOAWkjdXwRo0fKeJp8sshokh3mSVA8WW_q-SMfxi-ot7h559D8g1BCjglMUSi-fnT3RgBlH2uryZzTn51wgB7gK'
+
+const STORY_IMAGE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDvB3-HpRPKYcrraeXQYFcMfo51YpjCax6qv4WHMDJr6V-gxo9SnL5g5pL3W3fjAoaWKN6YacxNx5-yYG0Eig6vNG-pQtEdO0s-Gy4hLDikAcHkYCy-RyXQgfL2FTn_C721v6UO9fjBkfeSb1T8IS4AZcCxiw33Y5Ti6WCLA6Umepze-5sS247y2XF4e1FfUFkqQMTsUmfx2tP6DWC9JzcaMm5zHdR75QYUoRFGzFU9lvkI4E8wZ5ISAYcwAMdNUY3xbiI4_GJXPVzo'
+
 const WORK_PROCESS = [
-  { step: '01', title: 'Tư Vấn & Khảo Sát', desc: 'Đội tư vấn đến tận nhà đo đạc, tư vấn thiết kế phù hợp không gian và ngân sách. Hoàn toàn miễn phí.' },
-  { step: '02', title: 'Thiết Kế 3D', desc: 'Cung cấp bản vẽ thiết kế 3D để khách hàng hình dung rõ trước khi sản xuất. Chỉnh sửa không giới hạn đến khi hài lòng.' },
-  { step: '03', title: 'Báo Giá & Ký Hợp Đồng', desc: 'Báo giá chi tiết từng hạng mục, rõ ràng minh bạch. Ký hợp đồng có đầy đủ điều khoản bảo hành.' },
-  { step: '04', title: 'Sản Xuất Tại Xưởng', desc: 'Sản xuất tại xưởng Vân Nam với máy móc hiện đại. Kiểm tra chất lượng 100% trước khi xuất xưởng.' },
-  { step: '05', title: 'Thi Công Lắp Đặt', desc: 'Đội thợ lành nghề thi công tại nhà, đảm bảo thẩm mỹ và kỹ thuật. Thời gian thi công đúng hẹn.' },
-  { step: '06', title: 'Bàn Giao & Bảo Hành', desc: 'Bàn giao có biên bản, hướng dẫn sử dụng và bảo dưỡng. Bảo hành 5 năm, hỗ trợ kỹ thuật suốt đời.' },
+  { step: '01', title: 'Tư vấn & khảo sát', desc: 'Đo đạc tận nhà, tư vấn vật liệu và phương án bố trí phù hợp ngân sách.' },
+  { step: '02', title: 'Thiết kế 3D', desc: 'Dựng phối cảnh để khách hàng nhìn rõ màu sắc, công năng và tỉ lệ trước sản xuất.' },
+  { step: '03', title: 'Báo giá', desc: 'Tách rõ từng hạng mục, vật liệu, phụ kiện và điều khoản bảo hành.' },
+  { step: '04', title: 'Sản xuất', desc: 'Gia công tại xưởng, kiểm tra kích thước và hoàn thiện trước khi xuất xưởng.' },
+  { step: '05', title: 'Lắp đặt', desc: 'Đội thợ thi công tại nhà, xử lý gọn gàng và bàn giao theo tiến độ.' },
+  { step: '06', title: 'Bảo hành', desc: 'Theo dõi sau bàn giao, bảo hành kỹ thuật và hỗ trợ bảo dưỡng định kỳ.' },
 ]
 
 const COMMITMENTS = [
-  { icon: Shield, title: 'Vật Liệu Chính Hãng', desc: 'Inox 304 chính hãng, gỗ MDF chống ẩm, Acrylic nhập khẩu. Có nguồn gốc rõ ràng, kiểm định chất lượng.' },
-  { icon: CheckCircle2, title: 'Đúng Thiết Kế', desc: 'Cam kết thi công đúng bản vẽ đã thống nhất. Không tự ý thay đổi chất liệu hay kích thước.' },
-  { icon: Clock, title: 'Đúng Tiến Độ', desc: 'Bàn giao đúng ngày đã hẹn. Nếu chậm trễ do lỗi xưởng, khách hàng được bồi thường theo hợp đồng.' },
-  { icon: Award, title: 'Bảo Hành 5 Năm', desc: 'Bảo hành toàn bộ 5 năm. Bất kỳ lỗi kỹ thuật nào phát sinh trong thời gian bảo hành, chúng tôi xử lý miễn phí.' },
+  { icon: Shield, title: 'Vật liệu rõ nguồn gốc', desc: 'Inox 304, MDF chống ẩm, Acrylic và phụ kiện được tư vấn minh bạch theo nhu cầu.' },
+  { icon: CheckCircle2, title: 'Đúng thiết kế', desc: 'Thi công theo bản vẽ đã thống nhất, không tự ý đổi vật liệu hoặc kích thước.' },
+  { icon: Clock, title: 'Đúng tiến độ', desc: 'Lịch sản xuất và lắp đặt được chốt ngay từ đầu, có cập nhật trong quá trình làm.' },
+  { icon: Award, title: 'Bảo hành 5 năm', desc: 'Xử lý lỗi kỹ thuật phát sinh trong thời gian bảo hành theo cam kết hợp đồng.' },
 ]
 
 export default function AboutPage() {
   return (
     <>
-      {/* Hero */}
-      <section className="py-16 md:py-20 bg-stone-900 text-white">
-        <div className="max-w-content mx-auto px-4 lg:px-8 text-center">
-          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Về Chúng Tôi</p>
-          <h1 className="font-serif font-bold text-4xl md:text-5xl leading-tight mb-4">Nội Thất Duy Mạnh</h1>
-          <p className="text-stone-300 text-lg max-w-2xl mx-auto">
-            Hơn 10 năm đồng hành cùng hàng trăm gia đình tạo nên không gian bếp và nội thất đẹp, bền, giá tốt.
-          </p>
+      <section className="relative overflow-hidden bg-surface">
+        <div className="absolute inset-y-0 right-0 hidden w-1/2 lg:block">
+          <img src={HERO_IMAGE} alt="Xưởng nội thất Duy Mạnh" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/45 to-transparent" />
+        </div>
+        <div className="mx-auto grid min-h-[360px] max-w-content items-center px-4 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
+          <div className="relative z-10 max-w-2xl">
+            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Về chúng tôi</p>
+            <h1 className="font-headline text-4xl font-bold leading-tight text-primary md:text-6xl">
+              Nội Thất Duy Mạnh
+            </h1>
+            <p className="mt-6 max-w-xl text-body-lg leading-relaxed text-on-surface-variant">
+              Hơn 10 năm đồng hành cùng các gia đình tại Hà Nội, tập trung vào tủ bếp và nội thất bền, dễ dùng, thi công trực tiếp từ xưởng.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Thông tin công ty */}
-      <section className="py-16 md:py-20 bg-white">
-        <div className="max-w-content mx-auto px-4 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Câu Chuyện</p>
-              <h2 className="font-serif font-bold text-stone-900 text-3xl leading-tight mb-4">
-                Từ Xưởng Nhỏ Đến Thương Hiệu Uy Tín
-              </h2>
-              <div className="prose prose-stone max-w-none text-stone-600 space-y-3 text-sm leading-relaxed">
-                <p>
-                  Nội Thất Duy Mạnh được thành lập năm 2013 bởi anh Duy Mạnh — người thợ mộc có hơn 15 năm kinh nghiệm trong nghề. Xuất phát từ một xưởng nhỏ tại Vân Nam, Phúc Thọ, với tâm huyết mang đến sản phẩm chất lượng cao với giá xưởng, chúng tôi đã dần xây dựng uy tín qua từng công trình.
-                </p>
-                <p>
-                  Đến nay, xưởng Duy Mạnh có đội ngũ 20+ thợ lành nghề, trang bị máy móc hiện đại, đã hoàn thành hơn <strong>500 công trình</strong> tại Hà Nội và các tỉnh lân cận. Mỗi sản phẩm đều được sản xuất thủ công kết hợp công nghệ, đảm bảo độ chính xác và tính thẩm mỹ cao.
-                </p>
+      <section className="bg-surface-bright px-4 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto grid max-w-content items-center gap-12 lg:grid-cols-2">
+          <div>
+            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Câu chuyện</p>
+            <h2 className="max-w-xl font-headline text-3xl font-bold leading-tight text-primary md:text-5xl">
+              Từ xưởng nhỏ đến thương hiệu được tin chọn
+            </h2>
+            <div className="mt-8 space-y-5 text-body-md leading-relaxed text-on-surface-variant">
+              <p>
+                Nội Thất Duy Mạnh bắt đầu từ một xưởng mộc tại Vân Nam, Phúc Thọ. Lợi thế lớn nhất là làm trực tiếp tại xưởng, kiểm soát được vật liệu, kích thước và tiến độ.
+              </p>
+              <p>
+                Đến nay, đội ngũ đã hoàn thành hơn <strong className="font-semibold text-primary">500 công trình</strong> tủ bếp và nội thất gia đình tại Hà Nội cùng các tỉnh lân cận.
+              </p>
+            </div>
+            <div className="mt-10 grid grid-cols-2 gap-4">
+              <div className="border-l border-outline-variant pl-5">
+                <p className="font-headline text-4xl font-bold text-primary">500+</p>
+                <p className="mt-1 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Công trình</p>
+              </div>
+              <div className="border-l border-outline-variant pl-5">
+                <p className="font-headline text-4xl font-bold text-primary">10+</p>
+                <p className="mt-1 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Năm kinh nghiệm</p>
               </div>
             </div>
-            {/* Ảnh xưởng placeholder */}
-            <div className="aspect-[4/3] bg-gradient-to-br from-stone-200 to-stone-300 rounded-2xl flex items-center justify-center">
-              <div className="text-center text-stone-400">
-                <Factory size={48} className="mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Ảnh xưởng sản xuất</p>
-              </div>
+          </div>
+          <div className="relative">
+            <div className="aspect-[4/3] overflow-hidden rounded-xl bg-surface-container shadow-card">
+              <img src={STORY_IMAGE} alt="Không gian sản xuất nội thất" className="h-full w-full object-cover" />
+            </div>
+            <div className="absolute -bottom-6 -left-6 hidden max-w-[260px] rounded-xl bg-surface-bright p-5 shadow-card md:block">
+              <p className="font-headline text-xl font-bold text-primary">Sản xuất tại xưởng</p>
+              <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">
+                Kiểm tra từng chi tiết trước khi lắp đặt tại nhà.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Quy trình làm việc */}
-      <section className="py-16 md:py-20 bg-stone-50">
-        <div className="max-w-content mx-auto px-4 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Quy Trình</p>
-            <h2 className="font-serif font-bold text-stone-900 text-3xl leading-tight">Quy Trình Làm Việc 6 Bước</h2>
+      <section className="bg-surface-container-low px-4 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-content">
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Quy trình</p>
+            <h2 className="font-headline text-3xl font-bold leading-tight text-primary md:text-5xl">
+              6 bước làm việc rõ ràng
+            </h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {WORK_PROCESS.map(({ step, title, desc }) => (
-              <div key={step} className="p-6 bg-white rounded-xl border border-border">
-                <div className="w-10 h-10 rounded-xl bg-brand text-white font-bold text-sm flex items-center justify-center mb-3">
-                  {step}
-                </div>
-                <h3 className="font-semibold text-stone-900 mb-2">{title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{desc}</p>
+              <div key={step} className="rounded-xl border border-outline-variant/70 bg-surface-bright p-6 shadow-ambient-sm">
+                <span className="font-label text-xs uppercase tracking-widest text-tertiary">{step}</span>
+                <h3 className="mt-4 font-headline text-xl font-bold text-primary">{title}</h3>
+                <p className="mt-3 text-body-sm leading-relaxed text-on-surface-variant">{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Cam kết chất lượng */}
-      <section className="py-16 md:py-20 bg-white">
-        <div className="max-w-content mx-auto px-4 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Cam Kết</p>
-            <h2 className="font-serif font-bold text-stone-900 text-3xl leading-tight">Cam Kết Chất Lượng</h2>
+      <section className="bg-surface-bright px-4 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-content">
+          <div className="mb-12 text-center">
+            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Cam kết</p>
+            <h2 className="font-headline text-3xl font-bold leading-tight text-primary md:text-5xl">
+              Chất lượng nhìn được, dùng được
+            </h2>
           </div>
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-2">
             {COMMITMENTS.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="flex gap-4 p-5 bg-stone-50 rounded-xl border border-border">
-                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
-                  <Icon size={20} className="text-brand" />
+              <div key={title} className="flex gap-4 rounded-xl bg-surface-container-low p-6">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-tertiary/10">
+                  <Icon className="h-5 w-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-stone-900 text-sm mb-1">{title}</h3>
-                  <p className="text-stone-500 text-xs leading-relaxed">{desc}</p>
+                  <h3 className="font-headline text-lg font-bold text-primary">{title}</h3>
+                  <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">{desc}</p>
                 </div>
               </div>
             ))}

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
+import { getListData, getResponseData } from '@/lib/api-response'
 import type { Product, ProductCategory } from '@/types'
 
 function toSlug(str: string) {
@@ -49,11 +50,12 @@ export default function ProductEditorPage() {
         const [catsRes] = await Promise.all([
           api.get('/product-categories') as Promise<unknown>,
         ])
-        setCategories((catsRes as { data: ProductCategory[] }).data || [])
+        setCategories(getListData<ProductCategory>(catsRes))
 
         if (!isNew) {
           const prodRes = await api.get(`/products/${id}`) as unknown
-          const p = (prodRes as { data: Product }).data
+          const p = getResponseData<Product>(prodRes)
+          if (!p) throw new Error('Product not found')
           setForm({
             name: p.name,
             slug: p.slug,
@@ -61,8 +63,8 @@ export default function ProductEditorPage() {
             short_description: p.short_description || '',
             description: p.description || '',
             thumbnail_url: p.thumbnail_url || '',
-            gallery_urls: p.gallery_urls || [],
-            specs: p.specs ? Object.entries(p.specs).map(([k, v]) => ({ key: k, value: v })) : [],
+            gallery_urls: Array.isArray(p.gallery_urls) ? p.gallery_urls : [],
+            specs: p.specs && typeof p.specs === 'object' ? Object.entries(p.specs).map(([k, v]) => ({ key: k, value: String(v) })) : [],
             sort_order: String(p.sort_order),
             is_active: p.is_active,
             is_featured: p.is_featured,

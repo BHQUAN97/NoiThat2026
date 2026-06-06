@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData } from '@/lib/api-response'
 import { PROVINCES } from '@/lib/constants'
 import type { Project } from '@/types'
 
@@ -23,12 +24,12 @@ export default function AdminProjectsPage() {
     setLoading(true)
     try {
       const res = await api.get('/projects/admin/all') as unknown
-      setItems((res as { data: Project[] }).data || [])
+      setItems(getListData<Project>(res))
     } catch {
       // Thử endpoint công khai
       try {
         const res2 = await api.get('/projects') as unknown
-        setItems((res2 as { data: Project[] }).data || [])
+        setItems(getListData<Project>(res2))
       } catch {
         setActionError('Không tải được danh sách dự án.')
       }
@@ -54,6 +55,14 @@ export default function AdminProjectsPage() {
   const filtered = provinceFilter
     ? items.filter(p => p.province === provinceFilter)
     : items
+
+  const provinceOptions = [
+    { label: 'Tất cả', value: '' },
+    ...Array.from(new Set([
+      ...PROVINCES.map(p => p.value).filter(Boolean),
+      ...items.map(p => p.province).filter(Boolean),
+    ])).map(value => ({ label: value, value })),
+  ]
 
   const columns: Column<Project>[] = [
     {
@@ -126,7 +135,7 @@ export default function AdminProjectsPage() {
           onChange={e => setProvinceFilter(e.target.value)}
           className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
         >
-          {PROVINCES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+          {provinceOptions.map(p => <option key={p.value || 'all'} value={p.value}>{p.label}</option>)}
         </select>
       </div>
 

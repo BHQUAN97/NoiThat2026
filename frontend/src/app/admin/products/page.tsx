@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData } from '@/lib/api-response'
 import type { Product, ProductCategory } from '@/types'
 
 export default function AdminProductsPage() {
@@ -27,8 +28,8 @@ export default function AdminProductsPage() {
         api.get('/products/admin/all') as Promise<unknown>,
         api.get('/product-categories') as Promise<unknown>,
       ])
-      setItems((productsRes as { data: Product[] }).data || [])
-      setCategories((catsRes as { data: ProductCategory[] }).data || [])
+      setItems(getListData<Product>(productsRes))
+      setCategories(getListData<ProductCategory>(catsRes))
     } catch {
       setActionError('Không tải được danh sách sản phẩm.')
     } finally {

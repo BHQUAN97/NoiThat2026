@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData } from '@/lib/api-response'
 import type { Video as VideoType } from '@/types'
 
 export default function AdminVideosPage() {
@@ -21,7 +22,7 @@ export default function AdminVideosPage() {
     setLoading(true)
     try {
       const res = await api.get('/videos/admin/all') as unknown
-      setItems((res as { data: VideoType[] }).data || [])
+      setItems(getListData<VideoType>(res))
     } catch {
       setActionError('Không tải được danh sách video.')
     } finally {

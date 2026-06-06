@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import api from '@/lib/api'
+import { getListData, getPaginationMeta } from '@/lib/api-response'
 import { getErrorMessage } from '@/lib/error'
 import { getPageParam, updateSearchParam } from '@/lib/query'
 import type { PaginationMeta } from '@/types'
@@ -121,8 +122,8 @@ export function usePaginatedList<T>(
       }
 
       const res: any = await api.get(endpoint, { params: apiParams })
-      setItems(res.data || [])
-      setMeta(res.meta || null)
+      setItems(getListData<T>(res))
+      setMeta(getPaginationMeta(res, { page: currentPage, limit }))
     } catch (err) {
       setError(getErrorMessage(err))
       setItems([])

@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import api from '@/lib/api'
+import { getListData } from '@/lib/api-response'
 import type { PricingTable } from '@/types'
 
 export default function AdminPricingPage() {
@@ -21,7 +22,7 @@ export default function AdminPricingPage() {
     setLoading(true)
     try {
       const res = await api.get('/pricing') as unknown
-      setItems((res as { data: PricingTable[] }).data || [])
+      setItems(getListData<PricingTable>(res))
     } catch {
       setActionError('Không tải được bảng giá.')
     } finally {
