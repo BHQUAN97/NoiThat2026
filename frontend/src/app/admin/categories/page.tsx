@@ -8,6 +8,7 @@ import { DataTable, type Column } from '@/components/shared/DataTable'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { ActionErrorBanner } from '@/components/shared/ActionErrorBanner'
 import { FormModal } from '@/components/shared/FormModal'
+import { ImageUpload } from '@/components/admin/ImageUpload'
 import api from '@/lib/api'
 import { getListData } from '@/lib/api-response'
 import type { ProductCategory } from '@/types'
@@ -214,13 +215,12 @@ export default function AdminCategoriesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700">URL ảnh đại diện</label>
-            <input
-              type="text"
+            <label className="mb-1 block text-sm font-medium text-stone-700">Ảnh đại diện</label>
+            <ImageUpload
               value={form.thumbnail_url}
-              onChange={(e) => setForm(p => ({ ...p, thumbnail_url: e.target.value }))}
-              className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
-              placeholder="https://..."
+              onChange={(url) => setForm(p => ({ ...p, thumbnail_url: url }))}
+              aspect="4/3"
+              label=""
             />
           </div>
           <div className="flex gap-4">

@@ -42,7 +42,7 @@ export function GlassNav() {
         </Link>
 
         <ul className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.slice(0, 7).map((link) => {
+          {NAV_LINKS.slice(0, 8).map((link) => {
             const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
 
             return (
