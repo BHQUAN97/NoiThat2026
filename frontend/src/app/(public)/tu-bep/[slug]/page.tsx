@@ -5,6 +5,7 @@ import { QuoteForm } from '@/components/forms/QuoteForm'
 import { CONTACT } from '@/lib/constants'
 import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getResponseData } from '@/lib/api-response'
+import { GalleryGrid } from '@/components/shared/GalleryGrid'
 import type { Product } from '@/types'
 
 interface Props { params: Promise<{ slug: string }> }
@@ -206,17 +207,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="mx-auto max-w-content">
             <p className="mb-3 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Hình ảnh thực tế</p>
             <h2 className="mb-8 font-headline text-3xl font-bold text-primary">Thư viện ảnh</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {gallery.map((url, i) => (
-                <div key={i} className="overflow-hidden rounded-xl bg-surface-container shadow-card">
-                  <img
-                    src={url}
-                    alt={`${name} ${i + 1}`}
-                    className="aspect-[4/3] h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              ))}
-            </div>
+            <GalleryGrid images={gallery} altPrefix={name} columns={3} />
           </div>
         </section>
       )}
