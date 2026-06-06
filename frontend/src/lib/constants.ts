@@ -24,6 +24,23 @@ export const NAV_LINKS = [
   { label: 'Liên Hệ', href: '/lien-he' },
 ] as const
 
+export const BOTTOM_NAV_ITEMS = [
+  { label: 'Trang Chủ', href: '/', icon: 'Home' },
+  { label: 'Tủ Bếp', href: '/tu-bep', icon: 'LayoutGrid' },
+  { label: 'Báo Giá', href: '/bao-gia', icon: 'FileText', cta: true },
+  { label: 'Dự Án', href: '/du-an-thuc-te', icon: 'Building2' },
+  { label: 'Thêm', href: '#more', icon: 'Menu' },
+] as const
+
+export const BOTTOM_NAV_MORE_LINKS = [
+  { label: 'Giới Thiệu', href: '/gioi-thieu', icon: 'Info' },
+  { label: 'Nội Thất Khác', href: '/noi-that-khac', icon: 'Sofa' },
+  { label: 'Video Công Trình', href: '/video-cong-trinh', icon: 'Video' },
+  { label: 'Tin Tức', href: '/tin-tuc', icon: 'Newspaper' },
+  { label: 'Liên Hệ', href: '/lien-he', icon: 'Phone' },
+  { label: 'Đánh Giá KH', href: '/danh-gia-khach-hang', icon: 'Star' },
+] as const
+
 export const ADMIN_NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard' },
   { label: 'Form Yêu Cầu', href: '/admin/forms', icon: 'FileText' },

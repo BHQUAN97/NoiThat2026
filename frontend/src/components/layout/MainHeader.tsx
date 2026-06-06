@@ -83,6 +83,16 @@ export function MainHeader() {
               {CONTACT.hotline}
             </a>
 
+            {/* Secondary CTA: Zalo — desktop only */}
+            <a
+              href={`https://zalo.me/${CONTACT.hotlineRaw}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-[#0068FF] text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors duration-200"
+            >
+              Zalo Tư Vấn
+            </a>
+            {/* Primary CTA: Báo Giá — md+ */}
             <Link
               href="/bao-gia"
               className="hidden md:flex items-center px-4 py-2 bg-brand text-white text-sm font-semibold rounded hover:bg-primary-dark transition-colors duration-200 shadow-cta"
@@ -90,18 +100,20 @@ export function MainHeader() {
               Nhận Báo Giá
             </Link>
 
-            {/* Mobile: Gọi ngay nút tắt */}
+            {/* Mobile: Gọi ngay — BottomNav handles nav so just show call CTA */}
             <a
               href={`tel:${CONTACT.hotlineRaw}`}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-brand text-white"
+              className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-full bg-brand text-white text-xs font-semibold"
               aria-label="Gọi điện"
             >
-              <Phone size={18} />
+              <Phone size={14} />
+              Gọi Ngay
             </a>
 
+            {/* Hamburger — chỉ tablet (md-lg), mobile dùng BottomNav */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="lg:hidden flex items-center justify-center w-10 h-10 rounded text-stone-700 hover:bg-stone-100 transition-colors"
+              className="hidden md:flex lg:hidden items-center justify-center w-10 h-10 rounded text-stone-700 hover:bg-stone-100 transition-colors"
               aria-label={isMobileOpen ? 'Đóng menu' : 'Mở menu'}
             >
               {isMobileOpen ? <X size={22} /> : <Menu size={22} />}

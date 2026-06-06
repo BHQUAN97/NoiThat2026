@@ -7,7 +7,7 @@ import { CONTACT } from '@/lib/constants'
 // Thanh thông tin đầu trang — ẩn trên mobile (sm breakpoint)
 export function TopBar() {
   return (
-    <div className="hidden md:block bg-stone-900 text-stone-300 text-sm">
+    <div className="hidden md:block md:fixed md:top-0 md:left-0 md:right-0 md:z-50 bg-stone-900 text-stone-300 text-sm">
       <div className="max-w-content mx-auto px-4 lg:px-8 h-10 flex items-center justify-between">
         {/* Thông tin liên hệ bên trái */}
         <div className="flex items-center gap-6">
