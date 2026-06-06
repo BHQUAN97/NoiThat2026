@@ -39,23 +39,104 @@
 
 ---
 
-## 🔴 Sprint 5 — Deploy lên VPS
+## ✅ Sprint 5 — Deploy lên VPS (DONE 2026-06-06)
 
-### Môi trường
+### Kết quả
 ```
-VPS:        159.223.77.247 (chung với VietNet2026)
-User:       root
-Deploy dir: /srv/noithat2026
-Domain:     duymanh.bhquan.store
+VPS:        159.223.77.247
+Deploy dir: /opt/noithat2026   ← (đã đổi từ /srv/)
+Domain:     https://duymanh.bhquan.store  ← LIVE + SSL
 ```
 
-### Ports (không trùng VietNet)
 | Service | Port |
 |---------|------|
-| Frontend HTTP | 5200 |
-| Frontend HTTPS | 5201 |
-| API NestJS | 5202 |
-| MySQL | 3309 (internal Docker) |
+| Frontend | 127.0.0.1:5200:3000 |
+| API NestJS | 127.0.0.1:5202:4000 |
+| MySQL | shared-mysql (webphoto_backend network) |
+
+---
+
+## 🐛 Vấn đề còn tồn đọng (cần xử lý)
+
+### 🔴 Critical — Ảnh hưởng tính năng
+
+**1. R2 + Resend chưa config** — upload media và gửi email form sẽ fail
+```bash
+# SSH vào VPS, điền vào /opt/noithat2026/.env:
+R2_ACCOUNT_ID=<cloudflare_account_id>
+R2_ACCESS_KEY=<r2_access_key>
+R2_SECRET_KEY=<r2_secret_key>
+R2_PUBLIC_URL=https://pub-xxxx.r2.dev
+RESEND_API_KEY=re_xxxxx
+
+# Restart backend để pick up env mới:
+cd /opt/noithat2026
+docker compose -f docker-compose.prod.yml restart backend
+```
+
+**2. Git pull token sẽ expire** — khi GitHub PAT hết hạn, `git pull` trong deploy fail
+- Root cause: VPS clone dùng `https://USER:TOKEN@github.com/...` → token hết hạn = CI/CD gãy
+- Fix: Tạo deploy key (SSH) thay vì token trong URL
+```bash
+# Trên VPS:
+ssh-keygen -t ed25519 -f /opt/noithat2026/.deploy-key -N ""
+cat /opt/noithat2026/.deploy-key.pub
+# → Thêm public key vào GitHub repo → Settings → Deploy keys
+# → Đổi remote URL:
+cd /opt/noithat2026
+git remote set-url origin git@github.com:BHQUAN97/NoiThat2026.git
+```
+
+---
+
+### 🟡 Medium — Cần dọn dẹp
+
+**3. `noithat-frontend` container unhealthy** — app chạy tốt (HTTP 200) nhưng healthcheck fail
+- Root cause: `wget -qO- http://localhost:3000` trong container trả lỗi "Connection refused"
+  - Có thể Next.js standalone listen trên `0.0.0.0` nhưng healthcheck chạy trong network namespace khác
+  - VietNet cũng bị tương tự (unhealthy 4+ ngày) — không ảnh hưởng service
+- Fix option A: Đổi healthcheck sang `curl` hoặc `node -e "require('http').get(...)"`
+- Fix option B: Tắt healthcheck (`disable: true`) vì nginx đã làm proxy health
+
+**4. `deploy-noithat.yml` — nginx reload lỗi khi cert chưa có**
+- Lần deploy đầu tiên qua GitHub Actions fail vì cert chưa tồn tại khi chạy `nginx -s reload`
+- Hiện tại cert đã có → các deploy sau sẽ OK
+- Fix (phòng ngừa): Thêm `|| true` vào nginx reload trong workflow để không fail cứng
+
+**5. seed:admin:prod và seed:data:prod trỏ file không tồn tại**
+- `dist/scripts/seed-admin.js` và `dist/scripts/seed-data.js` chưa được tạo
+- Đã workaround bằng `seed:prod` → `dist/database/seeds/seed-noithat.js`
+- Fix: Tạo `src/scripts/seed-admin.ts` và `src/scripts/seed-data.ts` hoặc xóa 2 scripts thừa khỏi package.json
+
+---
+
+### 🟠 Workflows clone từ VietNet — cần xóa hoặc update
+
+Các file sau là clone nguyên từ VietNet2026, dùng secrets/paths VietNet (`APP_DIR: /opt/vietnet`, `VPS_PASSWORD`, `VIETNET_DB_PASSWORD`...) → **fail mỗi lần trigger**:
+
+| File | Vấn đề | Hành động |
+|------|--------|-----------|
+| `deploy.yml` (Auto Deploy) | Dùng `APP_DIR=/opt/vietnet`, `VPS_PASSWORD` | Xóa hoặc rewrite cho NoiThat |
+| `backup.yml` | Backup DB `vietnet`, dùng `VPS_PASSWORD` | Xóa hoặc rewrite cho `noithat2026` |
+| `restore.yml` | Restore VietNet | Xóa (chưa cần) |
+| `cron.yml` | Cron VietNet endpoints | Xóa |
+| `vps-setup.yml` | Setup VPS VietNet | Xóa (VPS đã setup rồi) |
+| `reseed.yml` | Seed VietNet | Xóa hoặc update dùng `seed:prod` |
+| `debug-logs.yml` | Logs VietNet containers | Update container names |
+| `ssl-renew.yml` | Cần check domain | Update domain → `duymanh.bhquan.store` |
+
+**Lệnh xóa nhanh (recommended):**
+```bash
+cd E:/DEVELOP/NoiThat2026
+git rm .github/workflows/deploy.yml \
+        .github/workflows/backup.yml \
+        .github/workflows/restore.yml \
+        .github/workflows/cron.yml \
+        .github/workflows/vps-setup.yml \
+        .github/workflows/reseed.yml \
+        .github/workflows/debug-logs.yml
+# Giữ lại: deploy-noithat.yml, ci.yml, ssl-renew.yml (sau khi update domain)
+```
 
 ### Checklist deploy lần đầu
 
