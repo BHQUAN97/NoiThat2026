@@ -11,7 +11,7 @@
 | Sprint 2 | Core BE modules + 11 FE public pages | ✅ DONE |
 | Sprint 3 | Admin CMS + Infra (Docker, CI/CD, Seed) + QC | ✅ DONE |
 | Sprint 4 | Real-time notifications (Socket.io) | ✅ DONE |
-| **Sprint 5** | **Deploy lên VPS** | **⏳ TODO** |
+| **Sprint 5** | **Deploy lên VPS** | **✅ DONE** |
 
 ---
 
