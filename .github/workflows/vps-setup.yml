@@ -1,0 +1,166 @@
+name: VPS Setup (one-time)
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What to install'
+        required: true
+        default: 'docker'
+        type: choice
+        options:
+          - docker
+          - check
+          - fix-nginx
+          - reset-mysql-volume
+          - reset-all
+
+jobs:
+  setup:
+    name: Setup VPS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass > /dev/null
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.VPS_PORT }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Check VPS status
+        if: inputs.action == 'check'
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+          sshpass -e ssh -p $PORT $VPS "
+            echo '=== OS ==='
+            cat /etc/os-release | head -3
+            echo '=== Docker ==='
+            docker --version 2>/dev/null || echo 'NOT INSTALLED'
+            docker compose version 2>/dev/null || echo 'NOT INSTALLED'
+            echo '=== Disk ==='
+            df -h /
+            echo '=== Memory ==='
+            free -h
+            echo '=== Ports ==='
+            ss -tlnp | grep -E ':80|:443' || echo 'No services on 80/443'
+          "
+
+      - name: Install Docker
+        if: inputs.action == 'docker'
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+          sshpass -e ssh -p $PORT $VPS "
+            set -e
+            echo '=== Installing Docker ==='
+
+            # Cai dependencies
+            apt-get update -qq
+            apt-get install -y -qq ca-certificates curl gnupg > /dev/null
+
+            # Docker GPG key
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            chmod a+r /etc/apt/keyrings/docker.gpg
+
+            # Docker repo
+            echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \$(. /etc/os-release && echo \$VERSION_CODENAME) stable\" > /etc/apt/sources.list.d/docker.list
+
+            # Install Docker Engine + Compose plugin
+            apt-get update -qq
+            apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin > /dev/null
+
+            # Verify
+            echo '=== Installed ==='
+            docker --version
+            docker compose version
+
+            # Enable + start
+            systemctl enable docker
+            systemctl start docker
+            echo '=== Docker ready ==='
+          "
+
+      - name: Fix nginx (create placeholder certs + restart)
+        if: inputs.action == 'fix-nginx'
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+
+          echo "=== Step 1: Upload correct infra/docker-compose.yml ==="
+          sshpass -e scp -P $PORT infra/docker-compose.yml $VPS:/opt/infra/docker-compose.yml
+
+          echo "=== Step 2: Create placeholder certs on VPS ==="
+          sshpass -e ssh -p $PORT $VPS "
+            export PATH=\$PATH:/usr/local/bin
+            for DOMAIN in bhquan.store bhquan.site shop.bhquan.store lqd.bhquan.store photostorage.cloud www.bhquan.store www.bhquan.site; do
+              mkdir -p /tmp/letsencrypt/live/\$DOMAIN
+              openssl req -x509 -nodes -days 90 -newkey rsa:2048 \
+                -keyout /tmp/letsencrypt/live/\$DOMAIN/privkey.pem \
+                -out /tmp/letsencrypt/live/\$DOMAIN/fullchain.pem \
+                -subj /CN=\$DOMAIN 2>/dev/null && echo 'Cert OK: '\$DOMAIN || echo 'Cert FAIL: '\$DOMAIN
+            done
+            docker run --rm \
+              -v shared_certbot_data:/etc/letsencrypt \
+              -v /tmp/letsencrypt:/src:ro \
+              alpine sh -c 'for d in /src/live/*/; do dom=\$(basename \$d); mkdir -p /etc/letsencrypt/live/\$dom; cp \$d/fullchain.pem /etc/letsencrypt/live/\$dom/; cp \$d/privkey.pem /etc/letsencrypt/live/\$dom/; echo Copied: \$dom; done' 2>&1
+            rm -rf /tmp/letsencrypt
+          "
+
+          echo "=== Step 3: Start nginx via docker compose ==="
+          sshpass -e ssh -p $PORT $VPS "
+            export PATH=\$PATH:/usr/local/bin
+            NGINX_STATUS=\$(docker inspect shared-nginx --format '{{.State.Status}}' 2>/dev/null || echo missing)
+            echo 'nginx status: '\$NGINX_STATUS
+            if [ \"\$NGINX_STATUS\" = 'running' ]; then
+              docker exec shared-nginx nginx -t 2>&1 && docker exec shared-nginx nginx -s reload 2>&1 || docker restart shared-nginx 2>&1
+            elif [ \"\$NGINX_STATUS\" = 'exited' ] || [ \"\$NGINX_STATUS\" = 'created' ] || [ \"\$NGINX_STATUS\" = 'restarting' ]; then
+              docker start shared-nginx 2>&1
+            else
+              echo 'Starting nginx via compose...'
+              cd /opt/infra && docker compose up -d nginx 2>&1
+            fi
+            sleep 3
+            echo '=== Final status ==='
+            docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'shared|infra' || echo 'No shared containers'
+            ss -tlnp | grep -E ':80|:443' || echo 'No services on 80/443 yet'
+          "
+
+      - name: Reset MySQL volume
+        if: inputs.action == 'reset-mysql-volume'
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+          sshpass -e ssh -p $PORT $VPS "
+            export PATH=\$PATH:/usr/local/bin
+            echo '=== Stopping shared infra containers ==='
+            docker stop shared-mysql shared-redis 2>/dev/null || true
+            docker rm shared-mysql shared-redis 2>/dev/null || true
+
+            echo '=== Removing stale MySQL data volume ==='
+            docker volume rm shared_mysql_data 2>/dev/null && echo 'Volume removed' || echo 'Volume not found (ok)'
+
+            echo '=== Done — next deploy will re-initialize MySQL with current MYSQL_ROOT_PASSWORD ==='
+          "
+
+      - name: Reset all (MySQL volume + app containers)
+        if: inputs.action == 'reset-all'
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+          sshpass -e ssh -p $PORT $VPS "
+            export PATH=\$PATH:/usr/local/bin
+            echo '=== Stopping and removing all VietNet + shared infra containers ==='
+            docker stop vietnet-api vietnet-frontend shared-mysql shared-redis 2>/dev/null || true
+            docker rm vietnet-api vietnet-frontend shared-mysql shared-redis 2>/dev/null || true
+
+            echo '=== Removing MySQL data volume ==='
+            docker volume rm shared_mysql_data 2>/dev/null && echo 'Volume removed' || echo 'Volume not found (ok)'
+
+            echo '=== Current container state ==='
+            docker ps -a --format 'table {{.Names}}\t{{.Status}}' | grep -E 'vietnet|shared' || echo '(none)'
+            echo '=== Done — next deploy will be INIT mode ==='
+          "

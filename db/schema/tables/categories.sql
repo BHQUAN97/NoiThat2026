@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS `categories` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `slug` VARCHAR(100) NOT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `type` ENUM('project','product','article','material') NOT NULL,
+  `parent_id` CHAR(26) NULL DEFAULT NULL,
+  `display_order` INT NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` CHAR(26) NULL DEFAULT NULL,
+  `updated_by` CHAR(26) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_categories_slug_type` (`slug`, `type`),
+  KEY `IDX_categories_parent_id` (`parent_id`),
+  KEY `IDX_categories_type` (`type`),
+  KEY `IDX_categories_deleted_at` (`deleted_at`),
+  CONSTRAINT `FK_categories_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

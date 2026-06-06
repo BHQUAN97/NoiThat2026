@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` CHAR(26) NOT NULL,
+  `full_name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `phone` VARCHAR(20) NULL DEFAULT NULL,
+  `avatar_url` VARCHAR(500) NULL DEFAULT NULL,
+  `role` ENUM('super_admin','admin','editor','viewer') NOT NULL DEFAULT 'viewer',
+  `status` ENUM('active','inactive','banned') NOT NULL DEFAULT 'active',
+  `refresh_token_hash` VARCHAR(255) NULL DEFAULT NULL,
+  `last_login_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` CHAR(26) NULL DEFAULT NULL,
+  `updated_by` CHAR(26) NULL DEFAULT NULL,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_users_email` (`email`),
+  KEY `IDX_users_role` (`role`),
+  KEY `IDX_users_status` (`status`),
+  KEY `IDX_users_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
