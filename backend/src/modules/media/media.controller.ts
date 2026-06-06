@@ -71,6 +71,31 @@ export class MediaController {
   }
 
   /**
+   * POST /media/upload-video
+   * Upload a single video file. Authenticated users only.
+   */
+  @Post('upload-video')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
+    }),
+  )
+  async uploadVideo(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    validateUploadedFile(file, {
+      allowedMimes: ['video/mp4', 'video/webm', 'video/mov', 'video/quicktime', 'video/x-msvideo'],
+      maxSize: 200 * 1024 * 1024,
+    });
+    const media = await this.mediaService.upload(file, req.user.id);
+    return ok(media, 'Video uploaded successfully');
+  }
+
+  /**
    * GET /media
    * List all media (paginated). Admin only.
    */
