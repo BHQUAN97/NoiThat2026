@@ -67,6 +67,10 @@ const config: Config = {
         'on-tertiary-fixed-variant':  '#2D4B54',
 
         'background':                 '#FCF9F7',
+        'brand':                      '#553722',
+        'primary-dark':               '#3F2818',
+        'border':                     '#D4C3BA',
+        'danger':                     '#BA1A1A',
 
         // ── Status Palette (thống nhất admin) ──
         'success':                    '#15803D',
@@ -91,9 +95,10 @@ const config: Config = {
       },
 
       fontFamily: {
-        'headline': ['"Google Sans Flex"', 'system-ui', 'sans-serif'],
-        'body':     ['"Google Sans Flex"', 'system-ui', 'sans-serif'],
-        'label':    ['"Google Sans Flex"', 'system-ui', 'sans-serif'],
+        'headline': ['"Noto Serif"', 'serif'],
+        'body':     ['"Manrope"', 'system-ui', 'sans-serif'],
+        'label':    ['"Manrope"', 'system-ui', 'sans-serif'],
+        'serif':    ['"Noto Serif"', 'serif'],
       },
 
       fontSize: {
@@ -132,6 +137,12 @@ const config: Config = {
         'hero-cta':      '0 20px 40px rgba(85, 55, 34, 0.20)',
         'testimonial':   '0 24px 48px rgba(85, 55, 34, 0.06)',
         'bottom-nav':    '0 -4px 24px rgba(85, 55, 34, 0.06)',
+        'header':        '0 12px 30px rgba(85, 55, 34, 0.08)',
+        'cta':           '0 20px 40px rgba(85, 55, 34, 0.18)',
+        'cta-hover':     '0 24px 52px rgba(85, 55, 34, 0.24)',
+        'card':          '0 24px 48px rgba(85, 55, 34, 0.06)',
+        'card-hover':    '0 32px 64px rgba(85, 55, 34, 0.10)',
+        'float':         '0 16px 32px rgba(85, 55, 34, 0.16)',
       },
 
       maxWidth: {
@@ -206,6 +217,7 @@ const config: Config = {
         'subtle-zoom':     'subtle-zoom 1.2s ease forwards',
         'mobile-menu':     'mobile-menu 0.25s ease forwards',
         'slide-up':        'slide-up 0.25s cubic-bezier(0.22,1,0.36,1) forwards',
+        'pulse-soft':      'custom-pulse 3s infinite ease-in-out',
       },
 
       aspectRatio: {

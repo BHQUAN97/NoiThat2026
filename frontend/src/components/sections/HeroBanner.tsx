@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Phone } from 'lucide-react'
+import { ArrowRight, Phone } from 'lucide-react'
 import { CONTACT } from '@/lib/constants'
 
 interface HeroBannerProps {
@@ -8,90 +8,51 @@ interface HeroBannerProps {
   imageUrl?: string
 }
 
-// Banner chính trang chủ — full-width, text overlay, 2 CTA buttons
+const DEFAULT_HERO_IMAGE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBbl16vPBWPylYhNaCf_1wb3R5wa0CkxdGYl1gO4uuX5gIC073XhfDsBJHI-fR2UKQo8BroOxDqFLAqIG52XknVHY7S7SGXEa7_5IVZA5XHdfTgdNwcG7VxOvFuqhoBp5x63UtQIvT44E0WO0KjJHNbkaRi5p3-WZxshW71-pVgoaynHTdEeyJjwsmjNaFFizBw5LsDhj9f-FZvapK5ms8zIo_SYe4B9sr7076Sdxxi_AwbYdAe1Oiy1h2B_DDwMGqjsw3My0oMA01s'
+
 export function HeroBanner({
-  title = 'Tủ Bếp & Nội Thất Cao Cấp\nTại Xưởng Sản Xuất',
-  subtitle = 'Thiết kế theo yêu cầu — Thi công chuyên nghiệp — Bảo hành 5 năm\nPhục vụ Hà Nội và các tỉnh lân cận',
-  imageUrl,
+  title = 'Kiến tạo không gian sống tinh tế.',
+  subtitle = 'Xưởng tủ bếp và nội thất Duy Mạnh kế thừa tinh thần VietNet: ảnh công trình làm trung tâm, vật liệu rõ ràng, thi công gọn và tư vấn trực tiếp.',
+  imageUrl = DEFAULT_HERO_IMAGE,
 }: HeroBannerProps) {
   return (
-    <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-center overflow-hidden bg-stone-900">
-      {/* Background image */}
-      {imageUrl ? (
+    <section className="relative flex min-h-[calc(100vh-var(--nav-height))] items-center justify-center overflow-hidden bg-primary">
+      <div className="absolute inset-0">
         <img
           src={imageUrl}
-          alt="Nội thất Duy Mạnh"
-          className="absolute inset-0 w-full h-full object-cover opacity-50"
+          alt="Không gian nội thất cao cấp"
+          className="h-full w-full scale-105 object-cover"
         />
-      ) : (
-        // Placeholder gradient khi chưa có ảnh thực
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 opacity-90" />
-      )}
+        <div className="absolute inset-0 bg-primary/25 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/75 via-primary/20 to-transparent" />
+      </div>
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/40 to-transparent" />
-
-      {/* Content */}
-      <div className="relative z-10 max-w-content mx-auto px-4 lg:px-8 py-16 md:py-20">
-        <div className="max-w-2xl">
-          {/* Label */}
-          <p className="inline-flex items-center gap-2 text-brand text-sm font-semibold uppercase tracking-widest mb-4">
-            <span className="w-8 h-px bg-brand" />
-            Xưởng Sản Xuất Trực Tiếp
-          </p>
-
-          {/* Heading */}
-          <h1 className="font-serif font-bold text-white leading-tight mb-4"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: '1.1' }}
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-24 text-center">
+        <span className="mb-6 inline-flex rounded-full border border-white/10 bg-primary-container/30 px-4 py-2 font-label text-xs uppercase tracking-[0.3em] text-surface backdrop-blur-md">
+          Xưởng sản xuất trực tiếp
+        </span>
+        <h1 className="mb-8 font-headline text-5xl font-bold leading-[1.08] tracking-tight text-surface md:text-7xl lg:text-8xl">
+          {title}
+        </h1>
+        <p className="mx-auto mb-10 max-w-2xl text-body-lg leading-relaxed text-surface/90 md:text-xl">
+          {subtitle}
+        </p>
+        <div className="flex flex-col items-center justify-center gap-5 md:flex-row">
+          <Link
+            href="/bao-gia"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-container px-10 py-4 font-label text-label-lg font-bold uppercase tracking-label-wide text-on-primary transition-all hover:bg-primary hover:shadow-cta"
           >
-            {title.split('\n').map((line, i) => (
-              <span key={i}>
-                {line}
-                {i < title.split('\n').length - 1 && <br />}
-              </span>
-            ))}
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-stone-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
-            {subtitle.split('\n').map((line, i) => (
-              <span key={i}>
-                {line}
-                {i < subtitle.split('\n').length - 1 && <br />}
-              </span>
-            ))}
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/bao-gia"
-              className="inline-flex items-center px-6 py-3 bg-brand text-white font-semibold rounded hover:bg-primary-dark transition-colors duration-200 shadow-cta text-sm md:text-base"
-            >
-              Nhận Báo Giá Miễn Phí
-            </Link>
-            <a
-              href={`tel:${CONTACT.hotlineRaw}`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded hover:bg-white/20 transition-colors duration-200 text-sm md:text-base"
-            >
-              <Phone size={16} />
-              {CONTACT.hotline}
-            </a>
-          </div>
-
-          {/* Trust badges */}
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
-            {[
-              '10+ năm kinh nghiệm',
-              '500+ công trình hoàn thành',
-              'Bảo hành 5 năm',
-            ].map((badge) => (
-              <span key={badge} className="flex items-center gap-1.5 text-stone-300 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
-                {badge}
-              </span>
-            ))}
-          </div>
+            Bắt đầu dự án
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <a
+            href={`tel:${CONTACT.hotlineRaw}`}
+            className="inline-flex items-center gap-2 font-label text-label-lg font-bold uppercase tracking-label-wide text-surface underline-offset-8 transition hover:underline"
+          >
+            <Phone className="h-4 w-4" />
+            {CONTACT.hotline}
+          </a>
         </div>
       </div>
     </section>

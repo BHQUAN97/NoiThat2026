@@ -1,53 +1,68 @@
 import Link from 'next/link'
-import { ArrowRight, Award, Users, Clock, CheckCircle2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
-// Giới thiệu nhanh về công ty — 2 cột: text + ảnh
+const MATERIAL_IMAGE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAUH7WPHs7Hdu5hOLGrf6EuKO5To8WzIOMWY0x_WHYgsIPpL6374msknhNrOGdRNlhRyaNY_6C8yFyD9Jb9kwWt6BVl8UDmk2Puf5C5JOCEwpwqYOJpb_wivvrJlRnFjLg0bcPUtdLcdUXL_2ssmNkCOvFpNXVB841-MeAiLhnbdBO2N0MTcBKKNCOAWkjdXwRo0fKeJp8sshokh3mSVA8WW_q-SMfxi-ot7h559D8g1BCjglMUSi-fnT3RgBlH2uryZzTn51wgB7gK'
+
+const SPACE_IMAGE =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDvB3-HpRPKYcrraeXQYFcMfo51YpjCax6qv4WHMDJr6V-gxo9SnL5g5pL3W3fjAoaWKN6YacxNx5-yYG0Eig6vNG-pQtEdO0s-Gy4hLDikAcHkYCy-RyXQgfL2FTn_C721v6UO9fjBkfeSb1T8IS4AZcCxiw33Y5Ti6WCLA6Umepze-5sS247y2XF4e1FfUFkqQMTsUmfx2tP6DWC9JzcaMm5zHdR75QYUoRFGzFU9lvkI4E8wZ5ISAYcwAMdNUY3xbiI4_GJXPVzo'
+
 export function CompanyIntro() {
-  const highlights = [
-    { icon: Clock, label: '10+ Năm Kinh Nghiệm', desc: 'Thành lập 2013, phục vụ hàng trăm gia đình' },
-    { icon: Users, label: '500+ Công Trình', desc: 'Đã hoàn thành tại Hà Nội và các tỉnh lân cận' },
-    { icon: Award, label: 'Bảo Hành 5 Năm', desc: 'Cam kết chất lượng sản phẩm và dịch vụ hậu mãi' },
-    { icon: CheckCircle2, label: 'Xưởng Sản Xuất', desc: 'Trực tiếp thi công, không qua trung gian' },
-  ]
-
   return (
-    <section className="py-16 md:py-20 bg-white">
-      <div className="max-w-content mx-auto px-4 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Text content */}
-          <div>
-            <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Về Chúng Tôi</p>
-            <h2 className="font-serif font-bold text-stone-900 text-3xl md:text-4xl leading-tight mb-4">
-              Nội Thất Duy Mạnh —<br />Xưởng Tủ Bếp Uy Tín Hà Nội
-            </h2>
-            <p className="text-stone-600 leading-relaxed mb-4">
-              Chúng tôi là xưởng sản xuất tủ bếp và nội thất gia đình tại <strong>Vân Nam, Phúc Thọ, Hà Nội</strong>. Với hơn 10 năm kinh nghiệm, đội ngũ thợ lành nghề và quy trình kiểm soát chất lượng nghiêm ngặt, chúng tôi tự hào mang đến những sản phẩm bền đẹp với giá xưởng tốt nhất.
-            </p>
-            <p className="text-stone-600 leading-relaxed mb-6">
-              Từ thiết kế đến thi công hoàn thiện, chúng tôi đồng hành cùng bạn trong từng bước để ngôi nhà trở thành không gian sống lý tưởng.
-            </p>
-            <Link
-              href="/gioi-thieu"
-              className="inline-flex items-center gap-2 text-brand font-semibold hover:gap-3 transition-all duration-200"
-            >
-              Xem thêm về chúng tôi <ArrowRight size={16} />
-            </Link>
+    <section className="bg-surface px-4 py-20 md:px-8 md:py-32">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <span className="mb-4 block font-label text-xs uppercase tracking-[0.2em] text-primary">
+            The Atelier Philosophy
+          </span>
+          <h2 className="mb-8 font-headline text-4xl font-bold leading-tight text-primary md:text-5xl">
+            Thiết kế là cuộc đối thoại giữa vật liệu, ánh sáng và thói quen sống.
+          </h2>
+          <p className="mb-6 text-body-lg leading-relaxed text-on-surface-variant">
+            Nội Thất Duy Mạnh tập trung vào các hệ tủ bếp, tủ áo và không gian gia đình được đo
+            ni đóng giày theo từng căn nhà. Ngôn ngữ VietNet giúp phần trình bày giữ được cảm giác
+            cao cấp, có khoảng thở và đặt ảnh công trình ở vị trí trung tâm.
+          </p>
+          <p className="mb-8 text-body-lg italic leading-relaxed text-on-surface-variant">
+            “Không chỉ lấp đầy căn phòng, chúng tôi hoàn thiện bầu không khí của ngôi nhà.”
+          </p>
+          <div className="grid grid-cols-2 gap-8 border-t border-outline-variant/30 pt-8">
+            <div>
+              <p className="font-headline text-3xl font-bold text-primary">500+</p>
+              <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                Công trình hoàn thành
+              </p>
+            </div>
+            <div>
+              <p className="font-headline text-3xl font-bold text-primary">10+</p>
+              <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                Năm kinh nghiệm
+              </p>
+            </div>
           </div>
+          <Link
+            href="/gioi-thieu"
+            className="mt-8 inline-flex items-center gap-2 font-label text-label-lg font-bold uppercase tracking-label-wide text-primary transition-all hover:gap-4"
+          >
+            Xem quy trình
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
 
-          {/* Highlights grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {highlights.map(({ icon: Icon, label, desc }) => (
-              <div
-                key={label}
-                className="p-4 bg-stone-50 rounded-xl border border-border hover:border-brand/30 hover:shadow-card transition-all duration-200"
-              >
-                <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center mb-3">
-                  <Icon size={20} className="text-brand" />
-                </div>
-                <h3 className="font-semibold text-stone-900 text-sm mb-1">{label}</h3>
-                <p className="text-stone-500 text-xs leading-relaxed">{desc}</p>
-              </div>
-            ))}
+        <div className="grid grid-cols-2 gap-4 lg:col-span-7">
+          <div className="pt-12">
+            <img
+              className="h-[360px] w-full rounded-2xl object-cover shadow-ambient-lg md:h-[440px]"
+              src={MATERIAL_IMAGE}
+              alt="Mẫu vật liệu nội thất"
+            />
+          </div>
+          <div>
+            <img
+              className="h-[360px] w-full rounded-2xl object-cover shadow-ambient-lg md:h-[440px]"
+              src={SPACE_IMAGE}
+              alt="Chi tiết không gian nội thất"
+            />
           </div>
         </div>
       </div>

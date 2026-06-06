@@ -1,6 +1,5 @@
-import { TopBar } from '@/components/layout/TopBar'
-import { MainHeader } from '@/components/layout/MainHeader'
-import { SiteFooter } from '@/components/layout/SiteFooter'
+import { GlassNav } from '@/components/layout/GlassNav'
+import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
 import { BottomNav } from '@/components/layout/BottomNav'
 
@@ -12,14 +11,11 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <TopBar />
-      <MainHeader />
-      {/* pt: 64px mobile (header only), 104px desktop (topbar+header) */}
-      {/* pb: 56px mobile (BottomNav), 0 desktop */}
-      <main className="pt-16 md:pt-[104px] pb-14 md:pb-0 min-h-screen">
+      <GlassNav />
+      <main className="pt-[var(--nav-height)] pb-14 md:pb-0 min-h-screen">
         {children}
       </main>
-      <SiteFooter />
+      <Footer />
       <FloatingButtons />
       <BottomNav />
     </>

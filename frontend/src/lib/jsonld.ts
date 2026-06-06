@@ -1,27 +1,27 @@
+import { CONTACT, SITE_DESCRIPTION, SITE_NAME } from './constants'
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhquan.site'
 
 export function organizationJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: 'VietNet Interior',
+    name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description:
-      'Noi that cao cap cho khong gian song tinh te. Thiet ke - Thi cong - Noi that tron goi.',
-    priceRange: '$$$$',
+    description: SITE_DESCRIPTION,
+    priceRange: '$$',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '',
-      addressLocality: 'Ho Chi Minh City',
-      addressRegion: 'Ho Chi Minh',
-      postalCode: '700000',
+      streetAddress: CONTACT.address,
+      addressLocality: 'Ha Noi',
+      addressRegion: 'Ha Noi',
       addressCountry: 'VN',
     },
     geo: {
       '@type': 'GeoCoordinates',
-      latitude: 10.7769,
-      longitude: 106.7009,
+      latitude: 21.0285,
+      longitude: 105.8542,
     },
     openingHoursSpecification: [
       {
@@ -69,11 +69,11 @@ export function articleJsonLd(article: {
     image: article.cover_image?.preview_url || undefined,
     author: {
       '@type': 'Organization',
-      name: 'VietNet Interior',
+      name: SITE_NAME,
     },
     publisher: {
       '@type': 'Organization',
-      name: 'VietNet Interior',
+      name: SITE_NAME,
       logo: {
         '@type': 'ImageObject',
         url: `${SITE_URL}/logo.png`,
@@ -99,7 +99,7 @@ export function projectJsonLd(project: {
     image: project.cover_image?.preview_url || undefined,
     creator: {
       '@type': 'Organization',
-      name: 'VietNet Interior',
+      name: SITE_NAME,
     },
   }
 }
@@ -120,7 +120,7 @@ export function productJsonLd(product: {
     image: product.cover_image?.preview_url || undefined,
     brand: {
       '@type': 'Organization',
-      name: 'VietNet Interior',
+      name: SITE_NAME,
     },
     offers: product.price_range
       ? {

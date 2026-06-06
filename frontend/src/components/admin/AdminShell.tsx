@@ -10,7 +10,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <NotificationsProvider isAdmin={isAdmin}>
-      <div className="min-h-screen bg-stone-100">
+      <div className="min-h-screen bg-surface-container-low">
         <AdminSidebar />
         <div className="min-h-screen md:ml-[var(--sidebar-width)]">
           <AdminHeader />

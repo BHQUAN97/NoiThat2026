@@ -53,8 +53,8 @@ export function AdminSidebar() {
           className="flex items-center gap-2.5 font-headline text-title-lg text-primary transition-opacity hover:opacity-80"
           onClick={() => setMobileOpen(false)}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/8">
-            <span className="font-headline text-body-md text-primary">V</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <span className="font-headline text-body-md text-primary">D</span>
           </span>
           {SITE_NAME}
         </Link>

@@ -105,10 +105,10 @@
   --color-warning-text: var(--color-on-warning-container);
 
   /* -- TYPOGRAPHY ------------------------------------------- */
-  --font-display: 'Google Sans Flex', system-ui, sans-serif;
-  --font-headline: 'Google Sans Flex', system-ui, sans-serif;
-  --font-body: 'Google Sans Flex', system-ui, sans-serif;
-  --font-label: 'Google Sans Flex', system-ui, sans-serif;
+  --font-display: 'Noto Serif', serif;
+  --font-headline: 'Noto Serif', serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-label: 'Manrope', system-ui, sans-serif;
   --font-icon: 'Material Symbols Outlined';
 
   /* Display Large -- page hero titles */
