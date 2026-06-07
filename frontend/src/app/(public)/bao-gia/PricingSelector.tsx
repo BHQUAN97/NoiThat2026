@@ -94,7 +94,7 @@ export function PricingSelector({ tables }: PricingSelectorProps) {
                 type="button"
                 onClick={() => setSelected(index)}
                 className={cn(
-                  'group relative overflow-hidden rounded-xl border-2 bg-surface text-left shadow-card transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary',
+                  'group relative flex flex-col overflow-hidden rounded-xl border-2 bg-surface text-left shadow-card transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary',
                   isSelected
                     ? 'border-tertiary shadow-card-hover'
                     : table.highlight
@@ -114,7 +114,7 @@ export function PricingSelector({ tables }: PricingSelectorProps) {
                   </div>
                 )}
 
-                <div className="p-6">
+                <div className="flex flex-1 flex-col p-6">
                   <h3 className="pr-20 font-headline text-2xl font-bold leading-tight text-primary">{table.material}</h3>
                   <p className="mt-2 font-label text-sm font-bold text-tertiary">{table.priceRange}</p>
 
@@ -138,7 +138,7 @@ export function PricingSelector({ tables }: PricingSelectorProps) {
 
                   <span
                     className={cn(
-                      'mt-6 inline-flex w-full items-center justify-center rounded-lg px-4 py-3 font-label text-xs font-bold uppercase tracking-widest transition-colors',
+                      'mt-auto pt-6 inline-flex w-full items-center justify-center rounded-lg px-4 py-3 font-label text-xs font-bold uppercase tracking-widest transition-colors',
                       isSelected
                         ? 'bg-tertiary text-white'
                         : 'bg-surface-container-low text-primary group-hover:bg-tertiary group-hover:text-white',
