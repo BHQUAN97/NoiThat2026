@@ -61,6 +61,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./frontend/.env
+    environment:
+      - INTERNAL_API_URL=http://noithat-api:4000/api
     networks:
       default:
         aliases:
