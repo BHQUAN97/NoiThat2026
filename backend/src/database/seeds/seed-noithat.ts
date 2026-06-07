@@ -706,33 +706,8 @@ async function seed() {
     }
     console.log(`✓ Reviews seeded: ${reviews.length}`)
 
-    const videos = [
-      ['Quy trình sản xuất tủ bếp tại xưởng Duy Mạnh', 'dQw4w9WgXcQ', 'Tổng quan các bước đo đạc, ra bản vẽ, cắt CNC, dán cạnh, lắp thử và bàn giao.'],
-      ['Bàn giao căn hộ 2PN Vinhomes Smart City', 'ysz5S6PUM-U', 'Video walkthrough căn hộ sau hoàn thiện nội thất trọn gói.'],
-      ['So sánh vật liệu Acrylic và Laminate', 'aqz-KE-bpKQ', 'Các điểm khác nhau về bề mặt, độ bền, ứng dụng và ngân sách.'],
-    ]
-
-    for (let i = 0; i < videos.length; i++) {
-      const [title, youtubeId, description] = videos[i]
-      const exists = await queryRunner.query('SELECT id FROM videos WHERE title = ?', [title])
-      if (exists.length === 0) {
-        await queryRunner.query(
-          `INSERT INTO videos
-           (id, title, video_type, youtube_id, video_url, description, thumbnail_url, sort_order, is_active)
-           VALUES (?, ?, 'youtube', ?, ?, ?, ?, ?, 1)`,
-          [
-            ulid(),
-            title,
-            youtubeId,
-            `https://www.youtube.com/watch?v=${youtubeId}`,
-            description,
-            `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
-            i + 1,
-          ],
-        )
-      }
-    }
-    console.log(`✓ Videos seeded: ${videos.length}`)
+    // Videos cần YouTube ID thật — thêm qua admin panel sau khi upload video lên kênh YouTube của xưởng.
+    console.log('→ Videos: bỏ qua (thêm YouTube ID thật qua admin)')
 
     const configs = [
       { key: 'site_name', value: 'Nội Thất Duy Mạnh' },
