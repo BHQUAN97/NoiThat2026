@@ -15,7 +15,6 @@ concurrency:
 env:
   APP_DIR: /opt/noithat
   INFRA_DIR: /opt/infra
-  BACKEND_PORT: 5202
 
 jobs:
   # ─── 1. Typecheck ─────────────────────────────────
@@ -53,53 +52,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          timeout: 300s
-          command_timeout: 25m
-          script: |
+      - name: Setup SSH (password)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass > /dev/null
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.VPS_PORT }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Deploy
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT }}"
+          sshpass -e ssh -p $PORT $VPS "
             set -e
-            export PATH=$PATH:/usr/local/bin
-            echo "=== Deploy NoiThat2026 — $(date) ==="
+            export PATH=\$PATH:/usr/local/bin
+            echo '=== Deploy NoiThat2026 — \$(date) ==='
 
-            # Kiểm tra thư mục
-            if [ ! -d /opt/noithat ]; then
-              echo "ERROR: /opt/noithat not found. Run VPS setup first."
-              exit 1
-            fi
-            cd /opt/noithat
+            [ ! -d ${APP_DIR} ] && { echo 'ERROR: ${APP_DIR} not found. Clone repo first.'; exit 1; }
+            cd ${APP_DIR}
 
-            echo "--- Git pull ---"
+            echo '--- Git pull ---'
             git pull origin main
 
-            echo "--- Docker build + up ---"
+            echo '--- Docker build + up ---'
             docker compose up -d --build --remove-orphans
 
-            echo "--- Wait for backend (max 60s) ---"
-            for i in $(seq 1 12); do
-              if curl -sf http://localhost:5202/api/health > /dev/null 2>&1; then
-                echo "Backend healthy after $((i*5))s"
-                break
-              fi
-              [ $i -eq 12 ] && { echo "ERROR: backend not healthy"; docker compose logs backend --tail 30; exit 1; }
-              echo "Waiting... ($i/12)"
+            echo '--- Wait for backend (max 60s) ---'
+            for i in \$(seq 1 12); do
+              curl -sf http://localhost:5202/api/health > /dev/null 2>&1 && { echo \"Backend healthy after \$((i*5))s\"; break; }
+              [ \$i -eq 12 ] && { echo 'ERROR: backend timeout'; docker compose logs backend --tail 30; exit 1; }
+              echo \"Waiting... (\$i/12)\"
               sleep 5
             done
 
-            echo "--- Run migrations ---"
-            docker compose exec -T backend npm run migration:run:prod 2>&1 || echo "Migrations: nothing to run"
+            echo '--- Run migrations ---'
+            docker compose exec -T backend npm run migration:run:prod 2>&1 || echo 'Migrations: nothing to run'
 
-            echo "--- Reload nginx ---"
-            cp nginx/conf.d/duymanh.bhquan.store.conf /opt/infra/nginx/conf.d/
+            echo '--- Reload nginx ---'
+            cp nginx/conf.d/duymanh.bhquan.store.conf ${INFRA_DIR}/nginx/conf.d/
             docker exec shared-nginx nginx -t && docker exec shared-nginx nginx -s reload
 
-            echo "--- Cleanup old images ---"
+            echo '--- Cleanup ---'
             docker image prune -f > /dev/null
 
-            echo "=== Deploy done: $(date) ==="
+            echo '=== Deploy done: \$(date) ==='
             curl -sf http://localhost:5202/api/health || true
+          "
