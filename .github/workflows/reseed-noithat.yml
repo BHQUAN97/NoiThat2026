@@ -1,0 +1,44 @@
+name: Reseed NoiThat DB
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm (idempotent — safe to re-run)'
+        required: true
+        default: ''
+
+jobs:
+  reseed:
+    name: "Run seed on VPS"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'yes'
+    timeout-minutes: 10
+
+    steps:
+      - name: Run seed via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          timeout: 120s
+          command_timeout: 8m
+          script: |
+            set -e
+            export PATH=$PATH:/usr/local/bin
+            echo "=== Reseed NoiThat2026 — $(date) ==="
+            cd /opt/noithat
+
+            echo "--- Check backend healthy ---"
+            if ! curl -sf http://localhost:5202/api/health > /dev/null 2>&1; then
+              echo "ERROR: backend not running"
+              docker compose ps
+              exit 1
+            fi
+
+            echo "--- Run seed ---"
+            docker compose exec -T backend npm run seed:prod 2>&1
+
+            echo "=== Reseed done: $(date) ==="

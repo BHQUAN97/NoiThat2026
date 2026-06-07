@@ -12,51 +12,94 @@ concurrency:
   group: deploy-noithat
   cancel-in-progress: true
 
+env:
+  APP_DIR: /opt/noithat
+  INFRA_DIR: /opt/infra
+  BACKEND_PORT: 5202
+
 jobs:
-  deploy:
+  # ─── 1. Typecheck ─────────────────────────────────
+  typecheck-fe:
+    name: "Typecheck FE"
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci && npx tsc --noEmit
+
+  typecheck-be:
+    name: "Typecheck BE"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: cd backend && npm ci && npx tsc --noEmit
+
+  # ─── 2. Deploy ────────────────────────────────────
+  deploy:
+    name: "Deploy to VPS"
+    runs-on: ubuntu-latest
+    needs: [typecheck-fe, typecheck-be]
+    timeout-minutes: 30
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: ${{ secrets.VPS_PORT }}
           timeout: 300s
-          command_timeout: 15m
+          command_timeout: 25m
           script: |
             set -e
-            echo "=== Deploy NoiThat2026 ==="
-            cd /opt/noithat2026
+            export PATH=$PATH:/usr/local/bin
+            echo "=== Deploy NoiThat2026 — $(date) ==="
+
+            # Kiểm tra thư mục
+            if [ ! -d /opt/noithat ]; then
+              echo "ERROR: /opt/noithat not found. Run VPS setup first."
+              exit 1
+            fi
+            cd /opt/noithat
 
             echo "--- Git pull ---"
             git pull origin main
 
-            echo "--- Docker build + up (prod) ---"
-            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            echo "--- Docker build + up ---"
+            docker compose up -d --build --remove-orphans
 
-            echo "--- Wait for backend healthy ---"
+            echo "--- Wait for backend (max 60s) ---"
             for i in $(seq 1 12); do
-              if curl -sf http://localhost:5202/api/health > /dev/null; then
-                echo "Backend healthy"
+              if curl -sf http://localhost:5202/api/health > /dev/null 2>&1; then
+                echo "Backend healthy after $((i*5))s"
                 break
               fi
+              [ $i -eq 12 ] && { echo "ERROR: backend not healthy"; docker compose logs backend --tail 30; exit 1; }
               echo "Waiting... ($i/12)"
               sleep 5
             done
 
             echo "--- Run migrations ---"
-            docker compose -f docker-compose.prod.yml exec -T backend \
-              npm run migration:run:prod || echo "Migration skipped"
+            docker compose exec -T backend npm run migration:run:prod 2>&1 || echo "Migrations: nothing to run"
 
-            echo "--- Reload nginx config ---"
+            echo "--- Reload nginx ---"
             cp nginx/conf.d/duymanh.bhquan.store.conf /opt/infra/nginx/conf.d/
-            docker exec shared-nginx nginx -s reload
+            docker exec shared-nginx nginx -t && docker exec shared-nginx nginx -s reload
 
             echo "--- Cleanup old images ---"
-            docker image prune -f
+            docker image prune -f > /dev/null
 
             echo "=== Deploy done: $(date) ==="
+            curl -sf http://localhost:5202/api/health || true
