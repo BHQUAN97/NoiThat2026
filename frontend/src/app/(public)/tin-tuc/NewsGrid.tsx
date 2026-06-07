@@ -7,54 +7,17 @@ import api from '@/lib/api'
 import { getListData, getPaginationMeta } from '@/lib/api-response'
 import type { News, PaginationMeta } from '@/types'
 
-const FALLBACK_NEWS: News[] = [
-  {
-    id: '1',
-    slug: 'so-sanh-tu-bep-inox-vs-mdf',
-    title: 'So sánh tủ bếp Inox 304 vs tủ bếp MDF — nên chọn loại nào?',
-    excerpt: 'Phân tích ưu nhược điểm từng loại vật liệu để giúp bạn chọn đúng tủ bếp phù hợp ngân sách và không gian.',
-    thumbnail_url: null,
-    is_active: true,
-    is_featured: false,
-    published_at: new Date(2024, 10, 15).toISOString(),
-    created_at: new Date(2024, 10, 15).toISOString(),
-    updated_at: new Date(2024, 10, 15).toISOString(),
-  },
-  {
-    id: '2',
-    slug: 'xu-huong-tu-bep-2025',
-    title: 'Xu hướng thiết kế tủ bếp 2025 — màu sắc và phong cách nổi bật',
-    excerpt: 'Các xu hướng nội thất bếp đang dẫn đầu thị trường năm 2025, từ tông màu trung tính đến chất liệu cao cấp.',
-    thumbnail_url: null,
-    is_active: true,
-    is_featured: true,
-    published_at: new Date(2024, 10, 10).toISOString(),
-    created_at: new Date(2024, 10, 10).toISOString(),
-    updated_at: new Date(2024, 10, 10).toISOString(),
-  },
-  {
-    id: '3',
-    slug: 'chi-phi-lam-tu-bep-tron-bo',
-    title: 'Chi phí làm tủ bếp trọn bộ hết bao nhiêu? Bảng giá chi tiết',
-    excerpt: 'Tổng hợp bảng giá tủ bếp theo từng loại vật liệu và diện tích, giúp bạn dự tính ngân sách chính xác.',
-    thumbnail_url: null,
-    is_active: true,
-    is_featured: false,
-    published_at: new Date(2024, 10, 5).toISOString(),
-    created_at: new Date(2024, 10, 5).toISOString(),
-    updated_at: new Date(2024, 10, 5).toISOString(),
-  },
-]
-
 export function NewsGrid() {
-  const [items, setItems] = useState<News[]>(FALLBACK_NEWS)
+  const [items, setItems] = useState<News[]>([])
   const [meta, setMeta] = useState<PaginationMeta | null>(null)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     let alive = true
     setLoading(true)
+    setError(false)
 
     async function load() {
       try {
@@ -62,11 +25,11 @@ export function NewsGrid() {
         const data = getListData<News>(res)
         const pagination = getPaginationMeta(res, { page, limit: 12 })
         if (alive) {
-          if (data.length > 0) setItems(data)
+          setItems(data)
           setMeta(pagination)
         }
       } catch {
-        // Keep fallback when API is unavailable.
+        if (alive) setError(true)
       } finally {
         if (alive) setLoading(false)
       }
@@ -91,6 +54,12 @@ export function NewsGrid() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : error || items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center text-on-surface-variant">
+            <p className="font-label text-xs uppercase tracking-widest">
+              {error ? 'Không thể tải bài viết. Vui lòng thử lại sau.' : 'Chưa có bài viết nào.'}
+            </p>
           </div>
         ) : (
           <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
