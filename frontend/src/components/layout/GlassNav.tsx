@@ -49,13 +49,15 @@ function NavDropdownItem({
         <Link
           href={link.href}
           className={cn(
-            'relative px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-colors duration-300 xl:px-4',
-            isActive ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+            'relative rounded-lg px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-all duration-200 xl:px-4',
+            isActive
+              ? 'bg-primary/10 text-primary'
+              : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
           )}
         >
           {link.label}
           {isActive && (
-            <span className="absolute bottom-0 left-4 right-4 h-[2px] origin-left animate-line-expand rounded-full bg-primary" />
+            <span className="absolute bottom-0.5 left-3 right-3 h-[2px] origin-left animate-line-expand rounded-full bg-primary xl:left-4 xl:right-4" />
           )}
         </Link>
       </li>
@@ -72,8 +74,10 @@ function NavDropdownItem({
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex items-center gap-0.5 px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-colors duration-300 xl:px-4',
-          isActive ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+          'flex items-center gap-0.5 rounded-lg px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-all duration-200 xl:px-4',
+          isActive || open
+            ? 'bg-primary/10 text-primary'
+            : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
         )}
       >
         {link.label}
@@ -81,16 +85,16 @@ function NavDropdownItem({
           className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')}
         />
         {isActive && (
-          <span className="absolute bottom-0 left-4 right-4 h-[2px] origin-left animate-line-expand rounded-full bg-primary" />
+          <span className="absolute bottom-0.5 left-3 right-3 h-[2px] origin-left animate-line-expand rounded-full bg-primary xl:left-4 xl:right-4" />
         )}
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-xl border border-outline-variant bg-surface shadow-ambient-lg py-1">
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[210px] rounded-xl border border-outline-variant bg-surface py-1 shadow-ambient-lg">
           <Link
             href={link.href}
             onClick={() => setOpen(false)}
-            className="flex items-center px-4 py-2 text-body-sm text-on-surface-variant hover:text-primary hover:bg-surface-container-low border-b border-outline-variant/50 mb-1"
+            className="mb-1 flex items-center border-b border-outline-variant/40 px-4 py-2.5 text-body-sm font-medium text-on-surface-variant transition-all duration-150 hover:bg-primary/8 hover:text-primary"
           >
             Tất cả {link.label}
           </Link>
@@ -100,10 +104,10 @@ function NavDropdownItem({
               href={sub.href}
               onClick={() => setOpen(false)}
               className={cn(
-                'flex items-center px-4 py-2 text-body-sm transition-colors duration-150',
+                'flex items-center px-4 py-2.5 text-body-sm transition-all duration-150',
                 pathname === sub.href
-                  ? 'text-primary font-medium bg-primary-container/20'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low',
+                  ? 'bg-primary/10 font-semibold text-primary'
+                  : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
               )}
             >
               {sub.label}
