@@ -101,7 +101,14 @@ export default async function HomePage() {
   const videoConfig = getSectionConfig(pageSections, 'video_section') as Record<string, unknown> | null
   const reviewsConfig = getSectionConfig(pageSections, 'customer_reviews') as Record<string, unknown> | null
 
-  const heroImages = (heroConfig?.bg_images as string[]) || []
+  function toImgItem(v: unknown): { url: string; pos: string } {
+    if (typeof v === 'string') return { url: v, pos: 'center' }
+    const x = v as any
+    return { url: x?.url || '', pos: x?.pos || 'center' }
+  }
+
+  const heroImages = ((heroConfig?.bg_images as unknown[]) || []).map(toImgItem)
+  const heroImg = heroImages[0]
 
   return (
     <>
@@ -109,7 +116,8 @@ export default async function HomePage() {
         <HeroBanner
           title={heroConfig?.title as string | undefined}
           subtitle={heroConfig?.subtitle as string | undefined}
-          imageUrl={heroImages[0]}
+          imageUrl={heroImg?.url}
+          imagePosition={heroImg?.pos}
           ctaPrimaryText={heroConfig?.cta_primary_text as string | undefined}
           ctaPrimaryLink={heroConfig?.cta_primary_link as string | undefined}
           badge={heroConfig?.badge as string | undefined}

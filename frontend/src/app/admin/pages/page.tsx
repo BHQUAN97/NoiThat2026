@@ -401,6 +401,44 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
 
 /* ─── Shared field primitives ──────────────────────────────────── */
 
+export interface ImgItem { url: string; pos?: string }
+
+function toImgItem(v: unknown): ImgItem {
+  if (typeof v === 'string') return { url: v, pos: 'center' }
+  const x = v as any
+  return { url: x?.url || '', pos: x?.pos || 'center' }
+}
+
+const POS_GRID = [
+  ['top left', 'top center', 'top right'],
+  ['center left', 'center', 'center right'],
+  ['bottom left', 'bottom center', 'bottom right'],
+]
+const POS_LABELS = [
+  ['Trên trái', 'Trên giữa', 'Trên phải'],
+  ['Giữa trái', 'Giữa', 'Giữa phải'],
+  ['Dưới trái', 'Dưới giữa', 'Dưới phải'],
+]
+
+function PositionPicker({ value = 'center', onChange }: { value?: string; onChange: (pos: string) => void }) {
+  return (
+    <div className="inline-grid grid-cols-3 gap-[3px] rounded-md bg-surface-container p-1.5">
+      {POS_GRID.flat().map((pos, i) => (
+        <button
+          key={pos}
+          type="button"
+          title={POS_LABELS.flat()[i]}
+          onClick={() => onChange(pos)}
+          className={cn(
+            'h-3 w-3 rounded-[2px] transition-colors',
+            value === pos ? 'bg-primary' : 'bg-on-surface/20 hover:bg-primary/50',
+          )}
+        />
+      ))}
+    </div>
+  )
+}
+
 function FInput({ label, value, onChange, multiline, placeholder }: {
   label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string
 }) {
@@ -447,7 +485,10 @@ function FNumber({ label, value, onChange, min = 1, max = 20 }: {
 }
 
 function FImageList({ label, images, onChange, max = 10 }: {
-  label: string; images: string[]; onChange: (urls: string[]) => void; max?: number
+  label: string
+  images: ImgItem[]
+  onChange: (items: ImgItem[]) => void
+  max?: number
 }) {
   const [uploading, setUploading] = useState(false)
   const [uploadErr, setUploadErr] = useState<string | null>(null)
@@ -458,19 +499,24 @@ function FImageList({ label, images, onChange, max = 10 }: {
     if (available <= 0) return
     setUploading(true)
     setUploadErr(null)
-    const newUrls = [...images]
+    const newItems = [...images]
     for (const file of Array.from(files).slice(0, available)) {
       const err = validateImageFile(file)
       if (err) { setUploadErr(err); continue }
       try {
         const media = await uploadMedia(file)
-        newUrls.push(media.preview_url || media.original_url)
+        newItems.push({ url: media.preview_url || media.original_url, pos: 'center' })
       } catch {
         setUploadErr('Tải ảnh thất bại.')
       }
     }
-    onChange(newUrls)
+    onChange(newItems)
     setUploading(false)
+  }
+
+  function updatePos(i: number, pos: string) {
+    const next = images.map((item, idx) => idx === i ? { ...item, pos } : item)
+    onChange(next)
   }
 
   return (
@@ -479,18 +525,29 @@ function FImageList({ label, images, onChange, max = 10 }: {
         {label} <span className="text-on-surface-variant/50">({images.length}/{max})</span>
       </label>
       {images.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          {images.map((url, i) => (
-            <div key={i} className="group relative h-16 w-24 overflow-hidden rounded-lg bg-surface-container">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => onChange(images.filter((_, idx) => idx !== i))}
-                className="absolute right-0.5 top-0.5 rounded-full bg-error/80 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <X className="h-3 w-3" />
-              </button>
+        <div className="mb-2 flex flex-wrap gap-3">
+          {images.map((item, i) => (
+            <div key={i} className="group flex flex-col gap-1.5 rounded-xl bg-surface-container p-1.5">
+              <div className="relative h-16 w-24 overflow-hidden rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: item.pos || 'center' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => onChange(images.filter((_, idx) => idx !== i))}
+                  className="absolute right-0.5 top-0.5 rounded-full bg-error/80 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] text-on-surface-variant/60">Vị trí</span>
+                <PositionPicker value={item.pos} onChange={(pos) => updatePos(i, pos)} />
+              </div>
             </div>
           ))}
         </div>
@@ -516,7 +573,11 @@ function FImageList({ label, images, onChange, max = 10 }: {
   )
 }
 
-function FImageSingle({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+function FImageSingle({ label, item, onChange }: {
+  label: string
+  item: ImgItem
+  onChange: (item: ImgItem) => void
+}) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -526,7 +587,7 @@ function FImageSingle({ label, value, onChange }: { label: string; value: string
     setUploading(true)
     try {
       const media = await uploadMedia(file)
-      onChange(media.preview_url || media.original_url)
+      onChange({ url: media.preview_url || media.original_url, pos: item.pos || 'center' })
     } catch { /* skip */ }
     setUploading(false)
   }
@@ -534,28 +595,36 @@ function FImageSingle({ label, value, onChange }: { label: string; value: string
   return (
     <div>
       <label className="mb-1 block font-label text-label-md text-on-surface-variant">{label}</label>
-      <div className="flex items-center gap-2">
-        {value && (
-          <div className="relative h-10 w-16 overflow-hidden rounded-lg bg-surface-container">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="" className="h-full w-full object-cover" />
+      <div className="flex flex-wrap items-start gap-2">
+        {item.url && (
+          <div className="flex flex-col gap-1.5 rounded-xl bg-surface-container p-1.5">
+            <div className="relative h-12 w-20 overflow-hidden rounded-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={item.url} alt="" className="h-full w-full object-cover" style={{ objectPosition: item.pos || 'center' }} />
+            </div>
+            <div className="flex items-center justify-between px-0.5">
+              <span className="text-[10px] text-on-surface-variant/60">Vị trí</span>
+              <PositionPicker value={item.pos} onChange={(pos) => onChange({ ...item, pos })} />
+            </div>
           </div>
         )}
-        <input ref={inputRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
-        />
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="flex items-center gap-1.5 rounded-lg border border-dashed border-on-surface/20 px-2 py-1.5 text-[11px] text-on-surface-variant hover:border-primary hover:text-primary disabled:opacity-50"
-        >
-          {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-          {uploading ? 'Đang tải...' : value ? 'Đổi ảnh' : 'Chọn ảnh'}
-        </button>
-        {value && (
-          <button type="button" onClick={() => onChange('')} className="text-[11px] text-error/70 hover:text-error">Xoá</button>
-        )}
+        <div className="flex flex-col gap-1.5">
+          <input ref={inputRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 rounded-lg border border-dashed border-on-surface/20 px-2 py-1.5 text-[11px] text-on-surface-variant hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+            {uploading ? 'Đang tải...' : item.url ? 'Đổi ảnh' : 'Chọn ảnh'}
+          </button>
+          {item.url && (
+            <button type="button" onClick={() => onChange({ url: '', pos: 'center' })} className="text-[11px] text-error/70 hover:text-error">Xoá</button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -582,8 +651,8 @@ function SectionEditor({ type, config, onUpdate }: {
           </div>
           <FImageList
             label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = slideshow)"
-            images={config.bg_images || []}
-            onChange={(urls) => onUpdate('bg_images', urls)}
+            images={(config.bg_images || []).map(toImgItem)}
+            onChange={(items) => onUpdate('bg_images', items)}
             max={10}
           />
         </div>
@@ -602,8 +671,8 @@ function SectionEditor({ type, config, onUpdate }: {
           <FInput label="Link đích" value={config.link_href || ''} onChange={(v) => onUpdate('link_href', v)} placeholder="/gioi-thieu" />
           <FImageList
             label="2 ảnh minh họa (trái / phải)"
-            images={config.images || []}
-            onChange={(urls) => onUpdate('images', urls)}
+            images={(config.images || []).map(toImgItem)}
+            onChange={(items) => onUpdate('images', items)}
             max={2}
           />
           <div>
@@ -689,10 +758,10 @@ function SectionEditor({ type, config, onUpdate }: {
                 />
                 <FImageSingle
                   label="Ảnh nền thẻ (tuỳ chọn)"
-                  value={card.bgImage || ''}
-                  onChange={(v) => {
+                  item={{ url: card.bgImage || '', pos: card.bgPos || 'center' }}
+                  onChange={(img) => {
                     const cards = [...(config.cards || [])]
-                    cards[ci] = { ...cards[ci], bgImage: v }
+                    cards[ci] = { ...cards[ci], bgImage: img.url, bgPos: img.pos }
                     onUpdate('cards', cards)
                   }}
                 />

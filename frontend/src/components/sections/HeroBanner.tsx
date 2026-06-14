@@ -6,6 +6,7 @@ interface HeroBannerProps {
   title?: string
   subtitle?: string
   imageUrl?: string
+  imagePosition?: string
   ctaPrimaryText?: string
   ctaPrimaryLink?: string
   badge?: string
@@ -18,6 +19,7 @@ export function HeroBanner({
   title = 'Kiến tạo không gian sống tinh tế.',
   subtitle = 'Xưởng tủ bếp và nội thất Duy Mạnh kế thừa tinh thần VietNet: ảnh công trình làm trung tâm, vật liệu rõ ràng, thi công gọn và tư vấn trực tiếp.',
   imageUrl = DEFAULT_HERO_IMAGE,
+  imagePosition = 'center',
   ctaPrimaryText = 'Bắt đầu dự án',
   ctaPrimaryLink = '/bao-gia',
   badge = 'Xưởng sản xuất trực tiếp',
@@ -29,6 +31,7 @@ export function HeroBanner({
           src={imageUrl}
           alt="Không gian nội thất cao cấp"
           className="h-full w-full scale-105 object-cover"
+          style={{ objectPosition: imagePosition }}
         />
         <div className="absolute inset-0 bg-primary/25 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/75 via-primary/20 to-transparent" />

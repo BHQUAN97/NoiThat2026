@@ -11,13 +11,15 @@ const DEFAULT_STATS = [
   { value: '10+', label: 'Năm kinh nghiệm' },
 ]
 
+interface ImgItem { url: string; pos?: string }
+
 interface CompanyIntroProps {
   label?: string
   headline?: string
   body?: string
   quote?: string
   stats?: Array<{ value: string; label: string }>
-  images?: string[]
+  images?: Array<string | ImgItem>
   linkText?: string
   linkHref?: string
 }
@@ -32,10 +34,14 @@ export function CompanyIntro({
   linkText = 'Xem quy trình',
   linkHref = '/gioi-thieu',
 }: CompanyIntroProps) {
-  const displayImages = [
-    images[0] || DEFAULT_IMAGES[0],
-    images[1] || DEFAULT_IMAGES[1],
-  ]
+  function resolveItem(v: string | ImgItem | undefined, fallback: string): ImgItem {
+    if (!v) return { url: fallback, pos: 'center' }
+    if (typeof v === 'string') return { url: v || fallback, pos: 'center' }
+    return { url: v.url || fallback, pos: v.pos || 'center' }
+  }
+
+  const img0 = resolveItem(images?.[0], DEFAULT_IMAGES[0])
+  const img1 = resolveItem(images?.[1], DEFAULT_IMAGES[1])
 
   return (
     <section className="bg-surface px-4 py-20 md:px-8 md:py-32">
@@ -80,15 +86,17 @@ export function CompanyIntro({
           <div className="pt-12">
             <img
               className="h-[360px] w-full rounded-2xl object-cover shadow-ambient-lg md:h-[440px]"
-              src={displayImages[0]}
+              src={img0.url}
               alt="Nội thất cao cấp"
+              style={{ objectPosition: img0.pos }}
             />
           </div>
           <div>
             <img
               className="h-[360px] w-full rounded-2xl object-cover shadow-ambient-lg md:h-[440px]"
-              src={displayImages[1]}
+              src={img1.url}
               alt="Chi tiết không gian nội thất"
+              style={{ objectPosition: img1.pos }}
             />
           </div>
         </div>

@@ -16,6 +16,7 @@ export interface WhyCard {
   title: string
   desc: string
   bgImage?: string
+  bgPos?: string
 }
 
 interface WhyChooseUsProps {
@@ -43,7 +44,7 @@ export function WhyChooseUs({
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cards.map(({ title, desc, bgImage }, i) => {
+          {cards.map(({ title, desc, bgImage, bgPos }, i) => {
             const Icon = ICON_MAP[i % ICON_MAP.length]
             return (
               <div
@@ -52,7 +53,7 @@ export function WhyChooseUs({
                   'group relative overflow-hidden p-6 rounded-xl border border-border hover:border-brand/30 hover:shadow-card-hover transition-all duration-300',
                   bgImage ? 'bg-cover bg-center' : 'bg-white',
                 )}
-                style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
+                style={bgImage ? { backgroundImage: `url(${bgImage})`, backgroundPosition: bgPos || 'center' } : undefined}
               >
                 {bgImage && (
                   <div className="absolute inset-0 bg-black/50 rounded-xl group-hover:bg-black/40 transition-colors duration-300" />
