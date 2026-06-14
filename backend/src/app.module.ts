@@ -27,6 +27,9 @@ import { PricingModule } from './modules/pricing/pricing.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { FormsModule } from './modules/forms/forms.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { LogsModule } from './modules/logs/logs.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { PageConfigsModule } from './modules/page-configs/page-configs.module';
 
 @Module({
   imports: [
@@ -75,6 +78,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ReviewsModule,
     FormsModule,
     NotificationsModule,
+    LogsModule,
+    AnalyticsModule,
+    PageConfigsModule,
   ],
   providers: [
     {

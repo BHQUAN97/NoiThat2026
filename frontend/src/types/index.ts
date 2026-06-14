@@ -189,3 +189,80 @@ export interface MediaUploadResponse {
   mime_type: string
   file_size: number
 }
+
+// ─── App Logs ───────────────────────────────────────────────────
+
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace'
+
+export interface AppLog {
+  id: string
+  level: LogLevel
+  message: string
+  stack_trace: string | null
+  endpoint: string | null
+  status_code: number | null
+  ip: string | null
+  user_id: string | null
+  user_agent: string | null
+  context: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface LogStats {
+  errorCount: number
+  warnCount: number
+  infoCount: number
+  totalToday: number
+}
+
+// ─── Analytics ──────────────────────────────────────────────────
+
+export interface AnalyticsDashboard {
+  totalViews: number
+  totalUnique: number
+  deviceBreakdown: { mobile: number; desktop: number; tablet: number }
+  dailyTrend: Array<{ date: string; views: number; unique: number }>
+  topPages: Array<{ path: string; views: number; unique: number }>
+}
+
+// ─── Page Config ────────────────────────────────────────────────
+
+export type PageSectionType =
+  | 'hero'
+  | 'featured_products'
+  | 'featured_projects'
+  | 'about'
+  | 'latest_news'
+  | 'contact_cta'
+  | 'testimonials'
+
+export interface PageSection {
+  id: string
+  type: PageSectionType
+  visible: boolean
+  config: Record<string, unknown>
+}
+
+export interface PageConfigData {
+  sections: PageSection[]
+}
+
+export interface PageConfig {
+  id: string
+  page_slug: string
+  config_draft: PageConfigData | null
+  config_published: PageConfigData | null
+  version: number
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PageConfigHistory {
+  id: string
+  page_config_id: string
+  config_snapshot: PageConfigData
+  version: number
+  published_at: string | null
+  created_at: string
+}

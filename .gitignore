@@ -64,7 +64,7 @@ scripts/node_modules/
 scripts/package-lock.json
 scripts/.gdrive-credentials.json
 scripts/.env
-logs/
+/logs/
 
 # Secrets - managed by secrets-infra
 .env

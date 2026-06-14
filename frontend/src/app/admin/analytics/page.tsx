@@ -1,0 +1,246 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { Eye, Users, Smartphone, Monitor, Tablet, RefreshCw } from 'lucide-react'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { LoadingSpinner, ErrorDisplay } from '@/components/shared/DataStates'
+import { formatNumber } from '@/lib/number'
+import { getErrorMessage } from '@/lib/error'
+import api from '@/lib/api'
+import { cn } from '@/lib/utils'
+import type { AnalyticsDashboard } from '@/types'
+
+type DateRange = '7d' | '30d' | '90d'
+
+function getDateRange(range: DateRange): { start: string; end: string } {
+  const end = new Date()
+  const start = new Date()
+  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
+  start.setDate(end.getDate() - days)
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  return { start: fmt(start), end: fmt(end) }
+}
+
+export default function AdminAnalyticsPage() {
+  const [data, setData] = useState<AnalyticsDashboard | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [range, setRange] = useState<DateRange>('30d')
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { start, end } = getDateRange(range)
+      const res = await api.get(`/analytics/dashboard?start=${start}&end=${end}`)
+      setData((res as any).data)
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [range])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  if (loading && !data) {
+    return (
+      <div className="py-4">
+        <PageHeader title="Phân tích" showDecoLine={false} />
+        <LoadingSpinner minHeight="min-h-[30vh]" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-4">
+        <PageHeader title="Phân tích" showDecoLine={false} />
+        <ErrorDisplay message={error} onRetry={fetchData} minHeight="min-h-[30vh]" />
+      </div>
+    )
+  }
+
+  const totalDevice =
+    (data?.deviceBreakdown?.mobile || 0) +
+    (data?.deviceBreakdown?.desktop || 0) +
+    (data?.deviceBreakdown?.tablet || 0)
+
+  return (
+    <div className="py-4">
+      <PageHeader title="Phân tích" description="Thống kê lượt xem và hành vi người dùng" showDecoLine={false}>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-surface-container p-1">
+            {(['7d', '30d', '90d'] as DateRange[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 min-h-[44px] text-label-md transition-colors',
+                  range === r ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-container-high',
+                )}
+              >
+                {r === '7d' ? '7 ngày' : r === '30d' ? '30 ngày' : '90 ngày'}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center justify-center rounded-xl p-2.5 min-h-[44px] min-w-[44px] text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50"
+          >
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+          </button>
+        </div>
+      </PageHeader>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={Eye} label="Tổng lượt xem" value={data?.totalViews || 0} color="primary" />
+        <StatCard icon={Users} label="Khách truy cập" value={data?.totalUnique || 0} color="secondary" />
+        <StatCard
+          icon={Smartphone}
+          label="Mobile"
+          value={data?.deviceBreakdown?.mobile || 0}
+          suffix={totalDevice > 0 ? `${Math.round(((data?.deviceBreakdown?.mobile || 0) / totalDevice) * 100)}%` : '0%'}
+          color="tertiary"
+        />
+        <StatCard
+          icon={Monitor}
+          label="Desktop"
+          value={data?.deviceBreakdown?.desktop || 0}
+          suffix={totalDevice > 0 ? `${Math.round(((data?.deviceBreakdown?.desktop || 0) / totalDevice) * 100)}%` : '0%'}
+          color="primary"
+        />
+      </div>
+
+      <div className="mt-6 rounded-2xl bg-surface-container-low p-6">
+        <h2 className="font-headline text-title-md text-on-surface">Xu hướng lượt xem</h2>
+        <div className="mt-4">
+          {data?.dailyTrend && data.dailyTrend.length > 0 && data.dailyTrend.some((d) => d.views > 0) ? (
+            <TrendChart data={data.dailyTrend} />
+          ) : (
+            <div className="flex h-48 items-center justify-center text-body-md text-on-surface-variant">
+              Chưa có dữ liệu traffic trong khoảng thời gian này
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="rounded-2xl bg-surface-container-low p-6 lg:col-span-2">
+          <h2 className="font-headline text-title-md text-on-surface">Trang được xem nhiều nhất</h2>
+          <div className="mt-4 overflow-x-auto">
+            {data?.topPages && data.topPages.length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-label-sm text-on-surface-variant">
+                    <th className="pb-3 pr-4">Trang</th>
+                    <th className="pb-3 pr-4 text-right">Lượt xem</th>
+                    <th className="pb-3 text-right">Khách</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.topPages.map((p, i) => (
+                    <tr key={p.path} className="even:bg-surface-container-low/30">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-label-sm text-on-surface-variant/50">{i + 1}</span>
+                          <span className="text-body-sm text-on-surface">{p.path}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-right text-body-sm font-medium text-on-surface">{formatNumber(p.views)}</td>
+                      <td className="py-3 text-right text-body-sm text-on-surface-variant">{formatNumber(p.unique)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="py-8 text-center text-body-sm text-on-surface-variant">Chưa có dữ liệu</p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-surface-container-low p-6">
+          <h2 className="font-headline text-title-md text-on-surface">Thiết bị</h2>
+          <div className="mt-6 space-y-4">
+            <DeviceBar icon={Monitor} label="Desktop" value={data?.deviceBreakdown?.desktop || 0} total={totalDevice} />
+            <DeviceBar icon={Smartphone} label="Mobile" value={data?.deviceBreakdown?.mobile || 0} total={totalDevice} />
+            <DeviceBar icon={Tablet} label="Tablet" value={data?.deviceBreakdown?.tablet || 0} total={totalDevice} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatCard({ icon: Icon, label, value, suffix, color }: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+  suffix?: string
+  color: 'primary' | 'secondary' | 'tertiary'
+}) {
+  const bgMap = { primary: 'bg-primary/5', secondary: 'bg-secondary/5', tertiary: 'bg-tertiary/5' }
+  const iconMap = { primary: 'bg-primary/10 text-primary', secondary: 'bg-secondary/10 text-secondary', tertiary: 'bg-tertiary/10 text-tertiary' }
+  return (
+    <div className={cn('rounded-2xl p-5', bgMap[color])}>
+      <div className="flex items-center justify-between">
+        <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', iconMap[color])}><Icon className="h-5 w-5" /></span>
+        {suffix && <span className="text-label-sm text-on-surface-variant">{suffix}</span>}
+      </div>
+      <p className="mt-3 font-body text-headline-md font-bold text-on-surface">{formatNumber(value)}</p>
+      <p className="mt-1 text-body-sm text-on-surface-variant">{label}</p>
+    </div>
+  )
+}
+
+function DeviceBar({ icon: Icon, label, value, total }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number; total: number }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2"><Icon className="h-4 w-4 text-on-surface-variant" /><span className="text-body-sm text-on-surface">{label}</span></div>
+        <span className="text-label-sm text-on-surface-variant">{formatNumber(value)} ({pct}%)</span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-container">
+        <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function TrendChart({ data }: { data: Array<{ date: string; views: number; unique: number }> }) {
+  const maxViews = Math.max(...data.map((d) => d.views), 1)
+  const chartHeight = 200
+  const needsScroll = data.length > 15
+
+  return (
+    <div className="relative">
+      <div className="absolute left-0 top-0 flex h-[200px] flex-col justify-between text-label-sm text-on-surface-variant/50">
+        <span>{formatNumber(maxViews)}</span>
+        <span>{formatNumber(Math.round(maxViews / 2))}</span>
+        <span>0</span>
+      </div>
+      <div className={needsScroll ? 'ml-12 overflow-x-auto' : 'ml-12'}>
+        <div className="flex items-end gap-1" style={{ height: chartHeight, minWidth: needsScroll ? `${data.length * 12}px` : undefined }}>
+          {data.map((d, i) => {
+            const viewHeight = (d.views / maxViews) * chartHeight
+            return (
+              <div key={i} className="group relative flex flex-1 flex-col items-center" style={{ minWidth: '8px' }}>
+                <div className="pointer-events-none absolute -top-16 z-10 hidden rounded-lg bg-inverse-surface px-3 py-2 text-label-sm text-inverse-on-surface shadow-lg group-hover:block">
+                  <p>{d.date}</p>
+                  <p>Xem: {formatNumber(d.views)}</p>
+                  <p>Khách: {formatNumber(d.unique)}</p>
+                </div>
+                <div className="w-full rounded-t bg-primary/30 transition-all group-hover:bg-primary/50" style={{ height: `${viewHeight}px` }} />
+                {(i % Math.max(1, Math.floor(data.length / 8)) === 0 || i === data.length - 1) && (
+                  <span className="mt-2 whitespace-nowrap text-label-sm text-on-surface-variant/50">{d.date.slice(5)}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}

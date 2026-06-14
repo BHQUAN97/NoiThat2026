@@ -51,6 +51,9 @@ export const ADMIN_NAV_ITEMS = [
   { label: 'Tin Tức', href: '/admin/news', icon: 'Newspaper' },
   { label: 'Bảng Giá', href: '/admin/pricing', icon: 'DollarSign' },
   { label: 'Đánh Giá', href: '/admin/reviews', icon: 'Star' },
+  { label: 'Trang Chủ', href: '/admin/pages', icon: 'LayoutTemplate' },
+  { label: 'Phân Tích', href: '/admin/analytics', icon: 'BarChart2' },
+  { label: 'System Log', href: '/admin/logs', icon: 'ScrollText' },
   { label: 'Cài Đặt', href: '/admin/settings', icon: 'Settings' },
   { label: 'Người Dùng', href: '/admin/users', icon: 'Users' },
 ] as const

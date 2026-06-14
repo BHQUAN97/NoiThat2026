@@ -18,6 +18,9 @@ import {
   LogOut,
   Menu,
   X,
+  LayoutTemplate,
+  BarChart2,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ADMIN_NAV_ITEMS, SITE_NAME } from '@/lib/constants'
@@ -36,6 +39,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Video,
   Users,
   Settings,
+  LayoutTemplate,
+  BarChart2,
+  ScrollText,
 }
 
 export function AdminSidebar() {
