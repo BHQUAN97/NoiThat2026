@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  APP_DIR: /opt/noithat
+  APP_DIR: /opt/noithat2026
   INFRA_DIR: /opt/infra
 
 jobs:

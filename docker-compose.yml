@@ -35,6 +35,9 @@ services:
       default:
         aliases:
           - noithat-api
+      proxy:
+        aliases:
+          - noithat-api
     depends_on:
       mysql:
         condition: service_healthy
@@ -67,6 +70,9 @@ services:
       default:
         aliases:
           - noithat-frontend
+      proxy:
+        aliases:
+          - noithat-frontend
     depends_on:
       backend:
         condition: service_healthy
@@ -93,7 +99,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-noithat_root}
       MYSQL_DATABASE: noithat2026
       MYSQL_USER: noithat
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-noithat_dev}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-noithat_dev}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/schema/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -118,6 +124,11 @@ services:
           cpus: '0.5'
           memory: 2G
     restart: unless-stopped
+
+networks:
+  proxy:
+    external: true
+    name: noithat_frontend
 
 volumes:
   mysql_data:

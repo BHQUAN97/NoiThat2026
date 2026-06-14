@@ -132,6 +132,12 @@ export class AddLogsAnalyticsPages1749400000000 implements MigrationInterface {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    // ── site_config: add type column nếu chưa có ─────────────────
+    await queryRunner.query(`
+      ALTER TABLE \`site_config\`
+      ADD COLUMN IF NOT EXISTS \`type\` varchar(50) NOT NULL DEFAULT 'string'
+    `).catch(() => {})
+
     // ── page_view_daily ───────────────────────────────────────────
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS \`page_view_daily\` (
