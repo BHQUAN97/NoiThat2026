@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Save,
   Eye,
@@ -12,9 +12,16 @@ import {
   Undo2,
   History,
   Loader2,
+  ImageIcon,
   X,
   GripVertical,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Upload,
 } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { uploadMedia, validateImageFile } from '@/lib/media'
 import api from '@/lib/api'
 import { formatDateTime } from '@/lib/date'
 import { cn } from '@/lib/utils'
@@ -32,33 +39,36 @@ const SECTION_TYPE_LABELS: Record<PageSectionType, string> = {
 
 const NEW_SECTION_DEFAULTS: Record<PageSectionType, Record<string, unknown>> = {
   hero: {
+    label: 'Chuyên nghiệp',
     title: 'Nội Thất Duy Mạnh',
     subtitle: 'Thiết kế nội thất đẳng cấp cho ngôi nhà của bạn',
-    label: 'Chuyên nghiệp',
+    text_align: 'center',
     cta_primary_text: 'Xem sản phẩm',
-    cta_primary_link: '/san-pham',
+    cta_primary_link: '/tu-bep',
     cta_secondary_text: 'Liên hệ ngay',
     cta_secondary_link: '/lien-he',
-    bg_image_url: null,
+    bg_images: [],
   },
   featured_products: {
     label: 'Sản phẩm',
     title: 'Sản phẩm nổi bật',
     limit: 8,
     cta_text: 'Xem tất cả',
-    cta_link: '/san-pham',
+    cta_link: '/tu-bep',
   },
   featured_projects: {
     label: 'Dự án',
     title: 'Dự án tiêu biểu',
     limit: 6,
     cta_text: 'Xem tất cả',
-    cta_link: '/du-an',
+    cta_link: '/du-an-thuc-te',
   },
   about: {
     label: 'Về chúng tôi',
     title: 'Nội Thất Duy Mạnh',
-    description: 'Hơn 10 năm kinh nghiệm thiết kế và thi công nội thất cao cấp.',
+    description: 'Hơn 10 năm kinh nghiệm thiết kế và thi công nội thất cao cấp tại Hà Nội.',
+    text_align: 'left',
+    images: [],
     stats: [],
   },
   latest_news: {
@@ -69,6 +79,7 @@ const NEW_SECTION_DEFAULTS: Record<PageSectionType, Record<string, unknown>> = {
   contact_cta: {
     title: 'Liên hệ ngay hôm nay',
     description: 'Nhận tư vấn miễn phí và báo giá chi tiết từ đội ngũ chuyên gia.',
+    text_align: 'center',
     cta_text: 'Liên hệ tư vấn',
     cta_link: '/lien-he',
   },
@@ -116,7 +127,7 @@ export default function AdminPagesPage() {
       const config = res.data as PageConfig
       if (config) {
         setPageConfig(config)
-        const draft = config.config_draft
+        const draft = config.config_draft as PageConfigData | null
         const rawSections = draft?.sections || DEFAULT_SECTIONS
         setSections(rawSections.map((s) => ({ ...s, id: s.id || genId() })))
       } else {
@@ -252,60 +263,41 @@ export default function AdminPagesPage() {
   return (
     <div className="py-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-headline-lg text-on-surface">Trang chủ</h1>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            Cấu hình các section hiển thị trên trang chủ
-            {pageConfig && <span className="ml-2 text-body-sm text-on-surface-variant/60">v{pageConfig.version}</span>}
+          <h1 className="font-headline text-headline-lg text-on-surface">Page Builder</h1>
+          <p className="mt-1 text-body-sm text-on-surface-variant">
+            Trang chủ — Phiên bản {pageConfig?.version || 0}
+            {pageConfig?.published_at && <> — Xuất bản lúc {formatDateTime(pageConfig.published_at)}</>}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchHistory}
-            className="flex items-center gap-1.5 rounded-xl px-4 py-2 min-h-[44px] text-label-md text-on-surface-variant hover:bg-surface-container-high"
-          >
-            <History className="h-4 w-4" /> Lịch sử
-          </button>
-          <button
-            onClick={saveDraft}
-            disabled={isSaving || isPublishing}
-            className="flex items-center gap-1.5 rounded-xl border border-outline px-4 py-2 min-h-[44px] text-label-md text-on-surface hover:bg-surface-container disabled:opacity-50"
-          >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {isSaving ? 'Đang lưu...' : 'Lưu nháp'}
-          </button>
-          <button
-            onClick={publishConfig}
-            disabled={isSaving || isPublishing}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 min-h-[44px] text-label-md text-on-primary hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isPublishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-            {isPublishing ? 'Đang xuất bản...' : 'Xuất bản'}
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {saveStatus && <span className="text-body-sm text-primary">{saveStatus}</span>}
+          <Button variant="ghost" size="sm" onClick={fetchHistory} disabled={!pageConfig}>
+            <History className="mr-2 h-4 w-4" /> Lịch sử
+          </Button>
+          <Button variant="secondary" size="sm" onClick={saveDraft} disabled={isSaving || isPublishing}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Lưu nháp
+          </Button>
+          <Button size="sm" onClick={publishConfig} disabled={isSaving || isPublishing}>
+            {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            Xuất bản
+          </Button>
         </div>
       </div>
 
-      {/* Status/error messages */}
-      {saveStatus && (
-        <div className="mt-4 rounded-xl bg-primary-container px-4 py-3 text-body-sm text-on-primary-container">{saveStatus}</div>
-      )}
       {error && (
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-error-container px-4 py-3">
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-error-container px-4 py-3">
           <p className="text-body-sm text-on-error-container">{error}</p>
-          <button onClick={() => setError(null)} className="p-1 text-on-error-container hover:opacity-70"><X className="h-4 w-4" /></button>
+          <button onClick={() => setError(null)} className="p-1 text-on-error-container hover:opacity-70">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
-      {/* Published info */}
-      {pageConfig?.published_at && (
-        <p className="mt-3 text-body-sm text-on-surface-variant/60">
-          Xuất bản lần cuối: {formatDateTime(pageConfig.published_at)}
-        </p>
-      )}
-
       {/* Sections list */}
-      <div className="mt-6 space-y-3">
+      <div className="space-y-3">
         {sections.map((section, idx) => (
           <SectionCard
             key={section.id}
@@ -327,26 +319,25 @@ export default function AdminPagesPage() {
       <div className="mt-4">
         {showAddSection ? (
           <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-label-md text-on-surface">Thêm section</h3>
-              <button onClick={() => setShowAddSection(false)} className="p-1 text-on-surface-variant hover:text-on-surface"><X className="h-4 w-4" /></button>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="font-label text-label-lg text-on-surface-variant">Thêm section mới</p>
+              <button onClick={() => setShowAddSection(false)} className="p-1 text-on-surface-variant hover:text-on-surface">
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="flex flex-wrap gap-2">
               {(Object.keys(SECTION_TYPE_LABELS) as PageSectionType[]).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => addSection(type)}
-                  className="rounded-xl bg-surface-container px-3 py-2.5 text-left text-body-sm text-on-surface hover:bg-surface-container-high"
-                >
+                <Button key={type} variant="ghost" size="sm" onClick={() => addSection(type)}>
+                  <Plus className="mr-1 h-4 w-4" />
                   {SECTION_TYPE_LABELS[type]}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
         ) : (
           <button
             onClick={() => setShowAddSection(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-outline-variant py-4 text-label-md text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-outline-variant py-4 text-label-md text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
           >
             <Plus className="h-4 w-4" /> Thêm section
           </button>
@@ -365,7 +356,7 @@ export default function AdminPagesPage() {
   )
 }
 
-/* ─── Section Card ─────────────────────────────────────────── */
+/* ─── Section Card ────────────────────────────────────────────── */
 
 function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onToggleVisibility, onRemove, onMoveUp, onMoveDown, onUpdate }: {
   section: PageSection
@@ -379,39 +370,58 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
   onMoveDown: () => void
   onUpdate: (key: string, value: unknown) => void
 }) {
-  const label = SECTION_TYPE_LABELS[section.type]
-
   return (
-    <div className={cn('rounded-2xl border transition-all', expanded ? 'border-primary/30 bg-surface-container-low' : 'border-outline-variant bg-surface-container-lowest')}>
+    <div className={cn(
+      'rounded-xl transition-all',
+      section.visible ? 'bg-surface-container-low' : 'bg-surface-container-low/50 opacity-60',
+      expanded && 'ring-1 ring-primary/20',
+    )}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4">
-        <GripVertical className="h-5 w-5 shrink-0 text-on-surface-variant/30" />
-
-        <button onClick={onToggleExpand} className="flex flex-1 items-center gap-3 text-left">
-          <div>
-            <p className="text-body-sm font-medium text-on-surface">{label}</p>
-            <p className="text-[11px] text-on-surface-variant/50">{section.type}</p>
-          </div>
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+        <button
+          onClick={onToggleExpand}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          <GripVertical className="h-5 w-5 shrink-0 text-on-surface-variant/40" />
+          <span className="truncate font-label text-label-lg text-on-surface">
+            {SECTION_TYPE_LABELS[section.type]}
+          </span>
+          {!section.visible && (
+            <span className="shrink-0 text-body-sm text-on-surface-variant">(Ẩn)</span>
+          )}
         </button>
-
         <div className="flex items-center gap-1">
-          <button onClick={onMoveUp} disabled={isFirst} className="flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-20">
+          <button
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30"
+          >
             <ChevronUp className="h-4 w-4" />
           </button>
-          <button onClick={onMoveDown} disabled={isLast} className="flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-20">
+          <button
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30"
+          >
             <ChevronDown className="h-4 w-4" />
           </button>
           <button
             onClick={onToggleVisibility}
-            className={cn('flex h-8 w-8 items-center justify-center rounded-lg', section.visible ? 'text-on-surface-variant hover:bg-surface-container' : 'text-on-surface-variant/30 hover:bg-surface-container')}
             title={section.visible ? 'Ẩn section' : 'Hiện section'}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high"
           >
             {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
-          <button onClick={onRemove} className="flex h-8 w-8 items-center justify-center rounded-lg text-error/50 hover:bg-error-container/30 hover:text-error">
+          <button
+            onClick={onRemove}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
-          <button onClick={onToggleExpand} className="flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container">
+          <button
+            onClick={onToggleExpand}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high"
+          >
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
         </div>
@@ -419,7 +429,7 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
 
       {/* Config editor */}
       {expanded && (
-        <div className="border-t border-outline-variant/30 p-4">
+        <div className="border-t border-outline-variant/30 px-4 py-4">
           <SectionConfigEditor type={section.type} config={section.config} onUpdate={onUpdate} />
         </div>
       )}
@@ -427,111 +437,456 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
   )
 }
 
-/* ─── Section Config Editor ─────────────────────────────────── */
+/* ─── Shared field components ─────────────────────────────────── */
 
-function SectionConfigEditor({ type, config, onUpdate }: {
-  type: PageSectionType
-  config: Record<string, unknown>
-  onUpdate: (key: string, value: unknown) => void
+function FieldInput({ label, value, onChange, multiline, placeholder }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  multiline?: boolean
+  placeholder?: string
 }) {
-  const field = (key: string, label: string, multiline = false) => (
-    <div key={key}>
-      <label className="block text-label-sm text-on-surface-variant mb-1">{label}</label>
+  return (
+    <div>
+      <label className="mb-1 block font-label text-label-md text-on-surface-variant">{label}</label>
       {multiline ? (
         <textarea
-          value={String(config[key] || '')}
-          onChange={(e) => onUpdate(key, e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           rows={3}
-          className="w-full rounded-xl bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+          placeholder={placeholder}
+          className="w-full resize-none rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
         />
       ) : (
         <input
           type="text"
-          value={String(config[key] || '')}
-          onChange={(e) => onUpdate(key, e.target.value)}
-          className="w-full rounded-xl bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/30"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
         />
       )}
     </div>
   )
+}
 
-  const numField = (key: string, label: string) => (
-    <div key={key}>
-      <label className="block text-label-sm text-on-surface-variant mb-1">{label}</label>
+function FieldNumber({ label, value, onChange }: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div>
+      <label className="mb-1 block font-label text-label-md text-on-surface-variant">{label}</label>
       <input
         type="number"
-        value={Number(config[key] || 0)}
-        onChange={(e) => onUpdate(key, parseInt(e.target.value, 10))}
-        className="w-full rounded-xl bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/30"
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
+        className="w-full rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
       />
     </div>
   )
-
-  const fields: React.ReactNode[] = []
-
-  if (type === 'hero') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('label', 'Nhãn')}
-        {field('title', 'Tiêu đề')}
-        {field('subtitle', 'Mô tả', true)}
-        {field('cta_primary_text', 'Nút chính - Text')}
-        {field('cta_primary_link', 'Nút chính - Link')}
-        {field('cta_secondary_text', 'Nút phụ - Text')}
-        {field('cta_secondary_link', 'Nút phụ - Link')}
-        {field('bg_image_url', 'Ảnh nền (URL)')}
-      </div>,
-    )
-  } else if (type === 'featured_products' || type === 'featured_projects') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('label', 'Nhãn')}
-        {field('title', 'Tiêu đề')}
-        {numField('limit', 'Số lượng hiển thị')}
-        {field('cta_text', 'Nút - Text')}
-        {field('cta_link', 'Nút - Link')}
-      </div>,
-    )
-  } else if (type === 'about') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('label', 'Nhãn')}
-        {field('title', 'Tiêu đề')}
-        {field('description', 'Mô tả', true)}
-      </div>,
-    )
-  } else if (type === 'latest_news') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('label', 'Nhãn')}
-        {field('title', 'Tiêu đề')}
-        {numField('limit', 'Số bài viết hiển thị')}
-      </div>,
-    )
-  } else if (type === 'contact_cta') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('title', 'Tiêu đề')}
-        {field('description', 'Mô tả', true)}
-        {field('cta_text', 'Nút - Text')}
-        {field('cta_link', 'Nút - Link')}
-      </div>,
-    )
-  } else if (type === 'testimonials') {
-    fields.push(
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {field('label', 'Nhãn')}
-        {field('title', 'Tiêu đề')}
-      </div>,
-    )
-  }
-
-  return <div className="space-y-4">{fields}</div>
 }
 
-/* ─── History Modal ─────────────────────────────────────────── */
+function FieldAlign({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="mb-1 block font-label text-label-md text-on-surface-variant">Căn chữ</label>
+      <div className="flex gap-1">
+        {(['left', 'center', 'right'] as const).map((align) => {
+          const Icon = align === 'left' ? AlignLeft : align === 'center' ? AlignCenter : AlignRight
+          return (
+            <button
+              key={align}
+              type="button"
+              onClick={() => onChange(align)}
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-lg border transition-colors',
+                value === align
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-outline-variant bg-surface-container text-on-surface-variant hover:bg-surface-container-high',
+              )}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
-function HistoryModal({ history, onClose, onRollback }: { history: PageConfigHistory[]; onClose: () => void; onRollback: (v: number) => void }) {
+/**
+ * Upload và quản lý danh sách ảnh. Max 10 ảnh, hỗ trợ xoá từng ảnh.
+ */
+function PageImageList({ label, images, onChange, max = 10 }: {
+  label: string
+  images: string[]
+  onChange: (urls: string[]) => void
+  max?: number
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFiles(files: FileList) {
+    const fileArr = Array.from(files)
+    const available = max - images.length
+    if (available <= 0) return
+    setUploading(true)
+    setUploadError(null)
+    const newUrls = [...images]
+    for (const file of fileArr.slice(0, available)) {
+      const err = validateImageFile(file)
+      if (err) { setUploadError(err); continue }
+      try {
+        const media = await uploadMedia(file)
+        newUrls.push(media.preview_url || media.original_url)
+      } catch {
+        setUploadError('Tải ảnh thất bại. Vui lòng thử lại.')
+      }
+    }
+    onChange(newUrls)
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+        {label} <span className="text-on-surface-variant/50">({images.length}/{max})</span>
+      </label>
+
+      {images.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {images.map((url, i) => (
+            <div key={i} className="group relative h-16 w-24 overflow-hidden rounded-lg bg-surface-container">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => onChange(images.filter((_, idx) => idx !== i))}
+                className="absolute right-0.5 top-0.5 rounded-full bg-error/80 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {uploadError && <p className="mb-1 text-[11px] text-error">{uploadError}</p>}
+
+      {images.length < max && (
+        <>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { if (e.target.files) handleFiles(e.target.files); e.target.value = '' }}
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 rounded-lg border border-dashed border-on-surface/20 px-3 py-2 text-body-sm text-on-surface-variant hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            {uploading ? 'Đang tải...' : 'Chọn ảnh'}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Upload 1 ảnh duy nhất (dùng cho avatar testimonial).
+ */
+function PageImageSingle({ label, value, onChange }: {
+  label: string
+  value: string
+  onChange: (url: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(file: File) {
+    const err = validateImageFile(file)
+    if (err) return
+    setUploading(true)
+    try {
+      const media = await uploadMedia(file)
+      onChange(media.preview_url || media.original_url)
+    } catch { /* skip */ }
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      <label className="mb-1 block font-label text-label-md text-on-surface-variant">{label}</label>
+      <div className="flex items-center gap-2">
+        {value && (
+          <div className="relative h-10 w-10 overflow-hidden rounded-full bg-surface-container">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="" className="h-full w-full object-cover" />
+          </div>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1.5 rounded-lg border border-dashed border-on-surface/20 px-2 py-1.5 text-[11px] text-on-surface-variant hover:border-primary hover:text-primary disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+          {uploading ? 'Đang tải...' : value ? 'Đổi ảnh' : 'Chọn ảnh'}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="text-[11px] text-error/70 hover:text-error"
+          >
+            Xoá
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Section Config Editor ───────────────────────────────────── */
+
+function SectionConfigEditor({ type, config, onUpdate }: {
+  type: PageSectionType
+  config: Record<string, any>
+  onUpdate: (key: string, value: unknown) => void
+}) {
+  switch (type) {
+    case 'hero':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="vd: Chuyên nghiệp" />
+            <FieldAlign value={config.text_align || 'center'} onChange={(v) => onUpdate('text_align', v)} />
+          </div>
+          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FieldInput label="Mô tả" value={config.subtitle || ''} onChange={(v) => onUpdate('subtitle', v)} multiline />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Nút chính - Text" value={config.cta_primary_text || ''} onChange={(v) => onUpdate('cta_primary_text', v)} />
+            <FieldInput label="Nút chính - Link" value={config.cta_primary_link || ''} onChange={(v) => onUpdate('cta_primary_link', v)} placeholder="/tu-bep" />
+            <FieldInput label="Nút phụ - Text" value={config.cta_secondary_text || ''} onChange={(v) => onUpdate('cta_secondary_text', v)} />
+            <FieldInput label="Nút phụ - Link" value={config.cta_secondary_link || ''} onChange={(v) => onUpdate('cta_secondary_link', v)} placeholder="/lien-he" />
+          </div>
+          <PageImageList
+            label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = tự động lướt)"
+            images={config.bg_images || (config.bg_image_url ? [config.bg_image_url] : [])}
+            onChange={(urls) => onUpdate('bg_images', urls)}
+            max={10}
+          />
+        </div>
+      )
+
+    case 'featured_products':
+      return (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
+          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FieldNumber label="Số lượng hiển thị" value={config.limit || 8} onChange={(v) => onUpdate('limit', v)} />
+          <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
+          <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/tu-bep" />
+        </div>
+      )
+
+    case 'featured_projects':
+      return (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
+          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FieldNumber label="Số lượng hiển thị" value={config.limit || 6} onChange={(v) => onUpdate('limit', v)} />
+          <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
+          <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/du-an-thuc-te" />
+        </div>
+      )
+
+    case 'about':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
+            <FieldAlign value={config.text_align || 'left'} onChange={(v) => onUpdate('text_align', v)} />
+          </div>
+          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FieldInput label="Mô tả" value={config.description || ''} onChange={(v) => onUpdate('description', v)} multiline />
+          <PageImageList
+            label="Ảnh minh họa (2 ảnh hiển thị song song)"
+            images={config.images || []}
+            onChange={(urls) => onUpdate('images', urls)}
+            max={2}
+          />
+          <div>
+            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Thống kê</label>
+            {(config.stats || []).map((stat: any, si: number) => (
+              <div key={si} className="mb-2 flex flex-wrap gap-2 sm:flex-nowrap">
+                <input
+                  value={stat.value || ''}
+                  onChange={(e) => {
+                    const newStats = [...(config.stats || [])]
+                    newStats[si] = { ...newStats[si], value: e.target.value }
+                    onUpdate('stats', newStats)
+                  }}
+                  placeholder="vd: 10+"
+                  className="w-full rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40 sm:w-1/3"
+                />
+                <input
+                  value={stat.label || ''}
+                  onChange={(e) => {
+                    const newStats = [...(config.stats || [])]
+                    newStats[si] = { ...newStats[si], label: e.target.value }
+                    onUpdate('stats', newStats)
+                  }}
+                  placeholder="vd: Năm kinh nghiệm"
+                  className="min-w-0 flex-1 rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <button
+                  onClick={() => onUpdate('stats', (config.stats || []).filter((_: any, i: number) => i !== si))}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onUpdate('stats', [...(config.stats || []), { value: '', label: '' }])}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Thêm thống kê
+            </Button>
+          </div>
+        </div>
+      )
+
+    case 'latest_news':
+      return (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
+          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FieldNumber label="Số bài viết hiển thị" value={config.limit || 3} onChange={(v) => onUpdate('limit', v)} />
+        </div>
+      )
+
+    case 'contact_cta':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+            <FieldAlign value={config.text_align || 'center'} onChange={(v) => onUpdate('text_align', v)} />
+          </div>
+          <FieldInput label="Mô tả" value={config.description || ''} onChange={(v) => onUpdate('description', v)} multiline />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
+            <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/lien-he" />
+          </div>
+        </div>
+      )
+
+    case 'testimonials':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
+            <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          </div>
+          <div>
+            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Đánh giá khách hàng</label>
+            {(config.items || []).map((item: any, ti: number) => (
+              <div key={ti} className="mb-3 rounded-lg bg-surface p-3">
+                <div className="mb-2 grid gap-2 sm:grid-cols-2">
+                  <FieldInput
+                    label="Tên"
+                    value={item.name || ''}
+                    onChange={(v) => {
+                      const items = [...(config.items || [])]
+                      items[ti] = { ...items[ti], name: v }
+                      onUpdate('items', items)
+                    }}
+                    placeholder="Nguyễn Văn A"
+                  />
+                  <FieldInput
+                    label="Vai trò"
+                    value={item.role || ''}
+                    onChange={(v) => {
+                      const items = [...(config.items || [])]
+                      items[ti] = { ...items[ti], role: v }
+                      onUpdate('items', items)
+                    }}
+                    placeholder="Khách hàng"
+                  />
+                </div>
+                <div className="mb-2">
+                  <FieldInput
+                    label="Nội dung đánh giá"
+                    value={item.content || ''}
+                    onChange={(v) => {
+                      const items = [...(config.items || [])]
+                      items[ti] = { ...items[ti], content: v }
+                      onUpdate('items', items)
+                    }}
+                    multiline
+                    placeholder="Sản phẩm rất tốt..."
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <PageImageSingle
+                    label="Ảnh đại diện"
+                    value={item.avatar_url || ''}
+                    onChange={(v) => {
+                      const items = [...(config.items || [])]
+                      items[ti] = { ...items[ti], avatar_url: v }
+                      onUpdate('items', items)
+                    }}
+                  />
+                  <button
+                    onClick={() => onUpdate('items', (config.items || []).filter((_: any, i: number) => i !== ti))}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onUpdate('items', [...(config.items || []), { name: '', role: '', content: '', avatar_url: '' }])}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Thêm đánh giá
+            </Button>
+          </div>
+        </div>
+      )
+
+    default:
+      return <p className="text-body-sm text-on-surface-variant">Không hỗ trợ chỉnh sửa section này.</p>
+  }
+}
+
+/* ─── History Modal ───────────────────────────────────────────── */
+
+function HistoryModal({ history, onClose, onRollback }: {
+  history: PageConfigHistory[]
+  onClose: () => void
+  onRollback: (v: number) => void
+}) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose() } }
     window.addEventListener('keydown', handler)
@@ -551,24 +906,22 @@ function HistoryModal({ history, onClose, onRollback }: { history: PageConfigHis
             <X className="h-5 w-5" />
           </button>
         </div>
-
         <div className="px-6 pb-6">
           {history.length === 0 ? (
             <p className="py-8 text-center text-body-sm text-on-surface-variant">Chưa có lịch sử xuất bản</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {history.map((h) => (
                 <div key={h.id} className="flex items-center justify-between rounded-xl bg-surface-container p-4">
                   <div>
-                    <p className="text-body-sm font-medium text-on-surface">Phiên bản {h.version}</p>
-                    <p className="text-[11px] text-on-surface-variant/60">{h.published_at ? formatDateTime(h.published_at) : formatDateTime(h.created_at)}</p>
+                    <p className="font-label text-label-lg text-on-surface">Phiên bản {h.version}</p>
+                    <p className="text-[11px] text-on-surface-variant/60">
+                      {h.published_at ? formatDateTime(h.published_at) : formatDateTime(h.created_at)}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => onRollback(h.version)}
-                    className="flex items-center gap-1.5 rounded-xl border border-outline px-3 py-1.5 text-label-sm text-on-surface hover:bg-surface-container-high"
-                  >
-                    <Undo2 className="h-3.5 w-3.5" /> Khôi phục
-                  </button>
+                  <Button variant="ghost" size="sm" onClick={() => onRollback(h.version)}>
+                    <Undo2 className="mr-1 h-4 w-4" /> Khôi phục
+                  </Button>
                 </div>
               ))}
             </div>
