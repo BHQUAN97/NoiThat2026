@@ -10,6 +10,11 @@ interface Project {
 
 interface FeaturedProjectsProps {
   projects?: Project[]
+  label?: string
+  title?: string
+  ctaText?: string
+  ctaLink?: string
+  limit?: number
 }
 
 const PROJECT_IMAGES = [
@@ -24,8 +29,15 @@ const FALLBACK_PROJECTS: Project[] = [
   { id: '3', title: 'Tủ bếp Acrylic toàn bộ - Chung cư HH', province: 'Hà Nội', thumbnail_url: null },
 ]
 
-export function FeaturedProjects({ projects = [] }: FeaturedProjectsProps) {
-  const displayProjects = projects.length > 0 ? projects.slice(0, 3) : FALLBACK_PROJECTS
+export function FeaturedProjects({
+  projects = [],
+  label = 'Our Legacy',
+  title = 'Dự án tiêu biểu',
+  ctaText = 'Xem portfolio',
+  ctaLink = '/du-an-thuc-te',
+  limit = 3,
+}: FeaturedProjectsProps) {
+  const displayProjects = projects.length > 0 ? projects.slice(0, limit) : FALLBACK_PROJECTS.slice(0, limit)
 
   return (
     <section className="bg-surface-container-low px-4 py-20 md:px-8 md:py-32">
@@ -33,17 +45,17 @@ export function FeaturedProjects({ projects = [] }: FeaturedProjectsProps) {
         <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div>
             <span className="mb-4 block font-label text-xs uppercase tracking-[0.2em] text-primary">
-              Our Legacy
+              {label}
             </span>
             <h2 className="font-headline text-4xl font-bold text-primary md:text-5xl">
-              Dự án tiêu biểu
+              {title}
             </h2>
           </div>
           <Link
-            href="/du-an-thuc-te"
+            href={ctaLink}
             className="group flex items-center gap-2 font-label text-label-lg font-bold uppercase tracking-label-wide text-primary transition-all hover:gap-4"
           >
-            Xem portfolio
+            {ctaText}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

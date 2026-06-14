@@ -9,7 +9,7 @@ import { CustomerReviews } from '@/components/sections/CustomerReviews'
 import { QuoteFormSection } from '@/components/sections/QuoteFormSection'
 import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getListData } from '@/lib/api-response'
-import type { Project, Review, Video } from '@/types'
+import type { Project, Review, Video, PageConfig, PageSection } from '@/types'
 
 export const metadata: Metadata = {
   title: 'Tủ Bếp & Nội Thất Gia Đình Cao Cấp — Xưởng Duy Mạnh',
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
 
 async function fetchAll() {
   const base = getServerApiUrl()
-
   const signal = () => AbortSignal.timeout(5000)
 
-  const [projectsRes, reviewsRes, videosRes] = await Promise.allSettled([
-    fetch(`${base}/projects?featured=true&limit=3`, { next: { revalidate: 300 }, signal: signal() }),
+  const [projectsRes, reviewsRes, videosRes, pageRes] = await Promise.allSettled([
+    fetch(`${base}/projects?featured=true&limit=6`, { next: { revalidate: 300 }, signal: signal() }),
     fetch(`${base}/reviews?featured=true&limit=6`, { next: { revalidate: 300 }, signal: signal() }),
-    fetch(`${base}/videos?limit=3`, { next: { revalidate: 300 }, signal: signal() }),
+    fetch(`${base}/videos?limit=6`, { next: { revalidate: 300 }, signal: signal() }),
+    fetch(`${base}/pages/homepage/published`, { next: { revalidate: 60, tags: ['pages'] }, signal: signal() }),
   ])
 
   const projectsRaw: Project[] = projectsRes.status === 'fulfilled' && projectsRes.value.ok
@@ -40,7 +40,15 @@ async function fetchAll() {
     ? getListData<Video>(await videosRes.value.json())
     : []
 
-  // Map API types to section component prop shapes
+  let pageSections: PageSection[] = []
+  if (pageRes.status === 'fulfilled' && pageRes.value.ok) {
+    try {
+      const pageJson = await pageRes.value.json()
+      const pageConfig = (pageJson?.data || pageJson) as PageConfig
+      pageSections = pageConfig?.config_published?.sections || []
+    } catch { /* ignore */ }
+  }
+
   const projects = projectsRaw.map(p => ({
     id: p.id,
     title: p.name,
@@ -67,22 +75,107 @@ async function fetchAll() {
       type: 'thi_cong' as const,
     }))
 
-  return { projects, reviews, videos }
+  return { projects, reviews, videos, pageSections }
+}
+
+function getSectionConfig(sections: PageSection[], type: string): Record<string, unknown> | null {
+  const s = sections.find(s => s.type === type)
+  if (!s || s.visible === false) return null
+  return s.config
+}
+
+function isSectionVisible(sections: PageSection[], type: string): boolean {
+  if (sections.length === 0) return true
+  const s = sections.find(s => s.type === type)
+  return s ? s.visible !== false : true
 }
 
 export default async function HomePage() {
-  const { projects, reviews, videos } = await fetchAll()
+  const { projects, reviews, videos, pageSections } = await fetchAll()
+
+  const heroConfig = getSectionConfig(pageSections, 'hero') as Record<string, unknown> | null
+  const introConfig = getSectionConfig(pageSections, 'company_intro') as Record<string, unknown> | null
+  const whyConfig = getSectionConfig(pageSections, 'why_choose_us') as Record<string, unknown> | null
+  const catConfig = getSectionConfig(pageSections, 'product_categories') as Record<string, unknown> | null
+  const projectsConfig = getSectionConfig(pageSections, 'featured_projects') as Record<string, unknown> | null
+  const videoConfig = getSectionConfig(pageSections, 'video_section') as Record<string, unknown> | null
+  const reviewsConfig = getSectionConfig(pageSections, 'customer_reviews') as Record<string, unknown> | null
+
+  const heroImages = (heroConfig?.bg_images as string[]) || []
 
   return (
     <>
-      <HeroBanner />
-      <CompanyIntro />
-      <WhyChooseUs />
-      <ProductCategoriesSection />
-      <FeaturedProjects projects={projects} />
-      <VideoSection videos={videos} />
-      <CustomerReviews reviews={reviews} />
-      <QuoteFormSection />
+      {isSectionVisible(pageSections, 'hero') && (
+        <HeroBanner
+          title={heroConfig?.title as string | undefined}
+          subtitle={heroConfig?.subtitle as string | undefined}
+          imageUrl={heroImages[0]}
+          ctaPrimaryText={heroConfig?.cta_primary_text as string | undefined}
+          ctaPrimaryLink={heroConfig?.cta_primary_link as string | undefined}
+          badge={heroConfig?.badge as string | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'company_intro') && (
+        <CompanyIntro
+          label={introConfig?.label as string | undefined}
+          headline={introConfig?.headline as string | undefined}
+          body={introConfig?.body as string | undefined}
+          quote={introConfig?.quote as string | undefined}
+          stats={introConfig?.stats as Array<{ value: string; label: string }> | undefined}
+          images={introConfig?.images as string[] | undefined}
+          linkText={introConfig?.link_text as string | undefined}
+          linkHref={introConfig?.link_href as string | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'why_choose_us') && (
+        <WhyChooseUs
+          sectionLabel={whyConfig?.section_label as string | undefined}
+          sectionTitle={whyConfig?.section_title as string | undefined}
+          sectionDesc={whyConfig?.section_desc as string | undefined}
+          cards={whyConfig?.cards as Array<{ title: string; desc: string; bgImage?: string }> | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'product_categories') && (
+        <ProductCategoriesSection
+          label={catConfig?.label as string | undefined}
+          title={catConfig?.title as string | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'featured_projects') && (
+        <FeaturedProjects
+          projects={projects}
+          label={projectsConfig?.label as string | undefined}
+          title={projectsConfig?.title as string | undefined}
+          ctaText={projectsConfig?.cta_text as string | undefined}
+          ctaLink={projectsConfig?.cta_link as string | undefined}
+          limit={projectsConfig?.limit as number | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'video_section') && (
+        <VideoSection
+          videos={videos}
+          label={videoConfig?.label as string | undefined}
+          title={videoConfig?.title as string | undefined}
+          limit={videoConfig?.limit as number | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'customer_reviews') && (
+        <CustomerReviews
+          reviews={reviews}
+          label={reviewsConfig?.label as string | undefined}
+          title={reviewsConfig?.title as string | undefined}
+          desc={reviewsConfig?.desc as string | undefined}
+          limit={reviewsConfig?.limit as number | undefined}
+        />
+      )}
+
+      {isSectionVisible(pageSections, 'quote_form') && <QuoteFormSection />}
     </>
   )
 }

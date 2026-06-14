@@ -229,12 +229,13 @@ export interface AnalyticsDashboard {
 
 export type PageSectionType =
   | 'hero'
-  | 'featured_products'
+  | 'company_intro'
+  | 'why_choose_us'
+  | 'product_categories'
   | 'featured_projects'
-  | 'about'
-  | 'latest_news'
-  | 'contact_cta'
-  | 'testimonials'
+  | 'video_section'
+  | 'customer_reviews'
+  | 'quote_form'
 
 export interface PageSection {
   id: string

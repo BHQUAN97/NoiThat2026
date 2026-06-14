@@ -8,17 +8,25 @@ const CATEGORY_IMAGES = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAyedTNnDcb5WkuOBVaW1Wof3ATrIgW-7aJIT3JX8tPlt9ekzp2TqZJezUCmHe4coXAQTWYlsLNRbq-D3Vm6DCjkgsrxmRsyE9wnWVXFega1s5u6xnxmAc4HHX4J8OfsmlFg-XGuvkiNBies8931Qbg16X5jUClOtbQHxINu5oorCqvVVvsPlhUjOlwwypAN8_AHk3yz4S_w_DE4-XsKdQXwl2ClWe0xs5SDtYp3ngLkmRyD8tokMv2sv7CgQzYcRRVNLjaQzk9j9Wl',
 ]
 
-export function ProductCategoriesSection() {
+interface ProductCategoriesSectionProps {
+  label?: string
+  title?: string
+}
+
+export function ProductCategoriesSection({
+  label = 'Bespoke Furniture',
+  title = 'Danh mục sản phẩm',
+}: ProductCategoriesSectionProps) {
   return (
     <section className="bg-surface px-4 py-20 md:px-8 md:py-32">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div>
             <span className="mb-4 block font-label text-xs uppercase tracking-[0.2em] text-primary">
-              Bespoke Furniture
+              {label}
             </span>
             <h2 className="font-headline text-4xl font-bold text-primary md:text-5xl">
-              Danh mục sản phẩm
+              {title}
             </h2>
           </div>
           <Link

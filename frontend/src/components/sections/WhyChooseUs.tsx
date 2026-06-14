@@ -1,92 +1,75 @@
 import { type LucideIcon, Shield, Hammer, Truck, Headphones, DollarSign, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface Reason {
-  icon: LucideIcon
+const ICON_MAP: LucideIcon[] = [Hammer, Shield, Star, DollarSign, Truck, Headphones]
+
+const DEFAULT_CARDS = [
+  { title: 'Xưởng Sản Xuất Trực Tiếp', desc: 'Không qua trung gian, giá xưởng cạnh tranh nhất thị trường. Thăm quan xưởng bất cứ lúc nào.' },
+  { title: 'Bảo Hành 5 Năm', desc: 'Cam kết bảo hành toàn bộ sản phẩm 5 năm. Hỗ trợ kỹ thuật miễn phí suốt thời gian bảo hành.' },
+  { title: 'Vật Liệu Chất Lượng Cao', desc: 'Sử dụng Inox 304 chính hãng, gỗ MDF chống ẩm, Acrylic bóng cao cấp. Không dùng vật liệu kém chất lượng.' },
+  { title: 'Giá Minh Bạch — Không Phát Sinh', desc: 'Báo giá chi tiết từng hạng mục, ký hợp đồng rõ ràng. Không có phát sinh ngoài hợp đồng.' },
+  { title: 'Thi Công Tận Nơi', desc: 'Đội thợ kinh nghiệm, thi công tại nhà bạn. Phục vụ Hà Nội và các tỉnh: Bắc Ninh, Hưng Yên, Phú Thọ, Ninh Bình.' },
+  { title: 'Hỗ Trợ 7 Ngày / Tuần', desc: 'Đội tư vấn sẵn sàng 8h-18h hàng ngày kể cả cuối tuần. Tư vấn miễn phí qua Zalo, điện thoại.' },
+]
+
+export interface WhyCard {
   title: string
   desc: string
   bgImage?: string
 }
 
-const REASONS: Reason[] = [
-  {
-    icon: Hammer,
-    title: 'Xưởng Sản Xuất Trực Tiếp',
-    desc: 'Không qua trung gian, giá xưởng cạnh tranh nhất thị trường. Thăm quan xưởng bất cứ lúc nào.',
-  },
-  {
-    icon: Shield,
-    title: 'Bảo Hành 5 Năm',
-    desc: 'Cam kết bảo hành toàn bộ sản phẩm 5 năm. Hỗ trợ kỹ thuật miễn phí suốt thời gian bảo hành.',
-  },
-  {
-    icon: Star,
-    title: 'Vật Liệu Chất Lượng Cao',
-    desc: 'Sử dụng Inox 304 chính hãng, gỗ MDF chống ẩm, Acrylic bóng cao cấp. Không dùng vật liệu kém chất lượng.',
-  },
-  {
-    icon: DollarSign,
-    title: 'Giá Minh Bạch — Không Phát Sinh',
-    desc: 'Báo giá chi tiết từng hạng mục, ký hợp đồng rõ ràng. Không có phát sinh ngoài hợp đồng.',
-  },
-  {
-    icon: Truck,
-    title: 'Thi Công Tận Nơi',
-    desc: 'Đội thợ kinh nghiệm, thi công tại nhà bạn. Phục vụ Hà Nội và các tỉnh: Bắc Ninh, Hưng Yên, Phú Thọ, Ninh Bình.',
-  },
-  {
-    icon: Headphones,
-    title: 'Hỗ Trợ 7 Ngày / Tuần',
-    desc: 'Đội tư vấn sẵn sàng 8h-18h hàng ngày kể cả cuối tuần. Tư vấn miễn phí qua Zalo, điện thoại.',
-  },
-]
+interface WhyChooseUsProps {
+  sectionLabel?: string
+  sectionTitle?: string
+  sectionDesc?: string
+  cards?: WhyCard[]
+}
 
-// Section "Tại sao chọn Nội Thất Duy Mạnh" — grid 3x2
-export function WhyChooseUs() {
+export function WhyChooseUs({
+  sectionLabel = 'Điểm Khác Biệt',
+  sectionTitle = 'Tại Sao Chọn Nội Thất Duy Mạnh?',
+  sectionDesc = 'Hơn 10 năm xây dựng uy tín, chúng tôi cam kết mang đến sự hài lòng tuyệt đối.',
+  cards = DEFAULT_CARDS,
+}: WhyChooseUsProps) {
   return (
     <section className="py-16 md:py-20 bg-stone-50">
       <div className="max-w-content mx-auto px-4 lg:px-8">
-        {/* Section header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Điểm Khác Biệt</p>
+          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">{sectionLabel}</p>
           <h2 className="font-serif font-bold text-stone-900 text-3xl md:text-4xl leading-tight mb-3">
-            Tại Sao Chọn Nội Thất Duy Mạnh?
+            {sectionTitle}
           </h2>
-          <p className="text-stone-500 leading-relaxed">
-            Hơn 10 năm xây dựng uy tín, chúng tôi cam kết mang đến sự hài lòng tuyệt đối.
-          </p>
+          <p className="text-stone-500 leading-relaxed">{sectionDesc}</p>
         </div>
 
-        {/* Grid 3 cột */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {REASONS.map(({ icon: Icon, title, desc, bgImage }) => (
-            <div
-              key={title}
-              className={cn(
-                'group relative overflow-hidden p-6 rounded-xl border border-border hover:border-brand/30 hover:shadow-card-hover transition-all duration-300',
-                bgImage ? 'bg-cover bg-center' : 'bg-white',
-              )}
-              style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
-            >
-              {/* Overlay khi có ảnh nền */}
-              {bgImage && (
-                <div className="absolute inset-0 bg-black/50 rounded-xl group-hover:bg-black/40 transition-colors duration-300" />
-              )}
-
-              <div className={cn('relative z-10 flex flex-col items-center text-center sm:items-start sm:text-left', bgImage && 'text-white')}>
-                <div className={cn(
-                  'w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300',
-                  bgImage
-                    ? 'bg-white/20 group-hover:bg-white/30'
-                    : 'bg-brand/10 group-hover:bg-brand/15',
-                )}>
-                  <Icon size={22} className={bgImage ? 'text-white' : 'text-brand'} />
+          {cards.map(({ title, desc, bgImage }, i) => {
+            const Icon = ICON_MAP[i % ICON_MAP.length]
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'group relative overflow-hidden p-6 rounded-xl border border-border hover:border-brand/30 hover:shadow-card-hover transition-all duration-300',
+                  bgImage ? 'bg-cover bg-center' : 'bg-white',
+                )}
+                style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
+              >
+                {bgImage && (
+                  <div className="absolute inset-0 bg-black/50 rounded-xl group-hover:bg-black/40 transition-colors duration-300" />
+                )}
+                <div className={cn('relative z-10 flex flex-col items-center text-center sm:items-start sm:text-left', bgImage && 'text-white')}>
+                  <div className={cn(
+                    'w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300',
+                    bgImage ? 'bg-white/20 group-hover:bg-white/30' : 'bg-brand/10 group-hover:bg-brand/15',
+                  )}>
+                    <Icon size={22} className={bgImage ? 'text-white' : 'text-brand'} />
+                  </div>
+                  <h3 className={cn('font-semibold mb-2', bgImage ? 'text-white' : 'text-stone-900')}>{title}</h3>
+                  <p className={cn('text-sm leading-relaxed', bgImage ? 'text-white/80' : 'text-stone-500')}>{desc}</p>
                 </div>
-                <h3 className={cn('font-semibold mb-2', bgImage ? 'text-white' : 'text-stone-900')}>{title}</h3>
-                <p className={cn('text-sm leading-relaxed', bgImage ? 'text-white/80' : 'text-stone-500')}>{desc}</p>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

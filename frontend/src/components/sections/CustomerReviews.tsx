@@ -11,6 +11,10 @@ interface Review {
 
 interface CustomerReviewsProps {
   reviews?: Review[]
+  label?: string
+  title?: string
+  desc?: string
+  limit?: number
 }
 
 const PLACEHOLDER_REVIEWS: Review[] = [
@@ -47,19 +51,24 @@ const SOURCE_LABELS = {
   video: 'Video',
 }
 
-// Section đánh giá khách hàng — carousel/grid 3 review
-export function CustomerReviews({ reviews = [] }: CustomerReviewsProps) {
-  const displayReviews = reviews.length > 0 ? reviews : PLACEHOLDER_REVIEWS
+export function CustomerReviews({
+  reviews = [],
+  label = 'Phản Hồi',
+  title = 'Khách Hàng Nói Gì?',
+  desc = 'Hơn 500 công trình hoàn thành, mỗi khách hàng là một câu chuyện thành công.',
+  limit = 6,
+}: CustomerReviewsProps) {
+  const displayReviews = (reviews.length > 0 ? reviews.slice(0, limit) : PLACEHOLDER_REVIEWS.slice(0, limit))
 
   return (
     <section className="py-16 md:py-20 bg-stone-50">
       <div className="max-w-content mx-auto px-4 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Phản Hồi</p>
+          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">{label}</p>
           <h2 className="font-serif font-bold text-stone-900 text-3xl md:text-4xl leading-tight mb-3">
-            Khách Hàng Nói Gì?
+            {title}
           </h2>
-          <p className="text-stone-500">Hơn 500 công trình hoàn thành, mỗi khách hàng là một câu chuyện thành công.</p>
+          <p className="text-stone-500">{desc}</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

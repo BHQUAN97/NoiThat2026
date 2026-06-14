@@ -6,6 +6,9 @@ interface HeroBannerProps {
   title?: string
   subtitle?: string
   imageUrl?: string
+  ctaPrimaryText?: string
+  ctaPrimaryLink?: string
+  badge?: string
 }
 
 const DEFAULT_HERO_IMAGE =
@@ -15,6 +18,9 @@ export function HeroBanner({
   title = 'Kiến tạo không gian sống tinh tế.',
   subtitle = 'Xưởng tủ bếp và nội thất Duy Mạnh kế thừa tinh thần VietNet: ảnh công trình làm trung tâm, vật liệu rõ ràng, thi công gọn và tư vấn trực tiếp.',
   imageUrl = DEFAULT_HERO_IMAGE,
+  ctaPrimaryText = 'Bắt đầu dự án',
+  ctaPrimaryLink = '/bao-gia',
+  badge = 'Xưởng sản xuất trực tiếp',
 }: HeroBannerProps) {
   return (
     <section className="relative flex min-h-[calc(100vh-var(--nav-height))] items-center justify-center overflow-hidden bg-primary">
@@ -29,9 +35,11 @@ export function HeroBanner({
       </div>
 
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-24 text-center">
-        <span className="mb-6 inline-flex rounded-full border border-white/10 bg-primary-container/30 px-4 py-2 font-label text-xs uppercase tracking-[0.3em] text-surface backdrop-blur-md">
-          Xưởng sản xuất trực tiếp
-        </span>
+        {badge && (
+          <span className="mb-6 inline-flex rounded-full border border-white/10 bg-primary-container/30 px-4 py-2 font-label text-xs uppercase tracking-[0.3em] text-surface backdrop-blur-md">
+            {badge}
+          </span>
+        )}
         <h1 className="mb-8 font-headline text-5xl font-bold leading-[1.08] tracking-tight text-surface md:text-7xl lg:text-8xl">
           {title}
         </h1>
@@ -40,10 +48,10 @@ export function HeroBanner({
         </p>
         <div className="flex flex-col items-center justify-center gap-5 md:flex-row">
           <Link
-            href="/bao-gia"
+            href={ctaPrimaryLink}
             className="inline-flex items-center gap-2 rounded-xl bg-primary-container px-10 py-4 font-label text-label-lg font-bold uppercase tracking-label-wide text-on-primary transition-all hover:bg-primary hover:shadow-cta"
           >
-            Bắt đầu dự án
+            {ctaPrimaryText}
             <ArrowRight className="h-4 w-4" />
           </Link>
           <a

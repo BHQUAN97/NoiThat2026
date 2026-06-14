@@ -11,6 +11,9 @@ interface Video {
 
 interface VideoSectionProps {
   videos?: Video[]
+  label?: string
+  title?: string
+  limit?: number
 }
 
 // Extract YouTube video ID từ URL
@@ -25,22 +28,21 @@ const TYPE_LABELS = {
   khao_sat: 'Khảo Sát',
 }
 
-// Section video công trình — grid 3 video YouTube
-export function VideoSection({ videos = [] }: VideoSectionProps) {
-  const displayVideos = videos.length > 0 ? videos : [
+export function VideoSection({ videos = [], label = 'Video', title = 'Video Công Trình', limit = 3 }: VideoSectionProps) {
+  const displayVideos = (videos.length > 0 ? videos.slice(0, limit) : [
     { id: '1', title: 'Thi công tủ bếp Inox 304 tại Hà Nội', youtube_url: '', thumbnail_url: null, type: 'thi_cong' as const },
     { id: '2', title: 'Bàn giao nội thất phòng ngủ tại Bắc Ninh', youtube_url: '', thumbnail_url: null, type: 'ban_giao' as const },
     { id: '3', title: 'Khảo sát và tư vấn tại nhà khách hàng', youtube_url: '', thumbnail_url: null, type: 'khao_sat' as const },
-  ]
+  ]).slice(0, limit)
 
   return (
     <section className="py-16 md:py-20 bg-white">
       <div className="max-w-content mx-auto px-4 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
-            <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-2">Video</p>
+            <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-2">{label}</p>
             <h2 className="font-serif font-bold text-stone-900 text-3xl md:text-4xl leading-tight">
-              Video Công Trình
+              {title}
             </h2>
           </div>
           <Link

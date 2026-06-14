@@ -2,23 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  Save,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Trash2,
-  Undo2,
-  History,
-  Loader2,
-  ImageIcon,
-  X,
-  GripVertical,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Upload,
+  Save, Eye, EyeOff, ChevronDown, ChevronUp, Plus, Trash2,
+  Undo2, History, Loader2, ImageIcon, X, GripVertical, Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { uploadMedia, validateImageFile } from '@/lib/media'
@@ -27,77 +12,86 @@ import { formatDateTime } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import type { PageConfig, PageSection, PageSectionType, PageConfigData, PageConfigHistory } from '@/types'
 
-const SECTION_TYPE_LABELS: Record<PageSectionType, string> = {
-  hero: 'Hero Banner',
-  featured_products: 'Sản phẩm nổi bật',
-  featured_projects: 'Dự án tiêu biểu',
-  about: 'Về chúng tôi',
-  latest_news: 'Tin tức mới nhất',
-  contact_cta: 'Liên hệ CTA',
-  testimonials: 'Đánh giá khách hàng',
+const SECTION_LABELS: Record<PageSectionType, string> = {
+  hero: '🖼 Hero Banner',
+  company_intro: '🏢 Giới Thiệu Công Ty',
+  why_choose_us: '⭐ Điểm Khác Biệt',
+  product_categories: '🗂 Danh Mục Sản Phẩm',
+  featured_projects: '🏗 Dự Án Tiêu Biểu',
+  video_section: '🎬 Video Công Trình',
+  customer_reviews: '💬 Đánh Giá Khách Hàng',
+  quote_form: '📋 Form Báo Giá',
 }
 
-const NEW_SECTION_DEFAULTS: Record<PageSectionType, Record<string, unknown>> = {
+const DEFAULT_CONFIGS: Record<PageSectionType, Record<string, unknown>> = {
   hero: {
-    label: 'Chuyên nghiệp',
-    title: 'Nội Thất Duy Mạnh',
-    subtitle: 'Thiết kế nội thất đẳng cấp cho ngôi nhà của bạn',
-    text_align: 'center',
-    cta_primary_text: 'Xem sản phẩm',
-    cta_primary_link: '/tu-bep',
-    cta_secondary_text: 'Liên hệ ngay',
-    cta_secondary_link: '/lien-he',
+    badge: 'Xưởng sản xuất trực tiếp',
+    title: 'Kiến tạo không gian sống tinh tế.',
+    subtitle: 'Xưởng tủ bếp và nội thất Duy Mạnh: ảnh công trình làm trung tâm, vật liệu rõ ràng, thi công gọn và tư vấn trực tiếp.',
+    cta_primary_text: 'Bắt đầu dự án',
+    cta_primary_link: '/bao-gia',
     bg_images: [],
   },
-  featured_products: {
-    label: 'Sản phẩm',
-    title: 'Sản phẩm nổi bật',
-    limit: 8,
-    cta_text: 'Xem tất cả',
-    cta_link: '/tu-bep',
+  company_intro: {
+    label: 'The Atelier Philosophy',
+    headline: 'Thiết kế là cuộc đối thoại giữa vật liệu, ánh sáng và thói quen sống.',
+    body: 'Nội Thất Duy Mạnh tập trung vào các hệ tủ bếp, tủ áo và không gian gia đình được đo ni đóng giày theo từng căn nhà.',
+    quote: 'Không chỉ lấp đầy căn phòng, chúng tôi hoàn thiện bầu không khí của ngôi nhà.',
+    stats: [
+      { value: '500+', label: 'Công trình hoàn thành' },
+      { value: '10+', label: 'Năm kinh nghiệm' },
+    ],
+    images: [],
+    link_text: 'Xem quy trình',
+    link_href: '/gioi-thieu',
+  },
+  why_choose_us: {
+    section_label: 'Điểm Khác Biệt',
+    section_title: 'Tại Sao Chọn Nội Thất Duy Mạnh?',
+    section_desc: 'Hơn 10 năm xây dựng uy tín, chúng tôi cam kết mang đến sự hài lòng tuyệt đối.',
+    cards: [
+      { title: 'Xưởng Sản Xuất Trực Tiếp', desc: 'Không qua trung gian, giá xưởng cạnh tranh nhất thị trường.', bgImage: '' },
+      { title: 'Bảo Hành 5 Năm', desc: 'Cam kết bảo hành toàn bộ sản phẩm 5 năm. Hỗ trợ kỹ thuật miễn phí.', bgImage: '' },
+      { title: 'Vật Liệu Chất Lượng Cao', desc: 'Inox 304 chính hãng, gỗ MDF chống ẩm, Acrylic bóng cao cấp.', bgImage: '' },
+      { title: 'Giá Minh Bạch', desc: 'Báo giá chi tiết từng hạng mục. Không có phát sinh ngoài hợp đồng.', bgImage: '' },
+      { title: 'Thi Công Tận Nơi', desc: 'Đội thợ kinh nghiệm, thi công tại nhà. Phục vụ Hà Nội và các tỉnh lân cận.', bgImage: '' },
+      { title: 'Hỗ Trợ 7 Ngày / Tuần', desc: 'Đội tư vấn sẵn sàng 8h-18h hàng ngày kể cả cuối tuần.', bgImage: '' },
+    ],
+  },
+  product_categories: {
+    label: 'Bespoke Furniture',
+    title: 'Danh mục sản phẩm',
   },
   featured_projects: {
-    label: 'Dự án',
+    label: 'Our Legacy',
     title: 'Dự án tiêu biểu',
-    limit: 6,
-    cta_text: 'Xem tất cả',
+    limit: 3,
+    cta_text: 'Xem portfolio',
     cta_link: '/du-an-thuc-te',
   },
-  about: {
-    label: 'Về chúng tôi',
-    title: 'Nội Thất Duy Mạnh',
-    description: 'Hơn 10 năm kinh nghiệm thiết kế và thi công nội thất cao cấp tại Hà Nội.',
-    text_align: 'left',
-    images: [],
-    stats: [],
-  },
-  latest_news: {
-    label: 'Tin tức',
-    title: 'Tin tức mới nhất',
+  video_section: {
+    label: 'Video',
+    title: 'Video Công Trình',
     limit: 3,
   },
-  contact_cta: {
-    title: 'Liên hệ ngay hôm nay',
-    description: 'Nhận tư vấn miễn phí và báo giá chi tiết từ đội ngũ chuyên gia.',
-    text_align: 'center',
-    cta_text: 'Liên hệ tư vấn',
-    cta_link: '/lien-he',
+  customer_reviews: {
+    label: 'Phản Hồi',
+    title: 'Khách Hàng Nói Gì?',
+    desc: 'Hơn 500 công trình hoàn thành, mỗi khách hàng là một câu chuyện thành công.',
+    limit: 6,
   },
-  testimonials: {
-    label: 'Đánh giá',
-    title: 'Khách hàng nói gì về chúng tôi',
-    items: [],
-  },
+  quote_form: {},
 }
 
 const DEFAULT_SECTIONS: PageSection[] = [
-  { id: 'default-hero', type: 'hero', visible: true, config: NEW_SECTION_DEFAULTS.hero },
-  { id: 'default-products', type: 'featured_products', visible: true, config: NEW_SECTION_DEFAULTS.featured_products },
-  { id: 'default-projects', type: 'featured_projects', visible: true, config: NEW_SECTION_DEFAULTS.featured_projects },
-  { id: 'default-about', type: 'about', visible: true, config: NEW_SECTION_DEFAULTS.about },
-  { id: 'default-news', type: 'latest_news', visible: true, config: NEW_SECTION_DEFAULTS.latest_news },
-  { id: 'default-cta', type: 'contact_cta', visible: true, config: NEW_SECTION_DEFAULTS.contact_cta },
-  { id: 'default-testimonials', type: 'testimonials', visible: true, config: NEW_SECTION_DEFAULTS.testimonials },
+  { id: 'default-hero', type: 'hero', visible: true, config: DEFAULT_CONFIGS.hero },
+  { id: 'default-intro', type: 'company_intro', visible: true, config: DEFAULT_CONFIGS.company_intro },
+  { id: 'default-why', type: 'why_choose_us', visible: true, config: DEFAULT_CONFIGS.why_choose_us },
+  { id: 'default-cat', type: 'product_categories', visible: true, config: DEFAULT_CONFIGS.product_categories },
+  { id: 'default-projects', type: 'featured_projects', visible: true, config: DEFAULT_CONFIGS.featured_projects },
+  { id: 'default-video', type: 'video_section', visible: true, config: DEFAULT_CONFIGS.video_section },
+  { id: 'default-reviews', type: 'customer_reviews', visible: true, config: DEFAULT_CONFIGS.customer_reviews },
+  { id: 'default-quote', type: 'quote_form', visible: true, config: DEFAULT_CONFIGS.quote_form },
 ]
 
 function genId() {
@@ -128,8 +122,8 @@ export default function AdminPagesPage() {
       if (config) {
         setPageConfig(config)
         const draft = config.config_draft as PageConfigData | null
-        const rawSections = draft?.sections || DEFAULT_SECTIONS
-        setSections(rawSections.map((s) => ({ ...s, id: s.id || genId() })))
+        const raw = draft?.sections || DEFAULT_SECTIONS
+        setSections(raw.map((s) => ({ ...s, id: s.id || genId() })))
       } else {
         setSections(DEFAULT_SECTIONS)
       }
@@ -180,8 +174,8 @@ export default function AdminPagesPage() {
       }
       const res = await api.post(`/pages/${PAGE_SLUG}/publish`) as any
       setPageConfig(res.data)
-      setSaveStatus('Đã xuất bản thành công!')
-      setTimeout(() => setSaveStatus(null), 3000)
+      setSaveStatus('Đã xuất bản! Trang chủ sẽ cập nhật trong vài giây.')
+      setTimeout(() => setSaveStatus(null), 5000)
     } catch {
       setError('Xuất bản thất bại.')
     } finally {
@@ -206,20 +200,20 @@ export default function AdminPagesPage() {
       const draft = res.data?.config_draft as PageConfigData | null
       setSections((draft?.sections || DEFAULT_SECTIONS).map((s) => ({ ...s, id: s.id || genId() })))
       setShowHistory(false)
-      setSaveStatus(`Đã khôi phục về phiên bản ${version}`)
+      setSaveStatus(`Đã khôi phục phiên bản ${version}`)
       setTimeout(() => setSaveStatus(null), 3000)
     } catch {
       setError(`Không thể rollback về phiên bản ${version}.`)
     }
   }
 
-  const updateSectionConfig = (sectionId: string, key: string, value: unknown) => {
+  const updateConfig = (sectionId: string, key: string, value: unknown) => {
     setSections((prev) =>
       prev.map((s) => s.id === sectionId ? { ...s, config: { ...s.config, [key]: value } } : s),
     )
   }
 
-  const toggleSectionVisibility = (sectionId: string) => {
+  const toggleVisible = (sectionId: string) => {
     setSections((prev) => prev.map((s) => s.id === sectionId ? { ...s, visible: !s.visible } : s))
   }
 
@@ -228,11 +222,11 @@ export default function AdminPagesPage() {
     if (expandedSection === sectionId) setExpandedSection(null)
   }
 
-  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
+  const moveSection = (sectionId: string, dir: 'up' | 'down') => {
     setSections((prev) => {
       const idx = prev.findIndex((s) => s.id === sectionId)
       if (idx < 0) return prev
-      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      const newIdx = dir === 'up' ? idx - 1 : idx + 1
       if (newIdx < 0 || newIdx >= prev.length) return prev
       const arr = [...prev]
       ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
@@ -241,14 +235,9 @@ export default function AdminPagesPage() {
   }
 
   const addSection = (type: PageSectionType) => {
-    const newSection: PageSection = {
-      id: genId(),
-      type,
-      visible: true,
-      config: { ...NEW_SECTION_DEFAULTS[type] },
-    }
-    setSections((prev) => [...prev, newSection])
-    setExpandedSection(newSection.id)
+    const s: PageSection = { id: genId(), type, visible: true, config: { ...DEFAULT_CONFIGS[type] } }
+    setSections((prev) => [...prev, s])
+    setExpandedSection(s.id)
     setShowAddSection(false)
   }
 
@@ -262,12 +251,11 @@ export default function AdminPagesPage() {
 
   return (
     <div className="py-4">
-      {/* Header */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-headline-lg text-on-surface">Page Builder</h1>
+          <h1 className="font-headline text-headline-lg text-on-surface">Trang Chủ</h1>
           <p className="mt-1 text-body-sm text-on-surface-variant">
-            Trang chủ — Phiên bản {pageConfig?.version || 0}
+            Page Builder — phiên bản {pageConfig?.version || 0}
             {pageConfig?.published_at && <> — Xuất bản lúc {formatDateTime(pageConfig.published_at)}</>}
           </p>
         </div>
@@ -296,7 +284,6 @@ export default function AdminPagesPage() {
         </div>
       )}
 
-      {/* Sections list */}
       <div className="space-y-3">
         {sections.map((section, idx) => (
           <SectionCard
@@ -306,30 +293,29 @@ export default function AdminPagesPage() {
             isLast={idx === sections.length - 1}
             expanded={expandedSection === section.id}
             onToggleExpand={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-            onToggleVisibility={() => toggleSectionVisibility(section.id)}
+            onToggleVisible={() => toggleVisible(section.id)}
             onRemove={() => removeSection(section.id)}
             onMoveUp={() => moveSection(section.id, 'up')}
             onMoveDown={() => moveSection(section.id, 'down')}
-            onUpdate={(key, value) => updateSectionConfig(section.id, key, value)}
+            onUpdate={(key, value) => updateConfig(section.id, key, value)}
           />
         ))}
       </div>
 
-      {/* Add section */}
       <div className="mt-4">
         {showAddSection ? (
           <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-label text-label-lg text-on-surface-variant">Thêm section mới</p>
+              <p className="font-label text-label-lg text-on-surface-variant">Thêm section</p>
               <button onClick={() => setShowAddSection(false)} className="p-1 text-on-surface-variant hover:text-on-surface">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {(Object.keys(SECTION_TYPE_LABELS) as PageSectionType[]).map((type) => (
+              {(Object.keys(SECTION_LABELS) as PageSectionType[]).map((type) => (
                 <Button key={type} variant="ghost" size="sm" onClick={() => addSection(type)}>
                   <Plus className="mr-1 h-4 w-4" />
-                  {SECTION_TYPE_LABELS[type]}
+                  {SECTION_LABELS[type]}
                 </Button>
               ))}
             </div>
@@ -344,7 +330,6 @@ export default function AdminPagesPage() {
         )}
       </div>
 
-      {/* History modal */}
       {showHistory && (
         <HistoryModal
           history={history}
@@ -356,15 +341,15 @@ export default function AdminPagesPage() {
   )
 }
 
-/* ─── Section Card ────────────────────────────────────────────── */
+/* ─── Section Card ─────────────────────────────────────────────── */
 
-function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onToggleVisibility, onRemove, onMoveUp, onMoveDown, onUpdate }: {
+function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onToggleVisible, onRemove, onMoveUp, onMoveDown, onUpdate }: {
   section: PageSection
   isFirst: boolean
   isLast: boolean
   expanded: boolean
   onToggleExpand: () => void
-  onToggleVisibility: () => void
+  onToggleVisible: () => void
   onRemove: () => void
   onMoveUp: () => void
   onMoveDown: () => void
@@ -376,75 +361,48 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
       section.visible ? 'bg-surface-container-low' : 'bg-surface-container-low/50 opacity-60',
       expanded && 'ring-1 ring-primary/20',
     )}>
-      {/* Header */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
-        <button
-          onClick={onToggleExpand}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
-        >
+        <button onClick={onToggleExpand} className="flex min-w-0 flex-1 items-center gap-2 text-left">
           <GripVertical className="h-5 w-5 shrink-0 text-on-surface-variant/40" />
           <span className="truncate font-label text-label-lg text-on-surface">
-            {SECTION_TYPE_LABELS[section.type]}
+            {SECTION_LABELS[section.type]}
           </span>
           {!section.visible && (
             <span className="shrink-0 text-body-sm text-on-surface-variant">(Ẩn)</span>
           )}
         </button>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onMoveUp}
-            disabled={isFirst}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30"
-          >
+          <button onClick={onMoveUp} disabled={isFirst} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30">
             <ChevronUp className="h-4 w-4" />
           </button>
-          <button
-            onClick={onMoveDown}
-            disabled={isLast}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30"
-          >
+          <button onClick={onMoveDown} disabled={isLast} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30">
             <ChevronDown className="h-4 w-4" />
           </button>
-          <button
-            onClick={onToggleVisibility}
-            title={section.visible ? 'Ẩn section' : 'Hiện section'}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high"
-          >
+          <button onClick={onToggleVisible} title={section.visible ? 'Ẩn' : 'Hiện'} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high">
             {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
-          <button
-            onClick={onRemove}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
-          >
+          <button onClick={onRemove} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container">
             <Trash2 className="h-4 w-4" />
           </button>
-          <button
-            onClick={onToggleExpand}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high"
-          >
+          <button onClick={onToggleExpand} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high">
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      {/* Config editor */}
       {expanded && (
         <div className="border-t border-outline-variant/30 px-4 py-4">
-          <SectionConfigEditor type={section.type} config={section.config} onUpdate={onUpdate} />
+          <SectionEditor type={section.type} config={section.config} onUpdate={onUpdate} />
         </div>
       )}
     </div>
   )
 }
 
-/* ─── Shared field components ─────────────────────────────────── */
+/* ─── Shared field primitives ──────────────────────────────────── */
 
-function FieldInput({ label, value, onChange, multiline, placeholder }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  multiline?: boolean
-  placeholder?: string
+function FInput({ label, value, onChange, multiline, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string
 }) {
   return (
     <div>
@@ -470,10 +428,8 @@ function FieldInput({ label, value, onChange, multiline, placeholder }: {
   )
 }
 
-function FieldNumber({ label, value, onChange }: {
-  label: string
-  value: number
-  onChange: (v: number) => void
+function FNumber({ label, value, onChange, min = 1, max = 20 }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number
 }) {
   return (
     <div>
@@ -481,69 +437,36 @@ function FieldNumber({ label, value, onChange }: {
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(parseInt(e.target.value, 10) || min)}
         className="w-full rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
       />
     </div>
   )
 }
 
-function FieldAlign({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="mb-1 block font-label text-label-md text-on-surface-variant">Căn chữ</label>
-      <div className="flex gap-1">
-        {(['left', 'center', 'right'] as const).map((align) => {
-          const Icon = align === 'left' ? AlignLeft : align === 'center' ? AlignCenter : AlignRight
-          return (
-            <button
-              key={align}
-              type="button"
-              onClick={() => onChange(align)}
-              className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-lg border transition-colors',
-                value === align
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-outline-variant bg-surface-container text-on-surface-variant hover:bg-surface-container-high',
-              )}
-            >
-              <Icon className="h-4 w-4" />
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/**
- * Upload và quản lý danh sách ảnh. Max 10 ảnh, hỗ trợ xoá từng ảnh.
- */
-function PageImageList({ label, images, onChange, max = 10 }: {
-  label: string
-  images: string[]
-  onChange: (urls: string[]) => void
-  max?: number
+function FImageList({ label, images, onChange, max = 10 }: {
+  label: string; images: string[]; onChange: (urls: string[]) => void; max?: number
 }) {
   const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadErr, setUploadErr] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFiles(files: FileList) {
-    const fileArr = Array.from(files)
     const available = max - images.length
     if (available <= 0) return
     setUploading(true)
-    setUploadError(null)
+    setUploadErr(null)
     const newUrls = [...images]
-    for (const file of fileArr.slice(0, available)) {
+    for (const file of Array.from(files).slice(0, available)) {
       const err = validateImageFile(file)
-      if (err) { setUploadError(err); continue }
+      if (err) { setUploadErr(err); continue }
       try {
         const media = await uploadMedia(file)
         newUrls.push(media.preview_url || media.original_url)
       } catch {
-        setUploadError('Tải ảnh thất bại. Vui lòng thử lại.')
+        setUploadErr('Tải ảnh thất bại.')
       }
     }
     onChange(newUrls)
@@ -555,7 +478,6 @@ function PageImageList({ label, images, onChange, max = 10 }: {
       <label className="mb-1 block font-label text-label-md text-on-surface-variant">
         {label} <span className="text-on-surface-variant/50">({images.length}/{max})</span>
       </label>
-
       {images.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-2">
           {images.map((url, i) => (
@@ -573,17 +495,10 @@ function PageImageList({ label, images, onChange, max = 10 }: {
           ))}
         </div>
       )}
-
-      {uploadError && <p className="mb-1 text-[11px] text-error">{uploadError}</p>}
-
+      {uploadErr && <p className="mb-1 text-[11px] text-error">{uploadErr}</p>}
       {images.length < max && (
         <>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
+          <input ref={inputRef} type="file" accept="image/*" multiple className="hidden"
             onChange={(e) => { if (e.target.files) handleFiles(e.target.files); e.target.value = '' }}
           />
           <button
@@ -601,14 +516,7 @@ function PageImageList({ label, images, onChange, max = 10 }: {
   )
 }
 
-/**
- * Upload 1 ảnh duy nhất (dùng cho avatar testimonial).
- */
-function PageImageSingle({ label, value, onChange }: {
-  label: string
-  value: string
-  onChange: (url: string) => void
-}) {
+function FImageSingle({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -628,16 +536,12 @@ function PageImageSingle({ label, value, onChange }: {
       <label className="mb-1 block font-label text-label-md text-on-surface-variant">{label}</label>
       <div className="flex items-center gap-2">
         {value && (
-          <div className="relative h-10 w-10 overflow-hidden rounded-full bg-surface-container">
+          <div className="relative h-10 w-16 overflow-hidden rounded-lg bg-surface-container">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="" className="h-full w-full object-cover" />
           </div>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
+        <input ref={inputRef} type="file" accept="image/*" className="hidden"
           onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
         />
         <button
@@ -650,110 +554,80 @@ function PageImageSingle({ label, value, onChange }: {
           {uploading ? 'Đang tải...' : value ? 'Đổi ảnh' : 'Chọn ảnh'}
         </button>
         {value && (
-          <button
-            type="button"
-            onClick={() => onChange('')}
-            className="text-[11px] text-error/70 hover:text-error"
-          >
-            Xoá
-          </button>
+          <button type="button" onClick={() => onChange('')} className="text-[11px] text-error/70 hover:text-error">Xoá</button>
         )}
       </div>
     </div>
   )
 }
 
-/* ─── Section Config Editor ───────────────────────────────────── */
+/* ─── Section Editors ──────────────────────────────────────────── */
 
-function SectionConfigEditor({ type, config, onUpdate }: {
+function SectionEditor({ type, config, onUpdate }: {
   type: PageSectionType
   config: Record<string, any>
   onUpdate: (key: string, value: unknown) => void
 }) {
   switch (type) {
+
     case 'hero':
       return (
         <div className="space-y-4">
+          <FInput label="Badge (nhãn nhỏ)" value={config.badge || ''} onChange={(v) => onUpdate('badge', v)} placeholder="Xưởng sản xuất trực tiếp" />
+          <FInput label="Tiêu đề lớn" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          <FInput label="Mô tả" value={config.subtitle || ''} onChange={(v) => onUpdate('subtitle', v)} multiline />
           <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="vd: Chuyên nghiệp" />
-            <FieldAlign value={config.text_align || 'center'} onChange={(v) => onUpdate('text_align', v)} />
+            <FInput label="Nút CTA — Text" value={config.cta_primary_text || ''} onChange={(v) => onUpdate('cta_primary_text', v)} placeholder="Bắt đầu dự án" />
+            <FInput label="Nút CTA — Link" value={config.cta_primary_link || ''} onChange={(v) => onUpdate('cta_primary_link', v)} placeholder="/bao-gia" />
           </div>
-          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          <FieldInput label="Mô tả" value={config.subtitle || ''} onChange={(v) => onUpdate('subtitle', v)} multiline />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Nút chính - Text" value={config.cta_primary_text || ''} onChange={(v) => onUpdate('cta_primary_text', v)} />
-            <FieldInput label="Nút chính - Link" value={config.cta_primary_link || ''} onChange={(v) => onUpdate('cta_primary_link', v)} placeholder="/tu-bep" />
-            <FieldInput label="Nút phụ - Text" value={config.cta_secondary_text || ''} onChange={(v) => onUpdate('cta_secondary_text', v)} />
-            <FieldInput label="Nút phụ - Link" value={config.cta_secondary_link || ''} onChange={(v) => onUpdate('cta_secondary_link', v)} placeholder="/lien-he" />
-          </div>
-          <PageImageList
-            label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = tự động lướt)"
-            images={config.bg_images || (config.bg_image_url ? [config.bg_image_url] : [])}
+          <FImageList
+            label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = slideshow)"
+            images={config.bg_images || []}
             onChange={(urls) => onUpdate('bg_images', urls)}
             max={10}
           />
         </div>
       )
 
-    case 'featured_products':
-      return (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
-          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          <FieldNumber label="Số lượng hiển thị" value={config.limit || 8} onChange={(v) => onUpdate('limit', v)} />
-          <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
-          <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/tu-bep" />
-        </div>
-      )
-
-    case 'featured_projects':
-      return (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
-          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          <FieldNumber label="Số lượng hiển thị" value={config.limit || 6} onChange={(v) => onUpdate('limit', v)} />
-          <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
-          <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/du-an-thuc-te" />
-        </div>
-      )
-
-    case 'about':
+    case 'company_intro':
       return (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
-            <FieldAlign value={config.text_align || 'left'} onChange={(v) => onUpdate('text_align', v)} />
+            <FInput label="Nhãn nhỏ" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="The Atelier Philosophy" />
+            <FInput label="Link text" value={config.link_text || ''} onChange={(v) => onUpdate('link_text', v)} placeholder="Xem quy trình" />
           </div>
-          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          <FieldInput label="Mô tả" value={config.description || ''} onChange={(v) => onUpdate('description', v)} multiline />
-          <PageImageList
-            label="Ảnh minh họa (2 ảnh hiển thị song song)"
+          <FInput label="Headline" value={config.headline || ''} onChange={(v) => onUpdate('headline', v)} />
+          <FInput label="Nội dung" value={config.body || ''} onChange={(v) => onUpdate('body', v)} multiline />
+          <FInput label="Câu trích dẫn (quote)" value={config.quote || ''} onChange={(v) => onUpdate('quote', v)} placeholder='"Không chỉ lấp đầy căn phòng..."' />
+          <FInput label="Link đích" value={config.link_href || ''} onChange={(v) => onUpdate('link_href', v)} placeholder="/gioi-thieu" />
+          <FImageList
+            label="2 ảnh minh họa (trái / phải)"
             images={config.images || []}
             onChange={(urls) => onUpdate('images', urls)}
             max={2}
           />
           <div>
-            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Thống kê</label>
+            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Thống kê (số liệu)</label>
             {(config.stats || []).map((stat: any, si: number) => (
-              <div key={si} className="mb-2 flex flex-wrap gap-2 sm:flex-nowrap">
+              <div key={si} className="mb-2 flex gap-2">
                 <input
                   value={stat.value || ''}
                   onChange={(e) => {
-                    const newStats = [...(config.stats || [])]
-                    newStats[si] = { ...newStats[si], value: e.target.value }
-                    onUpdate('stats', newStats)
+                    const s = [...(config.stats || [])]
+                    s[si] = { ...s[si], value: e.target.value }
+                    onUpdate('stats', s)
                   }}
-                  placeholder="vd: 10+"
-                  className="w-full rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40 sm:w-1/3"
+                  placeholder="500+"
+                  className="w-24 rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
                 />
                 <input
                   value={stat.label || ''}
                   onChange={(e) => {
-                    const newStats = [...(config.stats || [])]
-                    newStats[si] = { ...newStats[si], label: e.target.value }
-                    onUpdate('stats', newStats)
+                    const s = [...(config.stats || [])]
+                    s[si] = { ...s[si], label: e.target.value }
+                    onUpdate('stats', s)
                   }}
-                  placeholder="vd: Năm kinh nghiệm"
+                  placeholder="Công trình hoàn thành"
                   className="min-w-0 flex-1 rounded-lg bg-surface-container px-3 py-2 text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40"
                 />
                 <button
@@ -764,115 +638,132 @@ function SectionConfigEditor({ type, config, onUpdate }: {
                 </button>
               </div>
             ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onUpdate('stats', [...(config.stats || []), { value: '', label: '' }])}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Thêm thống kê
+            <Button variant="ghost" size="sm" onClick={() => onUpdate('stats', [...(config.stats || []), { value: '', label: '' }])}>
+              <Plus className="mr-1 h-4 w-4" /> Thêm số liệu
             </Button>
           </div>
         </div>
       )
 
-    case 'latest_news':
-      return (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
-          <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          <FieldNumber label="Số bài viết hiển thị" value={config.limit || 3} onChange={(v) => onUpdate('limit', v)} />
-        </div>
-      )
-
-    case 'contact_cta':
+    case 'why_choose_us':
       return (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-            <FieldAlign value={config.text_align || 'center'} onChange={(v) => onUpdate('text_align', v)} />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FInput label="Nhãn nhỏ" value={config.section_label || ''} onChange={(v) => onUpdate('section_label', v)} placeholder="Điểm Khác Biệt" />
+            <div className="sm:col-span-2">
+              <FInput label="Tiêu đề section" value={config.section_title || ''} onChange={(v) => onUpdate('section_title', v)} />
+            </div>
           </div>
-          <FieldInput label="Mô tả" value={config.description || ''} onChange={(v) => onUpdate('description', v)} multiline />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Nút - Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
-            <FieldInput label="Nút - Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/lien-he" />
-          </div>
-        </div>
-      )
-
-    case 'testimonials':
-      return (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldInput label="Nhãn" value={config.label || ''} onChange={(v) => onUpdate('label', v)} />
-            <FieldInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
-          </div>
+          <FInput label="Mô tả section" value={config.section_desc || ''} onChange={(v) => onUpdate('section_desc', v)} />
           <div>
-            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Đánh giá khách hàng</label>
-            {(config.items || []).map((item: any, ti: number) => (
-              <div key={ti} className="mb-3 rounded-lg bg-surface p-3">
-                <div className="mb-2 grid gap-2 sm:grid-cols-2">
-                  <FieldInput
-                    label="Tên"
-                    value={item.name || ''}
-                    onChange={(v) => {
-                      const items = [...(config.items || [])]
-                      items[ti] = { ...items[ti], name: v }
-                      onUpdate('items', items)
-                    }}
-                    placeholder="Nguyễn Văn A"
-                  />
-                  <FieldInput
-                    label="Vai trò"
-                    value={item.role || ''}
-                    onChange={(v) => {
-                      const items = [...(config.items || [])]
-                      items[ti] = { ...items[ti], role: v }
-                      onUpdate('items', items)
-                    }}
-                    placeholder="Khách hàng"
-                  />
-                </div>
-                <div className="mb-2">
-                  <FieldInput
-                    label="Nội dung đánh giá"
-                    value={item.content || ''}
-                    onChange={(v) => {
-                      const items = [...(config.items || [])]
-                      items[ti] = { ...items[ti], content: v }
-                      onUpdate('items', items)
-                    }}
-                    multiline
-                    placeholder="Sản phẩm rất tốt..."
-                  />
-                </div>
+            <label className="mb-2 block font-label text-label-md text-on-surface-variant">Các thẻ điểm mạnh (tối đa 6)</label>
+            {(config.cards || []).map((card: any, ci: number) => (
+              <div key={ci} className="mb-3 rounded-lg bg-surface p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <PageImageSingle
-                    label="Ảnh đại diện"
-                    value={item.avatar_url || ''}
-                    onChange={(v) => {
-                      const items = [...(config.items || [])]
-                      items[ti] = { ...items[ti], avatar_url: v }
-                      onUpdate('items', items)
-                    }}
-                  />
+                  <span className="font-label text-label-sm text-on-surface-variant">Thẻ #{ci + 1}</span>
                   <button
-                    onClick={() => onUpdate('items', (config.items || []).filter((_: any, i: number) => i !== ti))}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
+                    onClick={() => onUpdate('cards', (config.cards || []).filter((_: any, i: number) => i !== ci))}
+                    className="flex h-7 w-7 items-center justify-center rounded text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
+                <FInput
+                  label="Tiêu đề"
+                  value={card.title || ''}
+                  onChange={(v) => {
+                    const cards = [...(config.cards || [])]
+                    cards[ci] = { ...cards[ci], title: v }
+                    onUpdate('cards', cards)
+                  }}
+                />
+                <FInput
+                  label="Mô tả"
+                  value={card.desc || ''}
+                  onChange={(v) => {
+                    const cards = [...(config.cards || [])]
+                    cards[ci] = { ...cards[ci], desc: v }
+                    onUpdate('cards', cards)
+                  }}
+                  multiline
+                />
+                <FImageSingle
+                  label="Ảnh nền thẻ (tuỳ chọn)"
+                  value={card.bgImage || ''}
+                  onChange={(v) => {
+                    const cards = [...(config.cards || [])]
+                    cards[ci] = { ...cards[ci], bgImage: v }
+                    onUpdate('cards', cards)
+                  }}
+                />
               </div>
             ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onUpdate('items', [...(config.items || []), { name: '', role: '', content: '', avatar_url: '' }])}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Thêm đánh giá
-            </Button>
+            {(config.cards || []).length < 6 && (
+              <Button variant="ghost" size="sm" onClick={() => onUpdate('cards', [...(config.cards || []), { title: '', desc: '', bgImage: '' }])}>
+                <Plus className="mr-1 h-4 w-4" /> Thêm thẻ
+              </Button>
+            )}
           </div>
         </div>
+      )
+
+    case 'product_categories':
+      return (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FInput label="Nhãn nhỏ" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="Bespoke Furniture" />
+          <FInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} placeholder="Danh mục sản phẩm" />
+          <p className="col-span-2 text-body-sm text-on-surface-variant/60">
+            Danh mục sản phẩm được lấy từ cấu hình hệ thống, không chỉnh sửa ảnh ở đây.
+          </p>
+        </div>
+      )
+
+    case 'featured_projects':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FInput label="Nhãn nhỏ" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="Our Legacy" />
+            <FInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FNumber label="Số dự án hiển thị" value={config.limit || 3} onChange={(v) => onUpdate('limit', v)} min={1} max={6} />
+            <FInput label="Nút — Text" value={config.cta_text || ''} onChange={(v) => onUpdate('cta_text', v)} />
+            <FInput label="Nút — Link" value={config.cta_link || ''} onChange={(v) => onUpdate('cta_link', v)} placeholder="/du-an-thuc-te" />
+          </div>
+          <p className="text-body-sm text-on-surface-variant/60">Dự án được lấy tự động từ các dự án có đánh dấu "nổi bật" trong hệ thống.</p>
+        </div>
+      )
+
+    case 'video_section':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FInput label="Nhãn nhỏ" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="Video" />
+            <FInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} placeholder="Video Công Trình" />
+          </div>
+          <FNumber label="Số video hiển thị" value={config.limit || 3} onChange={(v) => onUpdate('limit', v)} min={1} max={6} />
+          <p className="text-body-sm text-on-surface-variant/60">Video được lấy tự động từ danh sách video trong hệ thống.</p>
+        </div>
+      )
+
+    case 'customer_reviews':
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FInput label="Nhãn nhỏ" value={config.label || ''} onChange={(v) => onUpdate('label', v)} placeholder="Phản Hồi" />
+            <FInput label="Tiêu đề" value={config.title || ''} onChange={(v) => onUpdate('title', v)} placeholder="Khách Hàng Nói Gì?" />
+          </div>
+          <FInput label="Mô tả" value={config.desc || ''} onChange={(v) => onUpdate('desc', v)} multiline />
+          <FNumber label="Số đánh giá hiển thị" value={config.limit || 6} onChange={(v) => onUpdate('limit', v)} min={1} max={12} />
+          <p className="text-body-sm text-on-surface-variant/60">Đánh giá được lấy từ danh sách reviews có đánh dấu "nổi bật" trong hệ thống.</p>
+        </div>
+      )
+
+    case 'quote_form':
+      return (
+        <p className="text-body-sm text-on-surface-variant">
+          Form báo giá hiển thị cố định. Dùng nút Ẩn/Hiện để bật tắt section này trên trang chủ.
+        </p>
       )
 
     default:
@@ -880,7 +771,7 @@ function SectionConfigEditor({ type, config, onUpdate }: {
   }
 }
 
-/* ─── History Modal ───────────────────────────────────────────── */
+/* ─── History Modal ────────────────────────────────────────────── */
 
 function HistoryModal({ history, onClose, onRollback }: {
   history: PageConfigHistory[]
