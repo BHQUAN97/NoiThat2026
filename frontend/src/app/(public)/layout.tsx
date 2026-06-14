@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { GlassNav } from '@/components/layout/GlassNav'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
