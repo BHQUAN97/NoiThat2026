@@ -11,8 +11,22 @@ export function Footer() {
   if (pathname.startsWith('/admin')) return null
 
   return (
-    <footer className="bg-primary pb-28 pt-16 text-surface md:pb-8">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-8 md:grid-cols-3">
+    <footer className="bg-primary pb-28 pt-0 text-surface md:pb-8">
+      {/* Google Maps */}
+      <div className="w-full h-52">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3722.4!2d105.5!3d21.1!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zTuG7mWkgVGjhuqV0IER1eSBN4bqhbmggLSBWw6JuIE5hbSAtIFBow7pjIFToqJUsIEjDoCBO4buZaQ!5e0!3m2!1svi!2svn!4v1"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Bản đồ Nội Thất Duy Mạnh"
+        />
+      </div>
+
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-8 pt-16 md:grid-cols-3">
         <div>
           <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-surface">
             {SITE_NAME}

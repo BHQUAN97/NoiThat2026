@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Save } from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
+import { Save, ImageIcon, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/shared/PageHeader'
 import api from '@/lib/api'
+import { uploadMedia, validateImageFile } from '@/lib/media'
 import { getListData, getResponseData } from '@/lib/api-response'
 import type { SiteConfig } from '@/types'
 
@@ -98,6 +99,12 @@ export default function AdminSettingsPage() {
       {saved && <div className="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-600">✓ Đã lưu thành công!</div>}
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Logo section */}
+        <LogoSection
+          value={values['logo_url'] || ''}
+          onChange={(url) => setValues((p) => ({ ...p, logo_url: url }))}
+        />
+
         {SECTIONS.map(section => (
           <div key={section.title} className="rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="mb-5 font-semibold text-stone-700">{section.title}</h2>
@@ -135,6 +142,86 @@ export default function AdminSettingsPage() {
           </Button>
         </div>
       </form>
+    </div>
+  )
+}
+
+function LogoSection({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadErr, setUploadErr] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(file: File) {
+    const err = validateImageFile(file)
+    if (err) { setUploadErr(err); return }
+    setUploading(true)
+    setUploadErr(null)
+    try {
+      const media = await uploadMedia(file)
+      onChange(media.preview_url || media.original_url)
+    } catch {
+      setUploadErr('Tải ảnh thất bại.')
+    }
+    setUploading(false)
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <h2 className="mb-5 font-semibold text-stone-700">Logo website</h2>
+      <p className="mb-4 text-sm text-stone-500">
+        Nếu không có logo, website sẽ hiển thị tên text thay thế.
+        Khuyến nghị: ảnh PNG/WebP nền trong suốt, chiều cao 40–60px.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-4">
+        {value ? (
+          <div className="relative flex h-14 items-center rounded-lg border border-stone-200 bg-stone-50 px-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="Logo" className="max-h-10 max-w-[180px] object-contain" />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex h-14 items-center rounded-lg border border-dashed border-stone-300 bg-stone-50 px-4 text-sm text-stone-400">
+            Chưa có logo
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1.5">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:border-amber-400 hover:text-amber-600 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            {uploading ? 'Đang tải...' : 'Upload logo'}
+          </button>
+          {uploadErr && <p className="text-xs text-red-500">{uploadErr}</p>}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-stone-400">Hoặc nhập URL:</span>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="https://..."
+              className="w-48 rounded border border-stone-200 px-2 py-1 text-xs focus:border-amber-400 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

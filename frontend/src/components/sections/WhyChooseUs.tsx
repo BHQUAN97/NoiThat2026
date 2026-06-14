@@ -1,6 +1,14 @@
-import { Shield, Hammer, Truck, Headphones, DollarSign, Star } from 'lucide-react'
+import { type LucideIcon, Shield, Hammer, Truck, Headphones, DollarSign, Star } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-const REASONS = [
+interface Reason {
+  icon: LucideIcon
+  title: string
+  desc: string
+  bgImage?: string
+}
+
+const REASONS: Reason[] = [
   {
     icon: Hammer,
     title: 'Xưởng Sản Xuất Trực Tiếp',
@@ -51,16 +59,32 @@ export function WhyChooseUs() {
 
         {/* Grid 3 cột */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {REASONS.map(({ icon: Icon, title, desc }) => (
+          {REASONS.map(({ icon: Icon, title, desc, bgImage }) => (
             <div
               key={title}
-              className="group p-6 bg-white rounded-xl border border-border hover:border-brand/30 hover:shadow-card-hover transition-all duration-300"
+              className={cn(
+                'group relative overflow-hidden p-6 rounded-xl border border-border hover:border-brand/30 hover:shadow-card-hover transition-all duration-300',
+                bgImage ? 'bg-cover bg-center' : 'bg-white',
+              )}
+              style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
             >
-              <div className="w-12 h-12 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center mb-4 transition-colors duration-300">
-                <Icon size={22} className="text-brand" />
+              {/* Overlay khi có ảnh nền */}
+              {bgImage && (
+                <div className="absolute inset-0 bg-black/50 rounded-xl group-hover:bg-black/40 transition-colors duration-300" />
+              )}
+
+              <div className={cn('relative z-10 flex flex-col items-center text-center sm:items-start sm:text-left', bgImage && 'text-white')}>
+                <div className={cn(
+                  'w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300',
+                  bgImage
+                    ? 'bg-white/20 group-hover:bg-white/30'
+                    : 'bg-brand/10 group-hover:bg-brand/15',
+                )}>
+                  <Icon size={22} className={bgImage ? 'text-white' : 'text-brand'} />
+                </div>
+                <h3 className={cn('font-semibold mb-2', bgImage ? 'text-white' : 'text-stone-900')}>{title}</h3>
+                <p className={cn('text-sm leading-relaxed', bgImage ? 'text-white/80' : 'text-stone-500')}>{desc}</p>
               </div>
-              <h3 className="font-semibold text-stone-900 mb-2">{title}</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>

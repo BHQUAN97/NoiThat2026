@@ -145,33 +145,16 @@ export function QuoteForm({ variant = 'inline', className }: QuoteFormProps) {
         </div>
       </div>
 
-      {/* Hàng 2: Email + Loại nội thất */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Email (tuỳ chọn)</label>
-          <input
-            type="email"
-            value={data.email}
-            onChange={(e) => setData({ ...data, email: e.target.value })}
-            placeholder="email@example.com"
-            className="w-full px-3 py-2.5 border border-border rounded text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-colors duration-200"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Loại nội thất</label>
-          <div className="relative">
-            <select
-              value={data.type}
-              onChange={(e) => setData({ ...data, type: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 appearance-none bg-white transition-colors duration-200"
-            >
-              <option value="">Chọn loại nội thất</option>
-              {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-          </div>
-        </div>
+      {/* Hàng 2: Email */}
+      <div>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Email (tuỳ chọn)</label>
+        <input
+          type="email"
+          value={data.email}
+          onChange={(e) => setData({ ...data, email: e.target.value })}
+          placeholder="email@example.com"
+          className="w-full px-3 py-2.5 border border-border rounded text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-colors duration-200"
+        />
       </div>
 
       {/* Ghi chú */}

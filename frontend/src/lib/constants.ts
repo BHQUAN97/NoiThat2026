@@ -19,9 +19,9 @@ export const NAV_LINKS = [
   { label: 'Nội Thất Khác', href: '/noi-that-khac' },
   { label: 'Dự Án Thực Tế', href: '/du-an-thuc-te' },
   { label: 'Video Công Trình', href: '/video-cong-trinh' },
-  { label: 'Báo Giá', href: '/bao-gia' },
   { label: 'Tin Tức', href: '/tin-tuc' },
   { label: 'Liên Hệ', href: '/lien-he' },
+  { label: 'Báo Giá', href: '/bao-gia' },
 ] as const
 
 export const BOTTOM_NAV_ITEMS = [
