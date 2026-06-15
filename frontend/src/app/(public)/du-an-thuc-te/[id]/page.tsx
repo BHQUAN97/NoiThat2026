@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Maximize2, Phone, CalendarDays } from 'lucide-react'
 import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getResponseData } from '@/lib/api-response'
 import { CONTACT } from '@/lib/constants'
-import { GalleryGrid } from '@/components/shared/GalleryGrid'
+import { ProjectGallery } from '@/components/shared/ProjectGallery'
 import { ClickableHeroImage } from '@/components/shared/ClickableHeroImage'
 import type { Project } from '@/types'
 
@@ -115,7 +115,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
 
               {project.description && (
-                <p className="mb-8 text-body-lg leading-relaxed text-on-surface-variant">{project.description}</p>
+                <div
+                  className="mb-8 text-body-lg leading-relaxed text-on-surface-variant [&_p]:mb-4 [&_img]:mx-auto [&_img]:my-4 [&_img]:rounded-lg [&_img]:max-w-full [&_h1]:mb-3 [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:font-medium [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-tertiary [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: project.description }}
+                />
               )}
 
               {/* CTA */}
@@ -158,12 +161,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       </section>
 
       {/* ── Gallery ── */}
-      {gallery.length > 1 && (
+      {gallery.length > 0 && (
         <section className="bg-surface-bright px-4 py-16 lg:px-8 lg:py-20">
           <div className="mx-auto max-w-content">
             <p className="mb-3 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Hình ảnh thi công</p>
             <h2 className="mb-8 font-headline text-3xl font-bold text-primary">Thư viện ảnh công trình</h2>
-            <GalleryGrid images={gallery} altPrefix={project.name} columns={3} />
+            <ProjectGallery images={gallery} altPrefix={project.name} />
           </div>
         </section>
       )}

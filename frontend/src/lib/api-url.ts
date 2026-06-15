@@ -12,22 +12,27 @@ export function getServerApiUrl(): string {
 }
 
 /**
- * Chuyen relative media URL (/uploads/...) thanh absolute URL.
- * SSR: dung INTERNAL_API_URL (backend container).
- * Client: dung window.location.origin.
+ * Chuyen media URL thanh path co the dung trong browser.
+ * - Internal Docker URL (http://backend:4000/...) → strip hostname, tra ve path
+ * - Absolute URL (R2, CDN) → giu nguyen
+ * - Relative path (/uploads/...) → giu nguyen (browser resolve theo origin, Nginx proxy)
+ *
+ * Khong prefix internal hostname vao SSR output vi browser khong resolve duoc
+ * va gay Mixed Content + CSP violation.
  */
 export function resolveMediaUrl(url: string | null | undefined): string {
   if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  if (!url.startsWith('/uploads/')) return url
+  if (url.startsWith('data:')) return url
 
-  // SSR context — prepend backend origin
-  if (typeof window === 'undefined') {
-    const internal = process.env.INTERNAL_API_URL || 'http://localhost:4000/api'
-    const origin = internal.replace(/\/api\/?$/, '')
-    return origin + url
-  }
+  // Strip internal Docker hostname: http://backend:4000/... or http://noithat-api:4000/...
+  // Pattern: protocol://hostname-no-dots:port/path
+  const internalMatch = url.match(/^https?:\/\/[a-z][a-z0-9_-]*:\d+(\/.*)$/)
+  if (internalMatch) return internalMatch[1]
 
-  // Client context
-  return window.location.origin + url
+  // Absolute public URL (R2, Cloudflare, picsum, etc.) — return as-is
+  if (url.startsWith('http') || url.startsWith('//')) return url
+
+  // Relative path — return as-is, browser resolves against its origin
+  // Nginx routes /uploads/ → backend container
+  return url
 }
