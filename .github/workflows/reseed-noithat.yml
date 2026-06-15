@@ -9,7 +9,7 @@ on:
         default: ''
 
 env:
-  APP_DIR: /opt/noithat
+  APP_DIR: /opt/noithat2026
 
 jobs:
   reseed:
@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Setup SSH (password)
+      - name: Setup SSH
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq sshpass > /dev/null
           mkdir -p ~/.ssh
@@ -36,10 +36,10 @@ jobs:
             echo '=== Reseed NoiThat2026 — \$(date) ==='
             cd ${APP_DIR}
 
-            curl -sf http://localhost:5202/api/health > /dev/null 2>&1 || { echo 'ERROR: backend not running'; docker compose ps; exit 1; }
+            curl -sf http://localhost:5202/api/health > /dev/null 2>&1 || { echo 'ERROR: backend not running'; docker compose -f docker-compose.prod.yml ps; exit 1; }
 
             echo '--- Running seed ---'
-            docker compose exec -T backend npm run seed:prod 2>&1
+            docker compose -f docker-compose.prod.yml exec -T backend npm run seed:prod 2>&1
 
             echo '=== Reseed done: \$(date) ==='
           "

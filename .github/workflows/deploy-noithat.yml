@@ -17,7 +17,7 @@ env:
   INFRA_DIR: /opt/infra
 
 jobs:
-  # ─── 1. Typecheck ─────────────────────────────────
+  # ─── 1. Typecheck (parallel) ────────────────────────
   typecheck-fe:
     name: "Typecheck FE"
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: cd backend && npm ci && npx tsc --noEmit
 
-  # ─── 2. Deploy ────────────────────────────────────
+  # ─── 2. Deploy ──────────────────────────────────────
   deploy:
     name: "Deploy to VPS"
     runs-on: ubuntu-latest
@@ -52,12 +52,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SSH (password)
+      - name: Setup SSH
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq sshpass > /dev/null
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ secrets.VPS_PORT || '22' }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Sync .env to VPS
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET_PRIVATE: ${{ secrets.R2_BUCKET_PRIVATE }}
+          R2_BUCKET_PUBLIC: ${{ secrets.R2_BUCKET_PUBLIC }}
+          R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOITHAT_MAIL_FROM: ${{ secrets.NOITHAT_MAIL_FROM }}
+          NOITHAT_ADMIN_EMAIL: ${{ secrets.NOITHAT_ADMIN_EMAIL }}
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT || '22' }}"
+          printf 'DB_PASSWORD=%s\n' "$NOITHAT_DB_PASSWORD" > /tmp/noithat.env
+          printf 'JWT_SECRET=%s\n' "$JWT_SECRET" >> /tmp/noithat.env
+          printf 'R2_ACCOUNT_ID=%s\n' "$R2_ACCOUNT_ID" >> /tmp/noithat.env
+          printf 'R2_ACCESS_KEY=%s\n' "$R2_ACCESS_KEY" >> /tmp/noithat.env
+          printf 'R2_SECRET_KEY=%s\n' "$R2_SECRET_KEY" >> /tmp/noithat.env
+          printf 'R2_BUCKET_PRIVATE=%s\n' "${R2_BUCKET_PRIVATE:-noithat-private}" >> /tmp/noithat.env
+          printf 'R2_BUCKET_PUBLIC=%s\n' "${R2_BUCKET_PUBLIC:-noithat-public}" >> /tmp/noithat.env
+          printf 'R2_PUBLIC_URL=%s\n' "$R2_PUBLIC_URL" >> /tmp/noithat.env
+          printf 'RESEND_API_KEY=%s\n' "$RESEND_API_KEY" >> /tmp/noithat.env
+          printf 'MAIL_FROM=%s\n' "${NOITHAT_MAIL_FROM:-Noi That Duy Manh <noreply@duymanhnoithat.vn>}" >> /tmp/noithat.env
+          printf 'ADMIN_EMAIL=%s\n' "${NOITHAT_ADMIN_EMAIL:-duymanhnoithat@gmail.com}" >> /tmp/noithat.env
+          sshpass -e scp -P $PORT /tmp/noithat.env $VPS:${APP_DIR}/.env
+          sshpass -e ssh -p $PORT $VPS "chmod 600 ${APP_DIR}/.env"
+          rm -f /tmp/noithat.env
+
+      - name: Ensure DB user
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT || '22' }}"
+          MYSQL_RUNNING=$(sshpass -e ssh -p $PORT $VPS \
+            "docker ps --filter name=shared-mysql --filter status=running --format '{{.Names}}'" 2>/dev/null || echo "")
+          if [ -z "$MYSQL_RUNNING" ]; then
+            echo "::warning::shared-mysql not running — skip DB user setup"
+            exit 0
+          fi
+          printf "CREATE DATABASE IF NOT EXISTS noithat2026 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\nCREATE USER IF NOT EXISTS 'noithat'@'%%' IDENTIFIED BY '%s';\nGRANT ALL PRIVILEGES ON noithat2026.* TO 'noithat'@'%%';\nFLUSH PRIVILEGES;\n" \
+            "$NOITHAT_DB_PASSWORD" > /tmp/ensure_noithat.sql
+          sshpass -e scp -P $PORT /tmp/ensure_noithat.sql $VPS:/tmp/ensure_noithat.sql
+          rm -f /tmp/ensure_noithat.sql
+          sshpass -e ssh -p $PORT $VPS "
+            docker cp /tmp/ensure_noithat.sql shared-mysql:/tmp/ensure_noithat.sql
+            docker exec shared-mysql bash -c 'MYSQL_PWD=\"\$MYSQL_ROOT_PASSWORD\" mysql -u root < /tmp/ensure_noithat.sql' 2>&1
+            docker exec shared-mysql rm -f /tmp/ensure_noithat.sql
+            rm -f /tmp/ensure_noithat.sql
+          "
 
       - name: Deploy
         run: |
@@ -74,27 +128,65 @@ jobs:
             echo '--- Git pull ---'
             git pull origin main
 
-            echo '--- Docker build + up ---'
-            docker compose up -d --build --remove-orphans
+            echo '--- Ensure Docker networks ---'
+            docker network create webphoto_backend 2>/dev/null || true
+            docker network create noithat_frontend 2>/dev/null || true
+
+            echo '--- Docker build + up (prod compose) ---'
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
             echo '--- Wait for backend (max 60s) ---'
             for i in \$(seq 1 12); do
               curl -sf http://localhost:5202/api/health > /dev/null 2>&1 && { echo \"Backend healthy after \$((i*5))s\"; break; }
-              [ \$i -eq 12 ] && { echo 'ERROR: backend timeout'; docker compose logs backend --tail 30; exit 1; }
+              [ \$i -eq 12 ] && { echo 'ERROR: backend timeout'; docker compose -f docker-compose.prod.yml logs backend --tail 30; exit 1; }
               echo \"Waiting... (\$i/12)\"
               sleep 5
             done
 
             echo '--- Run migrations ---'
-            docker compose exec -T backend npm run migration:run:prod 2>&1 || echo 'Migrations: nothing to run'
+            docker compose -f docker-compose.prod.yml exec -T backend npm run migration:run:prod 2>&1 || echo 'Migrations: nothing to run'
 
             echo '--- Reload nginx ---'
             cp nginx/conf.d/duymanh.bhquan.store.conf ${INFRA_DIR}/nginx/conf.d/
+            docker network connect noithat_frontend shared-nginx 2>/dev/null || true
             docker exec shared-nginx nginx -t && docker exec shared-nginx nginx -s reload
 
             echo '--- Cleanup ---'
             docker image prune -f > /dev/null
 
             echo '=== Deploy done: \$(date) ==='
-            curl -sf http://localhost:5202/api/health || true
+          "
+
+      - name: Health check
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT || '22' }}"
+          sleep 5
+          echo '--- Backend ---'
+          for i in $(seq 1 10); do
+            if sshpass -e ssh -p $PORT $VPS "curl -sf http://localhost:5202/api/health > /dev/null 2>&1"; then
+              echo "Backend: OK"; break
+            fi
+            [ $i -eq 10 ] && {
+              echo "::error::Backend health check failed"
+              sshpass -e ssh -p $PORT $VPS "docker logs noithat-api --tail 20" 2>&1 || true
+              exit 1
+            }
+            sleep 3
+          done
+          echo '--- Frontend ---'
+          for i in $(seq 1 15); do
+            if sshpass -e ssh -p $PORT $VPS "curl -sf http://localhost:5200 > /dev/null 2>&1"; then
+              echo "Frontend: OK"; break
+            fi
+            [ $i -eq 15 ] && {
+              echo "::error::Frontend health check failed"
+              sshpass -e ssh -p $PORT $VPS "docker logs noithat-frontend --tail 20" 2>&1 || true
+              exit 1
+            }
+            sleep 4
+          done
+          echo '--- Container status ---'
+          sshpass -e ssh -p $PORT $VPS "
+            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'NAME|noithat' || true
           "
