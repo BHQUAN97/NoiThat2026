@@ -59,36 +59,16 @@ jobs:
           ssh-keyscan -p ${{ secrets.VPS_PORT || '22' }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Sync .env to VPS
-        env:
-          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
-          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
-          R2_BUCKET_PRIVATE: ${{ secrets.R2_BUCKET_PRIVATE }}
-          R2_BUCKET_PUBLIC: ${{ secrets.R2_BUCKET_PUBLIC }}
-          R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          NOITHAT_MAIL_FROM: ${{ secrets.NOITHAT_MAIL_FROM }}
-          NOITHAT_ADMIN_EMAIL: ${{ secrets.NOITHAT_ADMIN_EMAIL }}
+      - name: Ensure .env exists on VPS
         run: |
           VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
           PORT="${{ secrets.VPS_PORT || '22' }}"
-          printf 'DB_PASSWORD=%s\n' "$NOITHAT_DB_PASSWORD" > /tmp/noithat.env
-          printf 'JWT_SECRET=%s\n' "$JWT_SECRET" >> /tmp/noithat.env
-          printf 'R2_ACCOUNT_ID=%s\n' "$R2_ACCOUNT_ID" >> /tmp/noithat.env
-          printf 'R2_ACCESS_KEY=%s\n' "$R2_ACCESS_KEY" >> /tmp/noithat.env
-          printf 'R2_SECRET_KEY=%s\n' "$R2_SECRET_KEY" >> /tmp/noithat.env
-          printf 'R2_BUCKET_PRIVATE=%s\n' "${R2_BUCKET_PRIVATE:-noithat-private}" >> /tmp/noithat.env
-          printf 'R2_BUCKET_PUBLIC=%s\n' "${R2_BUCKET_PUBLIC:-noithat-public}" >> /tmp/noithat.env
-          printf 'R2_PUBLIC_URL=%s\n' "$R2_PUBLIC_URL" >> /tmp/noithat.env
-          printf 'RESEND_API_KEY=%s\n' "$RESEND_API_KEY" >> /tmp/noithat.env
-          printf 'MAIL_FROM=%s\n' "${NOITHAT_MAIL_FROM:-Noi That Duy Manh <noreply@duymanhnoithat.vn>}" >> /tmp/noithat.env
-          printf 'ADMIN_EMAIL=%s\n' "${NOITHAT_ADMIN_EMAIL:-duymanhnoithat@gmail.com}" >> /tmp/noithat.env
-          sshpass -e scp -P $PORT /tmp/noithat.env $VPS:${APP_DIR}/.env
-          sshpass -e ssh -p $PORT $VPS "chmod 600 ${APP_DIR}/.env"
-          rm -f /tmp/noithat.env
+          ENV_EXISTS=$(sshpass -e ssh -p $PORT $VPS "[ -f ${APP_DIR}/.env ] && echo yes || echo no")
+          if [ "$ENV_EXISTS" = "no" ]; then
+            echo "::error::.env not found on VPS at ${APP_DIR}/.env — create it manually on the server first"
+            exit 1
+          fi
+          echo ".env exists on VPS — skipping overwrite"
 
       - name: Ensure DB user
         env:
