@@ -132,16 +132,29 @@ jobs:
             docker network create webphoto_backend 2>/dev/null || true
             docker network create noithat_frontend 2>/dev/null || true
 
-            echo '--- Docker build + up (prod compose) ---'
-            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            echo '--- Docker build backend ---'
+            docker compose -f docker-compose.prod.yml build backend frontend
 
-            echo '--- Wait for backend (max 60s) ---'
-            for i in \$(seq 1 12); do
+            echo '--- Start backend first ---'
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps backend
+
+            echo '--- Wait for backend (max 120s) ---'
+            for i in \$(seq 1 24); do
               curl -sf http://localhost:5202/api/health > /dev/null 2>&1 && { echo \"Backend healthy after \$((i*5))s\"; break; }
-              [ \$i -eq 12 ] && { echo 'ERROR: backend timeout'; docker compose -f docker-compose.prod.yml logs backend --tail 30; exit 1; }
-              echo \"Waiting... (\$i/12)\"
+              [ \$i -eq 24 ] && {
+                echo 'ERROR: backend timeout after 120s'
+                echo '=== docker logs noithat-api ==='
+                docker logs noithat-api --tail 60
+                echo '=== container inspect ==='
+                docker inspect noithat-api --format '{{.State.Status}} exit={{.State.ExitCode}}'
+                exit 1
+              }
+              echo \"Waiting \$((i*5))s...\"
               sleep 5
             done
+
+            echo '--- Start frontend ---'
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps frontend
 
             echo '--- Run migrations ---'
             docker compose -f docker-compose.prod.yml exec -T backend npm run migration:run:prod 2>&1 || echo 'Migrations: nothing to run'
