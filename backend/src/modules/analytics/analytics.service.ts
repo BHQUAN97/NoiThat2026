@@ -165,7 +165,7 @@ export class AnalyticsService {
         COUNT(DISTINCT visitor_ip) AS \`unique\`
        FROM page_views
        WHERE viewed_at BETWEEN ? AND ? AND is_bot = 0
-       GROUP BY DATE(viewed_at)
+       GROUP BY DATE_FORMAT(viewed_at, '%Y-%m-%d')
        ORDER BY date ASC`,
       [start, end],
     )
