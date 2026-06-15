@@ -89,8 +89,8 @@ jobs:
             echo "::warning::shared-mysql not running — skip DB user setup"
             exit 0
           fi
-          printf "CREATE DATABASE IF NOT EXISTS noithat2026 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\nCREATE USER IF NOT EXISTS 'noithat'@'%%' IDENTIFIED BY '%s';\nGRANT ALL PRIVILEGES ON noithat2026.* TO 'noithat'@'%%';\nFLUSH PRIVILEGES;\n" \
-            "$NOITHAT_DB_PASSWORD" > /tmp/ensure_noithat.sql
+          printf "CREATE DATABASE IF NOT EXISTS noithat2026 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\nCREATE USER IF NOT EXISTS 'noithat'@'%%' IDENTIFIED BY '%s';\nALTER USER 'noithat'@'%%' IDENTIFIED BY '%s';\nGRANT ALL PRIVILEGES ON noithat2026.* TO 'noithat'@'%%';\nFLUSH PRIVILEGES;\n" \
+            "$NOITHAT_DB_PASSWORD" "$NOITHAT_DB_PASSWORD" > /tmp/ensure_noithat.sql
           sshpass -e scp -P $PORT /tmp/ensure_noithat.sql $VPS:/tmp/ensure_noithat.sql
           rm -f /tmp/ensure_noithat.sql
           sshpass -e ssh -p $PORT $VPS "
