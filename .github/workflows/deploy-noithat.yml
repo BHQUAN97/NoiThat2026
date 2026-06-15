@@ -59,16 +59,23 @@ jobs:
           ssh-keyscan -p ${{ secrets.VPS_PORT || '22' }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Ensure .env exists on VPS
+      - name: Sync .env to VPS
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
           VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
           PORT="${{ secrets.VPS_PORT || '22' }}"
-          ENV_EXISTS=$(sshpass -e ssh -p $PORT $VPS "[ -f ${APP_DIR}/.env ] && echo yes || echo no")
-          if [ "$ENV_EXISTS" = "no" ]; then
-            echo "::error::.env not found on VPS at ${APP_DIR}/.env — create it manually on the server first"
-            exit 1
-          fi
-          echo ".env exists on VPS — skipping overwrite"
+          printf 'DB_PASSWORD=%s\n' "$NOITHAT_DB_PASSWORD" > /tmp/noithat.env
+          printf 'JWT_SECRET=%s\n' "$JWT_SECRET" >> /tmp/noithat.env
+          printf 'RESEND_API_KEY=%s\n' "$RESEND_API_KEY" >> /tmp/noithat.env
+          printf 'MAIL_FROM=%s\n' "Noi That Duy Manh <noreply@duymanhnoithat.vn>" >> /tmp/noithat.env
+          printf 'ADMIN_EMAIL=%s\n' "buihongquan28041997@gmail.com" >> /tmp/noithat.env
+          sshpass -e scp -P $PORT /tmp/noithat.env $VPS:${APP_DIR}/.env
+          sshpass -e ssh -p $PORT $VPS "chmod 600 ${APP_DIR}/.env"
+          rm -f /tmp/noithat.env
+          echo ".env synced to VPS"
 
       - name: Ensure DB user
         env:
