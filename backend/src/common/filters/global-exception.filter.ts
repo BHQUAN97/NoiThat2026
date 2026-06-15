@@ -57,8 +57,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       statusCode,
     })
 
-    // Ghi vào app_logs (fire-and-forget, không block response)
-    if (statusCode !== 404) {
+    // Ghi vào app_logs — bỏ qua 401, 404 (quá nhiều, không hữu ích)
+    if (statusCode !== 404 && statusCode !== 401) {
       const level = statusCode >= 500 ? 'error' : 'warn'
       const ip = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
         || request.ip
