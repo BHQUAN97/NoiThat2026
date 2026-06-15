@@ -5,11 +5,13 @@ import { usePathname } from 'next/navigation'
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react'
 import { CONTACT, NAV_LINKS, SITE_NAME } from '@/lib/constants'
 
-const MAPS_URL =
-  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3722.4!2d105.5!3d21.1!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zTuG7mWkgVGjhuqV0IER1eSBN4bqhbmggLSBWw6JuIE5hbSAtIFBow7pjIFToqJUsIEjDoCBO4buZaQ!5e0!3m2!1svi!2svn!4v1'
+// Fallback: tìm kiếm địa chỉ showroom, không cần API key
+const DEFAULT_MAPS_URL =
+  'https://maps.google.com/maps?q=V%C3%A2n+Nam+Ph%C3%BAc+Th%E1%BB%8D+H%C3%A0+N%E1%BB%99i&t=&z=14&ie=UTF8&iwloc=&output=embed'
 
-export function Footer() {
+export function Footer({ mapsUrl }: { mapsUrl?: string | null }) {
   const pathname = usePathname()
+  const embedUrl = mapsUrl || DEFAULT_MAPS_URL
 
   if (pathname.startsWith('/admin')) return null
 
@@ -109,7 +111,7 @@ export function Footer() {
           </h4>
           <div className="mt-5 overflow-hidden rounded-xl" style={{ height: 200 }}>
             <iframe
-              src={MAPS_URL}
+              src={embedUrl}
               width="100%"
               height="100%"
               style={{ border: 0 }}

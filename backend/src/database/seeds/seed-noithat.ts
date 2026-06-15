@@ -36,8 +36,9 @@ type ProjectSeed = {
   featured?: boolean
 }
 
+// picsum.photos/seed/{word}/WxH — ổn định, không cần API key, không deprecate
 const img = (q: string) =>
-  `https://images.unsplash.com/featured/?${encodeURIComponent(q + ' interior design')}`
+  `https://picsum.photos/seed/${encodeURIComponent(q)}/800/600`
 
 const paragraphs = (...items: string[]) => items.join('\n\n')
 
@@ -706,6 +707,52 @@ async function seed() {
     }
     console.log(`✓ Reviews seeded: ${reviews.length}`)
 
+    // Fix ảnh cũ dùng Unsplash Source API đã deprecated → đổi sang picsum.photos
+    const oldUrlPattern = '%images.unsplash.com/featured%'
+    await queryRunner.query(
+      `UPDATE products SET thumbnail_url = CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '/800/600')
+       WHERE thumbnail_url LIKE ?`,
+      [oldUrlPattern],
+    )
+    await queryRunner.query(
+      `UPDATE product_categories SET thumbnail_url = CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '/800/600')
+       WHERE thumbnail_url LIKE ?`,
+      [oldUrlPattern],
+    )
+    await queryRunner.query(
+      `UPDATE projects SET thumbnail_url = CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '/800/600')
+       WHERE thumbnail_url LIKE ?`,
+      [oldUrlPattern],
+    )
+    await queryRunner.query(
+      `UPDATE news SET thumbnail_url = CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '/800/600')
+       WHERE thumbnail_url LIKE ?`,
+      [oldUrlPattern],
+    )
+    await queryRunner.query(
+      `UPDATE reviews SET avatar_url = CONCAT('https://picsum.photos/seed/', REPLACE(id, ' ', '+'), '/200/200')
+       WHERE avatar_url LIKE ?`,
+      [oldUrlPattern],
+    )
+    // gallery_urls là JSON array — dùng JSON_ARRAY (MySQL 8)
+    await queryRunner.query(
+      `UPDATE projects SET gallery_urls = JSON_ARRAY(
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-1/800/600'),
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-2/800/600'),
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-3/800/600')
+       ) WHERE gallery_urls LIKE ?`,
+      [oldUrlPattern],
+    )
+    await queryRunner.query(
+      `UPDATE products SET gallery_urls = JSON_ARRAY(
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-1/800/600'),
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-2/800/600'),
+         CONCAT('https://picsum.photos/seed/', REPLACE(slug, '-', '+'), '-3/800/600')
+       ) WHERE gallery_urls LIKE ?`,
+      [oldUrlPattern],
+    )
+    console.log('✓ Fixed legacy Unsplash URLs → picsum.photos')
+
     // Videos cần YouTube ID thật — thêm qua admin panel sau khi upload video lên kênh YouTube của xưởng.
     console.log('→ Videos: bỏ qua (thêm YouTube ID thật qua admin)')
 
@@ -725,6 +772,10 @@ async function seed() {
       },
       { key: 'admin_email', value: 'duymanhnoithat@gmail.com' },
       { key: 'resend_from', value: 'no-reply@duymanhnoithat.vn' },
+      {
+        key: 'google_maps_embed_url',
+        value: 'https://maps.google.com/maps?q=V%C3%A2n+Nam+Ph%C3%BAc+Th%E1%BB%8D+H%C3%A0+N%E1%BB%99i&t=&z=14&ie=UTF8&iwloc=&output=embed',
+      },
     ]
 
     for (const cfg of configs) {

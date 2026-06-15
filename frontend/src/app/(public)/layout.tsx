@@ -6,21 +6,24 @@ import { FloatingButtons } from '@/components/layout/FloatingButtons'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { getServerApiUrl } from '@/lib/api-url'
 
-async function getLogoUrl(): Promise<string | null> {
+async function getPublicSettings(): Promise<{ logoUrl: string | null; mapsUrl: string | null }> {
   try {
     const res = await fetch(`${getServerApiUrl()}/settings/public`, {
       next: { revalidate: 3600, tags: ['settings'] },
     })
-    if (!res.ok) return null
+    if (!res.ok) return { logoUrl: null, mapsUrl: null }
     const data: Record<string, string> = await res.json()
-    return data?.logo_url || null
+    return {
+      logoUrl: data?.logo_url || null,
+      mapsUrl: data?.google_maps_embed_url || null,
+    }
   } catch {
-    return null
+    return { logoUrl: null, mapsUrl: null }
   }
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const logoUrl = await getLogoUrl()
+  const { logoUrl, mapsUrl } = await getPublicSettings()
 
   return (
     <>
@@ -28,7 +31,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="pt-[var(--nav-height)] pb-14 md:pb-0 min-h-screen">
         {children}
       </main>
-      <Footer />
+      <Footer mapsUrl={mapsUrl} />
       <FloatingButtons />
       <BottomNav />
     </>
