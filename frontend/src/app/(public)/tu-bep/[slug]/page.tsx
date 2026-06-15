@@ -5,7 +5,7 @@ import { QuoteForm } from '@/components/forms/QuoteForm'
 import { CONTACT } from '@/lib/constants'
 import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 import { getResponseData } from '@/lib/api-response'
-import { GalleryGrid } from '@/components/shared/GalleryGrid'
+import { ProjectGallery } from '@/components/shared/ProjectGallery'
 import { ProductImagePanel } from '@/components/shared/ProductImagePanel'
 import type { Product } from '@/types'
 
@@ -144,9 +144,10 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="mx-auto max-w-content">
             <p className="mb-3 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Thông tin sản phẩm</p>
             <h2 className="mb-8 font-headline text-3xl font-bold text-primary">Mô tả chi tiết</h2>
-            <div className="prose-custom max-w-3xl whitespace-pre-wrap text-body-base leading-[1.85] text-on-surface">
-              {description}
-            </div>
+            <div
+              className="max-w-3xl text-body-base leading-[1.85] text-on-surface [&_p]:mb-4 [&_img]:mx-auto [&_img]:my-4 [&_img]:rounded-xl [&_img]:max-w-full [&_h1]:mb-3 [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:mt-6 [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:font-medium [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-tertiary [&_a]:underline"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           </div>
         </section>
       )}
@@ -178,7 +179,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="mx-auto max-w-content">
             <p className="mb-3 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Hình ảnh thực tế</p>
             <h2 className="mb-8 font-headline text-3xl font-bold text-primary">Thư viện ảnh</h2>
-            <GalleryGrid images={gallery} altPrefix={name} columns={3} />
+            <ProjectGallery images={gallery} altPrefix={name} />
           </div>
         </section>
       )}
