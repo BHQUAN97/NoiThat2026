@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common'
-import { R2StorageService } from './r2-storage.service'
+import { LocalStorageService } from './local-storage.service'
 import { SimpleMailService } from './simple-mail.service'
 
 @Global()
 @Module({
-  providers: [R2StorageService, SimpleMailService],
-  exports: [R2StorageService, SimpleMailService],
+  providers: [LocalStorageService, SimpleMailService],
+  exports: [LocalStorageService, SimpleMailService],
 })
 export class ServicesModule {}

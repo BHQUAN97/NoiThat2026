@@ -8,7 +8,6 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 
 import { databaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
-import { r2Config } from './config/r2.config';
 import { mailConfig } from './config/mail.config';
 
 import { AuthModule } from './modules/auth/auth.module';
@@ -36,7 +35,7 @@ import { PageConfigsModule } from './modules/page-configs/page-configs.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, r2Config, mailConfig],
+      load: [databaseConfig, jwtConfig, mailConfig],
       envFilePath: ['.env'],
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),

@@ -27,12 +27,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: 3600
       REFRESH_TOKEN_EXPIRATION: 604800
-      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
-      R2_ACCESS_KEY: ${R2_ACCESS_KEY}
-      R2_SECRET_KEY: ${R2_SECRET_KEY}
-      R2_BUCKET_PRIVATE: ${R2_BUCKET_PRIVATE:-noithat-private}
-      R2_BUCKET_PUBLIC: ${R2_BUCKET_PUBLIC:-noithat-public}
-      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
       RESEND_API_KEY: ${RESEND_API_KEY}
       MAIL_FROM: ${MAIL_FROM:-Noi That Duy Manh <noreply@duymanhnoithat.vn>}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-duymanhnoithat@gmail.com}
