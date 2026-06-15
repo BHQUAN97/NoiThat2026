@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 import { databaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
@@ -83,6 +84,10 @@ import { PageConfigsModule } from './modules/page-configs/page-configs.module';
     PageConfigsModule,
   ],
   providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

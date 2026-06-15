@@ -4,6 +4,7 @@ import { GlassNav } from '@/components/layout/GlassNav'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { TrafficTracker } from '@/components/layout/TrafficTracker'
 import { getServerApiUrl } from '@/lib/api-url'
 
 async function getPublicSettings(): Promise<{ logoUrl: string | null; mapsUrl: string | null }> {
@@ -27,6 +28,7 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <>
+      <TrafficTracker />
       <GlassNav logoUrl={logoUrl} />
       <main className="pt-[var(--nav-height)] pb-14 md:pb-0 min-h-screen">
         {children}
