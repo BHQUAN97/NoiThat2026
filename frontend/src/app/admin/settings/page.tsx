@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import {
   Save, ImageIcon, Loader2, X, Building2, Search, Mail,
   ChevronDown, ChevronUp, MapPin, ExternalLink, Info,
-  CheckCircle2, Circle, Eye, EyeOff,
+  CheckCircle2, Circle, Eye, EyeOff, AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -94,11 +94,11 @@ const SECTIONS: SectionDef[] = [
       {
         key: 'google_maps_embed_url',
         label: 'Google Maps Embed URL',
-        placeholder: 'https://maps.google.com/maps?q=...&output=embed',
+        placeholder: 'https://www.google.com/maps/embed?pb=!1m18...',
         type: 'url',
         wide: true,
         mapsPreview: true,
-        hint: 'URL nhúng bản đồ vào footer. Cách lấy: Google Maps → Tìm địa chỉ showroom → Chia sẻ → "Nhúng bản đồ" → Copy URL trong phần src="..." của thẻ <iframe>.',
+        hint: 'Phải là URL embed (chứa /maps/embed hoặc output=embed). KHÔNG dùng link chia sẻ ngắn như maps.app.goo.gl hay maps/place/...',
       },
     ],
   },
@@ -452,6 +452,16 @@ function SectionCard({
 
 // ─── Field row ────────────────────────────────────────────────────────────────
 
+// Kiểm tra URL Google Maps có phải embed URL hợp lệ không
+function isValidMapsEmbedUrl(url: string): boolean {
+  if (!url) return true // chưa nhập → không cảnh báo
+  return (
+    url.includes('google.com/maps/embed') ||
+    url.includes('maps.google.com/maps') ||
+    url.includes('output=embed')
+  )
+}
+
 function FieldRow({
   field, value, onChange,
 }: {
@@ -462,7 +472,16 @@ function FieldRow({
   const [showPreview, setShowPreview] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
 
-  const inputClass = 'w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-300 focus:border-amber-400 focus:bg-white focus:outline-none transition-colors'
+  const isMapsField = field.key === 'google_maps_embed_url'
+  const mapsUrlInvalid = isMapsField && value.length > 0 && !isValidMapsEmbedUrl(value)
+  const mapsUrlValid = isMapsField && value.length > 0 && isValidMapsEmbedUrl(value)
+
+  const inputClass = cn(
+    'w-full rounded-lg border bg-stone-50 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-300 focus:bg-white focus:outline-none transition-colors',
+    mapsUrlInvalid
+      ? 'border-red-300 focus:border-red-400'
+      : 'border-stone-200 focus:border-amber-400',
+  )
 
   return (
     <div className={cn('flex flex-col gap-1.5', field.wide && 'md:col-span-2')}>
@@ -477,7 +496,7 @@ function FieldRow({
         >
           <Info className="h-3.5 w-3.5" />
         </button>
-        {field.mapsPreview && value && (
+        {field.mapsPreview && mapsUrlValid && (
           <button
             type="button"
             onClick={() => setShowPreview(v => !v)}
@@ -487,7 +506,7 @@ function FieldRow({
             {showPreview ? 'Ẩn bản đồ' : 'Xem bản đồ'}
           </button>
         )}
-        {field.type === 'url' && value && (
+        {field.type === 'url' && value && !isMapsField && (
           <a
             href={value}
             target="_blank"
@@ -504,6 +523,44 @@ function FieldRow({
         <div className="flex gap-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
           <span>{field.hint}</span>
+        </div>
+      )}
+
+      {/* Hướng dẫn lấy Maps embed URL — hiện luôn khi field trống hoặc sai */}
+      {isMapsField && !mapsUrlValid && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5 text-xs text-blue-800">
+          <p className="mb-2 font-semibold">Cách lấy URL nhúng bản đồ (3 bước):</p>
+          <ol className="space-y-1.5">
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-blue-500">1.</span>
+              <span>Mở <strong>Google Maps</strong> trên máy tính, tìm địa chỉ showroom</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-blue-500">2.</span>
+              <span>Nhấn nút <strong>Chia sẻ</strong> → chọn tab <strong>"Nhúng bản đồ"</strong></span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-blue-500">3.</span>
+              <span>Copy giá trị trong <code className="rounded bg-blue-100 px-1 font-mono">src="..."</code> của thẻ iframe — dán vào đây</span>
+            </li>
+          </ol>
+          <p className="mt-2.5 rounded-lg bg-blue-100 px-2.5 py-1.5 font-mono text-[10px] text-blue-700 break-all">
+            ✓ Đúng: https://www.google.com/maps/embed?pb=!1m18...
+          </p>
+          <p className="mt-1 rounded-lg bg-red-50 px-2.5 py-1.5 font-mono text-[10px] text-red-600 break-all">
+            ✗ Sai: https://maps.app.goo.gl/... (link chia sẻ, không nhúng được)
+          </p>
+        </div>
+      )}
+
+      {/* Cảnh báo URL sai format */}
+      {mapsUrlInvalid && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
+          <span>
+            <strong>URL không hợp lệ</strong> — Đây là link chia sẻ, không dùng được để nhúng iframe.
+            Phải lấy từ Google Maps → Chia sẻ → <strong>Nhúng bản đồ</strong> → copy giá trị <code className="rounded bg-red-100 px-0.5 font-mono">src="..."</code>.
+          </span>
         </div>
       )}
 
@@ -526,8 +583,8 @@ function FieldRow({
         />
       )}
 
-      {/* Maps inline preview */}
-      {field.mapsPreview && showPreview && value && (
+      {/* Maps inline preview — chỉ hiện khi URL hợp lệ */}
+      {field.mapsPreview && showPreview && mapsUrlValid && (
         <div className="mt-1 overflow-hidden rounded-xl border border-stone-200" style={{ height: 200 }}>
           <iframe
             src={value}
