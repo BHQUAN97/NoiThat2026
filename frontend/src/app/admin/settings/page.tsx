@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import {
-  Save, ImageIcon, Loader2, X, Building2, Search, Mail,
+  Save, ImageIcon, Loader2, X, Building2, Search, Mail, Image as ImageLucide,
   ChevronDown, ChevronUp, MapPin, ExternalLink, Info,
   CheckCircle2, Circle, Eye, EyeOff, AlertTriangle,
 } from 'lucide-react'
@@ -287,6 +287,9 @@ export default function AdminSettingsPage() {
           value={values['logo_url'] || ''}
           onChange={(url) => setValues(p => ({ ...p, logo_url: url }))}
         />
+
+        {/* Page Banners */}
+        <PageBannersSection values={values} setValues={setValues} />
 
         {/* Dynamic sections */}
         {SECTIONS.map(section => (
@@ -705,6 +708,114 @@ function LogoSection({ value, onChange }: { value: string; onChange: (url: strin
             Nếu không có logo, website tự động hiển thị tên (site_name) dạng text có kiểu chữ thương hiệu.
             Nên dùng file PNG hoặc WebP có nền trong suốt để logo không có viền trắng.
           </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Page Banners section ────────────────────────────────────────────────────
+
+const PAGE_BANNER_ITEMS = [
+  { slug: 'tu-bep', label: 'Tủ Bếp' },
+  { slug: 'noi-that-khac', label: 'Nội Thất Khác' },
+  { slug: 'du-an-thuc-te', label: 'Dự Án Thực Tế' },
+  { slug: 'video-cong-trinh', label: 'Video Công Trình' },
+  { slug: 'tin-tuc', label: 'Tin Tức' },
+  { slug: 'danh-gia-khach-hang', label: 'Đánh Giá Khách Hàng' },
+  { slug: 'bao-gia', label: 'Báo Giá' },
+  { slug: 'lien-he', label: 'Liên Hệ' },
+  { slug: 'gioi-thieu', label: 'Giới Thiệu' },
+]
+
+function PageBannersSection({
+  values, setValues,
+}: {
+  values: Record<string, string>
+  setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
+}) {
+  return (
+    <div className="rounded-2xl border border-violet-200 bg-white shadow-sm">
+      <div className="flex items-center gap-3 border-b border-stone-100 px-6 py-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+          <ImageLucide className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-stone-800">Ảnh bìa các trang</h2>
+          <p className="text-xs text-stone-400">Ảnh nền phần header mỗi trang. Nên dùng ảnh ngang, kích thước tối thiểu 1920×600px.</p>
+        </div>
+      </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PAGE_BANNER_ITEMS.map(({ slug, label }) => (
+            <BannerUploadCard
+              key={slug}
+              label={label}
+              value={values[`page_banner_${slug}`] || ''}
+              onChange={(url) => setValues(p => ({ ...p, [`page_banner_${slug}`]: url }))}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BannerUploadCard({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(file: File) {
+    const err = validateImageFile(file)
+    if (err) return
+    setUploading(true)
+    try {
+      const media = await uploadMedia(file)
+      onChange(media.preview_url || media.original_url)
+    } catch { /* skip */ }
+    setUploading(false)
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-stone-200">
+      <div className="relative h-24 bg-stone-100">
+        {value ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt={label} className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-500/80 text-white hover:bg-red-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </>
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-stone-400">
+            Chưa có ảnh bìa
+          </div>
+        )}
+      </div>
+      <div className="flex items-center justify-between px-3 py-2">
+        <span className="text-sm font-medium text-stone-700">{label}</span>
+        <div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }}
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-700 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+            {value ? 'Đổi' : 'Upload'}
+          </button>
         </div>
       </div>
     </div>

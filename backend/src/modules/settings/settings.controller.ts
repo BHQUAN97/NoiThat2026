@@ -2,6 +2,7 @@ import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common'
 import { SettingsService } from './settings.service'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
+import { Public } from '../../common/decorators/public.decorator'
 import { UserRole } from '../users/entities/user.entity'
 
 @Controller('settings')
@@ -9,6 +10,7 @@ export class SettingsController {
   constructor(private readonly service: SettingsService) {}
 
   @Get('public')
+  @Public()
   getPublic() {
     return this.service.getAll()
   }

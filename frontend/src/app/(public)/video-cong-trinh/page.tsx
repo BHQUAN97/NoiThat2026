@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PageBanner } from '@/components/shared/PageBanner'
 import { getServerApiUrl } from '@/lib/api-url'
 import { getListData } from '@/lib/api-response'
 import type { Video } from '@/types'
@@ -25,15 +26,12 @@ export default async function VideoPage() {
 
   return (
     <>
-      <section className="bg-surface px-4 py-20 lg:px-8">
-        <div className="mx-auto max-w-content">
-          <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Video</p>
-          <h1 className="font-headline text-4xl font-bold leading-tight text-primary md:text-6xl">Video công trình</h1>
-          <p className="mt-5 max-w-2xl text-body-lg leading-relaxed text-on-surface-variant">
-            Theo dõi quá trình thi công, bàn giao và khảo sát thực tế qua video.
-          </p>
-        </div>
-      </section>
+      <PageBanner
+        slug="video-cong-trinh"
+        title="Video công trình"
+        subtitle="Theo dõi quá trình thi công, bàn giao và khảo sát thực tế qua video."
+        label="Video"
+      />
 
       <section className="bg-surface-bright px-4 py-14 lg:px-8">
         <div className="mx-auto max-w-content">

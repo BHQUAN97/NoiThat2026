@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Award, CheckCircle2, Clock, Shield } from 'lucide-react'
+import { PageBanner } from '@/components/shared/PageBanner'
 
 export const metadata: Metadata = {
   title: 'Giới thiệu - Nội Thất Duy Mạnh',
@@ -32,23 +33,12 @@ const COMMITMENTS = [
 export default function AboutPage() {
   return (
     <>
-      <section className="relative overflow-hidden bg-surface">
-        <div className="absolute inset-y-0 right-0 hidden w-1/2 lg:block">
-          <img src={HERO_IMAGE} alt="Xưởng nội thất Duy Mạnh" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/45 to-transparent" />
-        </div>
-        <div className="mx-auto grid min-h-[360px] max-w-content items-center px-4 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
-          <div className="relative z-10 max-w-2xl">
-            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Về chúng tôi</p>
-            <h1 className="font-headline text-4xl font-bold leading-tight text-primary md:text-6xl">
-              Nội Thất Duy Mạnh
-            </h1>
-            <p className="mt-6 max-w-xl text-body-lg leading-relaxed text-on-surface-variant">
-              Hơn 10 năm đồng hành cùng các gia đình tại Hà Nội, tập trung vào tủ bếp và nội thất bền, dễ dùng, thi công trực tiếp từ xưởng.
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageBanner
+        slug="gioi-thieu"
+        title="Nội Thất Duy Mạnh"
+        subtitle="Hơn 10 năm đồng hành cùng các gia đình tại Hà Nội, tập trung vào tủ bếp và nội thất bền, dễ dùng, thi công trực tiếp từ xưởng."
+        label="Về chúng tôi"
+      />
 
       <section className="bg-surface-bright px-4 py-20 lg:px-8 lg:py-28">
         <div className="mx-auto grid max-w-content items-center gap-12 lg:grid-cols-2">

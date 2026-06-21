@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PageBanner } from '@/components/shared/PageBanner'
 import { QuoteForm } from '@/components/forms/QuoteForm'
 import { PricingSelector, type PricingOption } from './PricingSelector'
 
@@ -48,17 +49,12 @@ const PRICING_TABLES: PricingOption[] = [
 export default function PricingPage() {
   return (
     <>
-      <section className="bg-surface px-4 py-20 lg:px-8">
-        <div className="mx-auto max-w-content">
-          <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Giá tham khảo</p>
-          <h1 className="font-headline text-4xl font-bold leading-tight text-primary md:text-6xl">
-            Bảng giá tủ bếp
-          </h1>
-          <p className="mt-5 max-w-2xl text-body-lg leading-relaxed text-on-surface-variant">
-            Chọn gói vật liệu phù hợp để gửi yêu cầu. Giá chính xác được chốt sau khi khảo sát và đo đạc miễn phí.
-          </p>
-        </div>
-      </section>
+      <PageBanner
+        slug="bao-gia"
+        title="Bảng giá tủ bếp"
+        subtitle="Chọn gói vật liệu phù hợp để gửi yêu cầu. Giá chính xác được chốt sau khi khảo sát và đo đạc miễn phí."
+        label="Giá tham khảo"
+      />
 
       <PricingSelector tables={PRICING_TABLES} />
 

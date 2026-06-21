@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Phone, MapPin, Clock, Mail } from 'lucide-react'
 import { CONTACT } from '@/lib/constants'
+import { PageBanner } from '@/components/shared/PageBanner'
 import { ContactForm } from './ContactForm'
 
 export const metadata: Metadata = {
@@ -11,13 +12,12 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
-      <section className="py-16 bg-stone-900 text-white">
-        <div className="max-w-content mx-auto px-4 lg:px-8 text-center">
-          <p className="text-brand text-sm font-semibold uppercase tracking-widest mb-3">Liên Hệ</p>
-          <h1 className="font-serif font-bold text-4xl leading-tight mb-3">Liên Hệ Với Chúng Tôi</h1>
-          <p className="text-stone-300">Sẵn sàng tư vấn miễn phí — Thứ 2 đến Chủ Nhật, 8h-18h</p>
-        </div>
-      </section>
+      <PageBanner
+        slug="lien-he"
+        title="Liên Hệ Với Chúng Tôi"
+        subtitle="Sẵn sàng tư vấn miễn phí — Thứ 2 đến Chủ Nhật, 8h-18h"
+        label="Liên Hệ"
+      />
 
       <section className="py-16 bg-white">
         <div className="max-w-content mx-auto px-4 lg:px-8">

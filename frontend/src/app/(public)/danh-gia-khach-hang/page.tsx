@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { Star } from 'lucide-react'
+import { PageBanner } from '@/components/shared/PageBanner'
 import { getServerApiUrl } from '@/lib/api-url'
 import { getListData } from '@/lib/api-response'
 import type { Review } from '@/types'
@@ -54,20 +54,12 @@ export default async function ReviewsPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-surface px-4 py-20 lg:px-8 lg:py-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(47,85,85,0.12),transparent_38%),linear-gradient(135deg,#fffdf8_0%,#fbf7f0_54%,#efe5d9_100%)]" />
-        <div className="relative mx-auto grid max-w-content items-end gap-8 lg:grid-cols-[0.8fr_1fr]">
-          <div>
-            <nav className="mb-7 font-label text-xs uppercase tracking-widest text-on-surface-variant">
-              <Link href="/" className="transition hover:text-primary">Trang chủ</Link>
-              <span className="mx-3 text-outline">/</span>
-              <span className="text-primary">Đánh giá</span>
-            </nav>
-            <p className="mb-4 font-label text-xs uppercase tracking-[0.22em] text-tertiary">Phản hồi</p>
-            <h1 className="font-headline text-4xl font-bold leading-tight text-primary md:text-6xl">
-              Đánh giá khách hàng
-            </h1>
-          </div>
+      <PageBanner
+        slug="danh-gia-khach-hang"
+        title="Đánh giá khách hàng"
+        label="Phản hồi"
+        breadcrumb={[{ label: 'Trang chủ', href: '/' }, { label: 'Đánh giá' }]}
+      >
           <div className="lg:justify-self-end">
             <div className="mb-3 flex items-center gap-3">
               <div className="flex items-center gap-0.5">
@@ -79,8 +71,7 @@ export default async function ReviewsPage() {
             </div>
             <p className="text-body-md text-on-surface-variant">Từ {reviews.length}+ đánh giá thực tế của khách hàng</p>
           </div>
-        </div>
-      </section>
+      </PageBanner>
 
       {/* ── Đánh giá nổi bật ── */}
       {featured.length > 0 && (
