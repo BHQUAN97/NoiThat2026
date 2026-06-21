@@ -12,6 +12,7 @@ env:
   DB_USER: noithat
   VOLUME_NAME: noithat_uploads
   BACKUP_BRANCH: backups
+  GDRIVE_ENABLED: ${{ secrets.GDRIVE_FOLDER_ID != '' && 'true' || 'false' }}
 
 permissions:
   contents: write
@@ -147,6 +148,97 @@ jobs:
           sshpass -e scp -P $PORT -r $VPS:/tmp/backup-noithat-${DATE}/* /tmp/backups/
           echo "Downloaded:"; find /tmp/backups -type f -exec ls -lh {} \;
 
+      - name: Upload to Google Drive
+        if: env.GDRIVE_ENABLED == 'true'
+        continue-on-error: true
+        run: |
+          DATE="${{ env.DATE }}"
+          FOLDER_ID="${{ secrets.GDRIVE_FOLDER_ID }}"
+          CREDS='${{ secrets.GDRIVE_CREDENTIALS_JSON }}'
+          KEEP=${{ env.KEEP_DAYS }}
+
+          echo "$CREDS" > /tmp/gdrive-creds.json
+
+          # Install googleapis
+          cd /tmp && npm init -y --silent > /dev/null 2>&1
+          npm install googleapis@144 --silent > /dev/null 2>&1
+
+          node -e "
+          const { google } = require('googleapis');
+          const fs = require('fs');
+          const path = require('path');
+
+          async function main() {
+            const creds = JSON.parse(fs.readFileSync('/tmp/gdrive-creds.json', 'utf8'));
+            const auth = new google.auth.JWT({
+              email: creds.client_email,
+              key: creds.private_key,
+              scopes: ['https://www.googleapis.com/auth/drive.file'],
+            });
+            await auth.authorize();
+            const drive = google.drive({ version: 'v3', auth });
+            console.log('GDrive auth OK:', creds.client_email);
+
+            // Find or create noithat subfolder
+            const parentId = '${FOLDER_ID}';
+            const subName = 'noithat-backup';
+            let subId;
+            const list = await drive.files.list({
+              q: \"'\" + parentId + \"' in parents and name = '\" + subName + \"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false\",
+              fields: 'files(id)',
+            });
+            if (list.data.files && list.data.files.length > 0) {
+              subId = list.data.files[0].id;
+            } else {
+              const created = await drive.files.create({
+                requestBody: { name: subName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
+                fields: 'id',
+              });
+              subId = created.data.id;
+              console.log('Created folder:', subName);
+            }
+
+            // Upload each backup file
+            const backupDir = '/tmp/backups';
+            const files = fs.readdirSync(backupDir);
+            for (const fname of files) {
+              const fpath = path.join(backupDir, fname);
+              const stat = fs.statSync(fpath);
+              const uploadName = '${DATE}_' + fname;
+              const sizeMB = (stat.size / 1024 / 1024).toFixed(2);
+              console.log('Uploading:', uploadName, '(' + sizeMB + ' MB)');
+              await drive.files.create({
+                requestBody: { name: uploadName, parents: [subId] },
+                media: { body: fs.createReadStream(fpath) },
+                fields: 'id, name',
+              });
+              console.log('  OK:', uploadName);
+            }
+
+            // Rotate: keep KEEP_DAYS * files_per_day
+            const allFiles = await drive.files.list({
+              q: \"'\" + subId + \"' in parents and trashed = false\",
+              fields: 'files(id, name, createdTime)',
+              orderBy: 'createdTime desc',
+              pageSize: 200,
+            });
+            const maxFiles = ${KEEP} * 3; // 3 files per day (db, uploads, settings)
+            const toDelete = (allFiles.data.files || []).slice(maxFiles);
+            if (toDelete.length > 0) {
+              console.log('Rotating:', toDelete.length, 'old files');
+              for (const f of toDelete) {
+                await drive.files.delete({ fileId: f.id });
+              }
+            }
+
+            console.log('GDrive backup complete');
+          }
+          main().catch(e => { console.error('GDrive error:', e.message); process.exit(1); });
+          "
+
+          rm -f /tmp/gdrive-creds.json
+          echo "Google Drive: OK"
+
       - name: Encrypt backups
         run: |
           ENCRYPT_KEY="${{ secrets.BACKUP_ENCRYPT_KEY }}"
@@ -233,5 +325,6 @@ jobs:
           echo "==============================="
           echo "Backup OK: ${{ env.DATE }}"
           echo "Repo: NoiThat2026 | DB: ${{ env.DB_NAME }}"
-          echo "Branch: ${{ env.BACKUP_BRANCH }} | Retention: ${{ env.KEEP_DAYS }} days"
+          echo "Storage 1: GitHub branch '${{ env.BACKUP_BRANCH }}' (${KEEP_DAYS}d retention)"
+          echo "Storage 2: Google Drive (${{ env.GDRIVE_ENABLED == 'true' && 'enabled' || 'not configured' }})"
           echo "==============================="
