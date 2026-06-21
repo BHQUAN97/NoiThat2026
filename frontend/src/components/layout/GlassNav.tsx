@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Phone, Search, ShoppingBag, User, ChevronDown, Menu, X } from 'lucide-react'
 import { CONTACT, NAV_LINKS, SITE_NAME } from '@/lib/constants'
@@ -152,13 +151,11 @@ export function GlassNav({ logoUrl }: { logoUrl?: string | null }) {
             className="group flex items-center gap-2 shrink-0"
           >
             {logoUrl ? (
-              <Image
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
                 src={logoUrl}
                 alt={SITE_NAME}
-                width={140}
-                height={40}
                 className="h-9 w-auto object-contain"
-                priority
               />
             ) : (
               <>

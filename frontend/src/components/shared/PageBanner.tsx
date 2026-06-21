@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePageBanner } from '@/lib/page-banner-context'
 
 interface PageBannerProps {
@@ -27,12 +26,11 @@ export function PageBanner({ slug, title: defaultTitle, subtitle: defaultSubtitl
     <section className="relative overflow-hidden bg-surface px-4 py-20 lg:px-8 lg:py-24">
       {bannerUrl ? (
         <>
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={bannerUrl}
             alt=""
-            fill
-            className="object-cover"
-            priority
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
         </>

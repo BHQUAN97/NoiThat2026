@@ -3,13 +3,32 @@ import { Phone, MapPin, Clock, Mail } from 'lucide-react'
 import { CONTACT } from '@/lib/constants'
 import { PageBanner } from '@/components/shared/PageBanner'
 import { ContactForm } from './ContactForm'
+import { getServerApiUrl } from '@/lib/api-url'
 
 export const metadata: Metadata = {
   title: 'Liên Hệ — Nội Thất Duy Mạnh',
   description: 'Liên hệ xưởng Nội Thất Duy Mạnh. Hotline: 094.872.8091. Địa chỉ: Vân Nam - Phúc Thọ - Hà Nội.',
 }
 
-export default function ContactPage() {
+const DEFAULT_MAPS_URL =
+  'https://maps.google.com/maps?q=V%C3%A2n+Nam+Ph%C3%BAc+Th%E1%BB%8D+H%C3%A0+N%E1%BB%99i&t=&z=14&ie=UTF8&iwloc=&output=embed'
+
+async function getMapsUrl(): Promise<string> {
+  try {
+    const res = await fetch(`${getServerApiUrl()}/settings/public`, {
+      next: { revalidate: 3600, tags: ['settings'] },
+    })
+    if (!res.ok) return DEFAULT_MAPS_URL
+    const json = await res.json()
+    const data: Record<string, string> = json?.data ?? json
+    return data?.google_maps_embed_url || DEFAULT_MAPS_URL
+  } catch {
+    return DEFAULT_MAPS_URL
+  }
+}
+
+export default async function ContactPage() {
+  const mapsUrl = await getMapsUrl()
   return (
     <>
       <PageBanner
@@ -69,9 +88,18 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Google Maps placeholder */}
-              <div className="mt-6 aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border border-border flex items-center justify-center">
-                <p className="text-stone-400 text-sm">Google Maps sẽ được nhúng tại đây</p>
+              {/* Google Maps */}
+              <div className="mt-6 aspect-[4/3] rounded-xl overflow-hidden border border-border">
+                <iframe
+                  src={mapsUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Bản đồ xưởng Nội Thất Duy Mạnh"
+                />
               </div>
             </div>
 
