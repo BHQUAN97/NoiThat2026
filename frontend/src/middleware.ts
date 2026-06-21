@@ -26,7 +26,7 @@ function buildCsp(): string {
     `font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com`,
     `connect-src 'self' wss: ws: https://*.r2.dev https://bhquan.site https://bhquan.store`,
     `media-src 'self' data: blob: https://*.r2.dev https://*.r2.cloudflarestorage.com`,
-    `frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com`,
+    `frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com https://maps.googleapis.com`,
     `frame-ancestors 'self'`,
     `base-uri 'self'`,
     `form-action 'self'`,
