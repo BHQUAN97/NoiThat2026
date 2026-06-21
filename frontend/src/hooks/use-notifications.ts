@@ -11,7 +11,15 @@ export interface FormNotification {
   created_at: string
 }
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4002'
+function getSocketUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '')
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  return 'http://localhost:4000'
+}
 
 export function useNotifications(enabled: boolean) {
   const [notifications, setNotifications] = useState<FormNotification[]>([])
@@ -26,7 +34,7 @@ export function useNotifications(enabled: boolean) {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    const socket = io(`${SOCKET_URL}/notifications`, {
+    const socket = io(`${getSocketUrl()}/notifications`, {
       auth: { token },
       transports: ['websocket'],
       reconnectionAttempts: 5,
