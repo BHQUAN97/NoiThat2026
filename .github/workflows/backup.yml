@@ -2,7 +2,7 @@ name: Daily Backup NoiThat2026
 
 on:
   schedule:
-    - cron: '30 18 * * *'   # 1:30 AM UTC+7 (lech 30p voi VietNet)
+    - cron: '30 18 * * *' # 1:30 AM UTC+7
   workflow_dispatch:
 
 env:
