@@ -25,7 +25,7 @@ async function fetchAll() {
     fetch(`${base}/projects?featured=true&limit=6`, { next: { revalidate: 300 }, signal: signal() }),
     fetch(`${base}/reviews?featured=true&limit=6`, { next: { revalidate: 300 }, signal: signal() }),
     fetch(`${base}/videos?limit=6`, { next: { revalidate: 300 }, signal: signal() }),
-    fetch(`${base}/pages/homepage/published`, { next: { revalidate: 60, tags: ['pages'] }, signal: signal() }),
+    fetch(`${base}/pages/homepage`, { next: { revalidate: 60, tags: ['pages'] }, signal: signal() }),
   ])
 
   const projectsRaw: Project[] = projectsRes.status === 'fulfilled' && projectsRes.value.ok
@@ -44,8 +44,10 @@ async function fetchAll() {
   if (pageRes.status === 'fulfilled' && pageRes.value.ok) {
     try {
       const pageJson = await pageRes.value.json()
-      const pageConfig = (pageJson?.data || pageJson) as PageConfig
-      pageSections = pageConfig?.config_published?.sections || []
+      const payload = pageJson?.data ?? pageJson
+      // payload la config_published truc tiep (tu ok(config.config_published))
+      // hoac la PageConfig object — xu ly ca 2 truong hop
+      pageSections = payload?.sections || payload?.config_published?.sections || []
     } catch { /* ignore */ }
   }
 
