@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   backup:
-    name: Backup DB + Uploads → Git
+    name: Backup DB + Uploads -> Git
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,8 +56,7 @@ jobs:
               exit 1
             fi
 
-            # ── Verify MySQL ──
-            echo '=== MySQL check ==='
+            # --Verify MySQL            echo '=== MySQL check ==='
             if ! docker exec shared-mysql mysqladmin ping -h localhost --silent 2>/dev/null; then
               echo 'ERROR: shared-mysql not responding'
               docker logs shared-mysql --tail 20 2>&1 || true
@@ -65,13 +64,12 @@ jobs:
             fi
             # Verify user co the connect
             if ! docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysql -u ${DB_USER} ${DB_NAME} -e 'SELECT 1' >/dev/null 2>&1; then
-              echo 'ERROR: Cannot connect as ${DB_USER}@${DB_NAME} — check password'
+              echo 'ERROR: Cannot connect as ${DB_USER}@${DB_NAME} -- check password'
               exit 1
             fi
             echo 'MySQL: OK (user=${DB_USER})'
 
-            # ── DB dump (dung user rieng, khong can root) ──
-            echo ''
+            # --DB dump (dung user rieng, khong can root)            echo ''
             echo '=== Database dump: ${DB_NAME} ==='
             docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysqldump \
               -u ${DB_USER} \
@@ -83,8 +81,7 @@ jobs:
             rm -f /tmp/dump_noithat.sql
             echo \"  DB: \$(du -h \$BACKUP_DIR/${DB_NAME}.sql.gz | cut -f1)\"
 
-            # ── Uploads volume ──
-            echo ''
+            # --Uploads volume            echo ''
             echo '=== Upload archives: ${VOLUME_NAME} ==='
             UPLOADS_PATH=\$(docker volume inspect ${VOLUME_NAME} --format '{{.Mountpoint}}' 2>/dev/null || echo '')
             if [ -n \"\$UPLOADS_PATH\" ] && [ -d \"\$UPLOADS_PATH\" ] && [ \"\$(ls -A \$UPLOADS_PATH 2>/dev/null)\" ]; then
@@ -95,8 +92,7 @@ jobs:
               echo 'No uploads found (skip)'
             fi
 
-            # ── Settings export (JSON) ──
-            echo ''
+            # --Settings export (JSON)            echo ''
             echo '=== Settings export ==='
             SETTINGS_JSON=\$(docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysql -u ${DB_USER} ${DB_NAME} \
               -N -e \"SELECT JSON_OBJECTAGG(\\\`key\\\`, value) FROM site_configs\" 2>/dev/null || echo '')
@@ -107,8 +103,7 @@ jobs:
               echo 'No settings found (skip)'
             fi
 
-            # ── Verify integrity ──
-            echo ''
+            # --Verify integrity            echo ''
             echo '=== Verify backups ==='
             VERIFY_FAIL=0
             for gz in \$(find \$BACKUP_DIR -name '*.sql.gz'); do
@@ -153,7 +148,7 @@ jobs:
         run: |
           ENCRYPT_KEY="${{ secrets.BACKUP_ENCRYPT_KEY }}"
           if [ -z "$ENCRYPT_KEY" ]; then
-            echo "WARNING: BACKUP_ENCRYPT_KEY not set — skipping encryption"
+            echo "WARNING: BACKUP_ENCRYPT_KEY not set -- skipping encryption"
             exit 0
           fi
           for f in $(find /tmp/backups -type f \( -name '*.sql.gz' -o -name '*.zip' \)); do
@@ -185,9 +180,9 @@ gpg --decrypt --output FILE FILE.gpg
 
 ## Structure
 ```
-noithat/YYYY-MM-DD/noithat2026.sql.gz.gpg   — MySQL dump
-noithat/YYYY-MM-DD/uploads.zip.gpg           — Media files (ảnh sản phẩm, logo, banner)
-noithat/YYYY-MM-DD/settings.json             — Site settings export (không encrypt)
+noithat/YYYY-MM-DD/noithat2026.sql.gz.gpg   -- MySQL dump
+noithat/YYYY-MM-DD/uploads.zip.gpg           -- Media files (images, logo, banner)
+noithat/YYYY-MM-DD/settings.json             -- Site settings export (not encrypted)
 ```
 
 ## Restore
@@ -251,7 +246,7 @@ EOF
       - name: Summary
         run: |
           echo "==============================="
-          echo "Backup OK — ${{ env.DATE }}"
+          echo "Backup OK -- ${{ env.DATE }}"
           echo "Repo: NoiThat2026 | DB: ${{ env.DB_NAME }}"
           echo "Branch: ${{ env.BACKUP_BRANCH }} | Retention: ${{ env.KEEP_DAYS }} days"
           echo "==============================="

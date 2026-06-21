@@ -13,7 +13,7 @@ on:
         type: boolean
         default: true
       restore_uploads:
-        description: 'Restore uploads (ảnh, media)?'
+        description: 'Restore uploads (images, media)?'
         required: true
         type: boolean
         default: true
@@ -75,7 +75,7 @@ jobs:
           ENCRYPT_KEY="${{ secrets.BACKUP_ENCRYPT_KEY }}"
           GPG_COUNT=$(find /tmp/restore -name '*.gpg' -type f 2>/dev/null | wc -l)
           if [ "$GPG_COUNT" -eq 0 ]; then
-            echo "No encrypted files — skip"
+            echo "No encrypted files -- skip"
             exit 0
           fi
           if [ -z "$ENCRYPT_KEY" ]; then
@@ -108,7 +108,7 @@ jobs:
             set -e
             DUMP=/tmp/restore-noithat/${DB_NAME}.sql.gz
             if [ ! -f \$DUMP ]; then
-              echo 'No DB dump found — skip'
+              echo 'No DB dump found -- skip'
               exit 0
             fi
 
@@ -119,7 +119,7 @@ jobs:
 
             # Safety backup truoc khi restore
             PRE_RESTORE=/tmp/pre-restore-noithat-\$(date +%Y%m%d_%H%M%S).sql.gz
-            echo \"Creating safety backup → \${PRE_RESTORE}\"
+            echo \"Creating safety backup -> \${PRE_RESTORE}\"
             docker exec shared-mysql mysqldump -u root -p\${MYSQL_ROOT_PWD} \
               --single-transaction --quick ${DB_NAME} 2>/dev/null | gzip > \${PRE_RESTORE} || echo 'No existing DB to backup'
             echo \"Safety backup: \$(du -h \${PRE_RESTORE} 2>/dev/null | cut -f1 || echo 'N/A')\"
@@ -141,7 +141,7 @@ jobs:
               echo \"Tables: \${TABLES}\"
               rm -f \${PRE_RESTORE}
             else
-              echo 'RESTORE FAILED — rolling back...'
+              echo 'RESTORE FAILED -- rolling back...'
               docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} -e \
                 'DROP DATABASE IF EXISTS ${DB_NAME}; CREATE DATABASE ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
               if [ -s \${PRE_RESTORE} ]; then
@@ -161,13 +161,13 @@ jobs:
           sshpass -e ssh -p $PORT $VPS "
             ZIP=/tmp/restore-noithat/uploads.zip
             if [ ! -f \$ZIP ]; then
-              echo 'No uploads backup — skip'
+              echo 'No uploads backup -- skip'
               exit 0
             fi
 
             UPLOADS_PATH=\$(docker volume inspect ${VOLUME_NAME} --format '{{.Mountpoint}}' 2>/dev/null || echo '')
             if [ -z \"\$UPLOADS_PATH\" ]; then
-              echo '${VOLUME_NAME} volume not found — creating...'
+              echo '${VOLUME_NAME} volume not found -- creating...'
               docker volume create ${VOLUME_NAME}
               UPLOADS_PATH=\$(docker volume inspect ${VOLUME_NAME} --format '{{.Mountpoint}}')
             fi
@@ -190,7 +190,7 @@ jobs:
               cd ${APP_DIR} && docker compose -f docker-compose.prod.yml restart backend frontend
               echo 'OK'
             else
-              echo 'NoiThat2026 not deployed — skip restart'
+              echo 'NoiThat2026 not deployed -- skip restart'
             fi
           "
 
@@ -218,7 +218,7 @@ jobs:
       - name: Summary
         run: |
           echo "======================================="
-          echo "Restore completed — NoiThat2026"
+          echo "Restore completed -- NoiThat2026"
           echo "  Date:      ${{ steps.resolve.outputs.date }}"
           echo "  DB:        ${{ inputs.restore_db }}"
           echo "  Uploads:   ${{ inputs.restore_uploads }}"
