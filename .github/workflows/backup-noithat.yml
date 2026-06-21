@@ -81,8 +81,17 @@ jobs:
             UPLOADS_PATH=\$(docker volume inspect ${VOLUME_NAME} --format '{{.Mountpoint}}' 2>/dev/null || echo '')
             if [ -n \"\$UPLOADS_PATH\" ] && [ -d \"\$UPLOADS_PATH\" ] && [ \"\$(ls -A \$UPLOADS_PATH 2>/dev/null)\" ]; then
               echo \"Uploads path: \$UPLOADS_PATH\"
-              cd \$UPLOADS_PATH && zip -rq \$BACKUP_DIR/uploads.zip . && cd /
-              echo \"  Uploads: \$(du -h \$BACKUP_DIR/uploads.zip | cut -f1)\"
+              FILE_COUNT=\$(find \$UPLOADS_PATH -type f | wc -l)
+              echo \"  Files: \$FILE_COUNT\"
+              if [ \"\$FILE_COUNT\" -gt 0 ]; then
+                if command -v zip >/dev/null 2>&1; then
+                  cd \$UPLOADS_PATH && zip -rq \$BACKUP_DIR/uploads.zip . && cd /
+                else
+                  tar czf \$BACKUP_DIR/uploads.tar.gz -C \$UPLOADS_PATH .
+                fi
+                ARCHIVE=\$(find \$BACKUP_DIR -name 'uploads.*' -type f | head -1)
+                echo \"  Uploads: \$(du -h \$ARCHIVE | cut -f1)\"
+              fi
             else
               echo 'No uploads found (skip)'
             fi
@@ -90,7 +99,7 @@ jobs:
             echo ''
             echo '=== Settings export ==='
             SETTINGS_JSON=\$(docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysql -u ${DB_USER} ${DB_NAME} \
-              -N -e \"SELECT JSON_OBJECTAGG(\\\`key\\\`, value) FROM site_configs\" 2>/dev/null || echo '')
+              -N -e \"SELECT JSON_OBJECTAGG(\\\`key\\\`, value) FROM site_config\" 2>/dev/null || echo '')
             if [ -n \"\$SETTINGS_JSON\" ] && [ \"\$SETTINGS_JSON\" != 'NULL' ]; then
               echo \"\$SETTINGS_JSON\" > \$BACKUP_DIR/settings.json
               echo \"  Settings: \$(du -h \$BACKUP_DIR/settings.json | cut -f1)\"
@@ -115,12 +124,11 @@ jobs:
                 VERIFY_FAIL=1
               fi
             done
-            for z in \$(find \$BACKUP_DIR -name '*.zip'); do
-              if unzip -tq \"\$z\" > /dev/null 2>&1; then
-                echo \"OK: \$(basename \$z) (\$(du -h \$z | cut -f1))\"
-              else
-                echo \"FAIL: \$(basename \$z) corrupt\"
-                VERIFY_FAIL=1
+            for z in \$(find \$BACKUP_DIR -name '*.zip' -o -name '*.tar.gz' | grep -v '.sql.gz'); do
+              if echo \"\$z\" | grep -q '.zip\$'; then
+                unzip -tq \"\$z\" > /dev/null 2>&1 && echo \"OK: \$(basename \$z) (\$(du -h \$z | cut -f1))\" || { echo \"FAIL: \$(basename \$z) corrupt\"; VERIFY_FAIL=1; }
+              elif echo \"\$z\" | grep -q '.tar.gz\$'; then
+                tar tzf \"\$z\" > /dev/null 2>&1 && echo \"OK: \$(basename \$z) (\$(du -h \$z | cut -f1))\" || { echo \"FAIL: \$(basename \$z) corrupt\"; VERIFY_FAIL=1; }
               fi
             done
             [ \$VERIFY_FAIL -eq 0 ] || { echo 'ERROR: Verification failed!'; exit 1; }
@@ -146,7 +154,7 @@ jobs:
             echo "WARNING: BACKUP_ENCRYPT_KEY not set, skipping encryption"
             exit 0
           fi
-          for f in $(find /tmp/backups -type f \( -name '*.sql.gz' -o -name '*.zip' \)); do
+          for f in $(find /tmp/backups -type f \( -name '*.sql.gz' -o -name '*.zip' -o -name '*.tar.gz' \)); do
             gpg --batch --yes --passphrase "${ENCRYPT_KEY}" \
               --symmetric --cipher-algo AES256 "$f"
             rm -f "$f"
