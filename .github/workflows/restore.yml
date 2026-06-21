@@ -17,9 +17,13 @@ on:
         required: true
         type: boolean
         default: true
+      run_migrations:
+        description: 'Run DB migrations after restore? (upgrade schema to latest)'
+        required: true
+        type: boolean
+        default: true
 
 env:
-  INFRA_DIR: /opt/infra
   APP_DIR: /opt/noithat2026
   DB_NAME: noithat2026
   DB_USER: noithat
@@ -37,7 +41,7 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq sshpass > /dev/null
           mkdir -p ~/.ssh
-          VPS_PORT="${{ env.SSH_PORT }}"
+          VPS_PORT="${{ secrets.VPS_PORT }}"
           VPS_PORT="${VPS_PORT:-22}"
           ssh-keyscan -p $VPS_PORT -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           echo "SSHPASS=${{ secrets.VPS_PASSWORD }}" >> $GITHUB_ENV
@@ -57,7 +61,8 @@ jobs:
 
           if [ -z "$DATE" ] || [ ! -d "noithat/${DATE}" ]; then
             echo "No backup found for date: ${DATE:-latest}"
-            ls -d noithat/????-??-?? 2>/dev/null | sort -r | head -5 || echo "No backups available"
+            echo "Available backups:"
+            ls -d noithat/????-??-?? 2>/dev/null | sort -r | head -5 || echo "  (none)"
             exit 1
           fi
 
@@ -72,12 +77,12 @@ jobs:
 
       - name: Decrypt backups
         run: |
-          ENCRYPT_KEY="${{ secrets.BACKUP_ENCRYPT_KEY }}"
           GPG_COUNT=$(find /tmp/restore -name '*.gpg' -type f 2>/dev/null | wc -l)
           if [ "$GPG_COUNT" -eq 0 ]; then
             echo "No encrypted files -- skip"
             exit 0
           fi
+          ENCRYPT_KEY="${{ secrets.BACKUP_ENCRYPT_KEY }}"
           if [ -z "$ENCRYPT_KEY" ]; then
             echo "ERROR: Found .gpg files but BACKUP_ENCRYPT_KEY not set!"
             exit 1
@@ -97,9 +102,12 @@ jobs:
           sshpass -e ssh -p $PORT $VPS "mkdir -p /tmp/restore-noithat"
           sshpass -e scp -P $PORT /tmp/restore/* $VPS:/tmp/restore-noithat/
           echo "Uploaded backup files to VPS"
+          sshpass -e ssh -p $PORT $VPS "ls -lh /tmp/restore-noithat/"
 
       - name: Restore database
         if: inputs.restore_db
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
         run: |
           VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
           PORT="${{ env.SSH_PORT }}"
@@ -112,41 +120,44 @@ jobs:
               exit 0
             fi
 
-            MYSQL_ROOT_PWD=\$(grep '^MYSQL_ROOT_PASSWORD=' ${INFRA_DIR}/.env | cut -d= -f2-)
+            DB_PWD=\$(grep '^DB_PASSWORD=' ${APP_DIR}/.env 2>/dev/null | cut -d= -f2-)
+            if [ -z \"\$DB_PWD\" ]; then
+              echo 'ERROR: DB_PASSWORD not found in ${APP_DIR}/.env'
+              exit 1
+            fi
 
             echo '=== Verify MySQL ==='
             docker exec shared-mysql mysqladmin ping -h localhost --silent 2>/dev/null || { echo 'MySQL not responding'; exit 1; }
+            echo 'MySQL: OK'
 
-            # Safety backup truoc khi restore
+            # Safety backup before restore
             PRE_RESTORE=/tmp/pre-restore-noithat-\$(date +%Y%m%d_%H%M%S).sql.gz
             echo \"Creating safety backup -> \${PRE_RESTORE}\"
-            docker exec shared-mysql mysqldump -u root -p\${MYSQL_ROOT_PWD} \
-              --single-transaction --quick ${DB_NAME} 2>/dev/null | gzip > \${PRE_RESTORE} || echo 'No existing DB to backup'
+            docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysqldump \
+              -u ${DB_USER} --single-transaction --quick \
+              ${DB_NAME} 2>/dev/null | gzip > \${PRE_RESTORE} || echo 'No existing DB to backup'
             echo \"Safety backup: \$(du -h \${PRE_RESTORE} 2>/dev/null | cut -f1 || echo 'N/A')\"
 
             # Drop + recreate
             echo 'Dropping and recreating ${DB_NAME}...'
-            docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} -e \
+            docker exec -e MYSQL_PWD=\"\$DB_PWD\" -i shared-mysql mysql -u ${DB_USER} -e \
               'DROP DATABASE IF EXISTS ${DB_NAME}; CREATE DATABASE ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
-
-            # Ensure user
-            docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} -e \
-              \"CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '\${MYSQL_ROOT_PWD}'; GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;\"
 
             # Import
             echo 'Importing dump...'
-            if gunzip -c \$DUMP | docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} ${DB_NAME}; then
+            if gunzip -c \$DUMP | docker exec -e MYSQL_PWD=\"\$DB_PWD\" -i shared-mysql mysql -u ${DB_USER} ${DB_NAME}; then
               echo 'Database restored!'
-              TABLES=\$(docker exec shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} -N -e \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}'\" 2>/dev/null)
+              TABLES=\$(docker exec -e MYSQL_PWD=\"\$DB_PWD\" shared-mysql mysql -u ${DB_USER} -N -e \
+                \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}'\" 2>/dev/null)
               echo \"Tables: \${TABLES}\"
               rm -f \${PRE_RESTORE}
             else
-              echo 'RESTORE FAILED -- rolling back...'
-              docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} -e \
+              echo 'RESTORE FAILED -- rolling back from safety backup...'
+              docker exec -e MYSQL_PWD=\"\$DB_PWD\" -i shared-mysql mysql -u ${DB_USER} -e \
                 'DROP DATABASE IF EXISTS ${DB_NAME}; CREATE DATABASE ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
               if [ -s \${PRE_RESTORE} ]; then
-                gunzip -c \${PRE_RESTORE} | docker exec -i shared-mysql mysql -u root -p\${MYSQL_ROOT_PWD} ${DB_NAME}
-                echo 'Rollback complete.'
+                gunzip -c \${PRE_RESTORE} | docker exec -e MYSQL_PWD=\"\$DB_PWD\" -i shared-mysql mysql -u ${DB_USER} ${DB_NAME}
+                echo 'Rollback complete. Original data preserved.'
               fi
               exit 1
             fi
@@ -159,9 +170,14 @@ jobs:
           PORT="${{ env.SSH_PORT }}"
 
           sshpass -e ssh -p $PORT $VPS "
-            ZIP=/tmp/restore-noithat/uploads.zip
-            if [ ! -f \$ZIP ]; then
-              echo 'No uploads backup -- skip'
+            # Find archive (zip or tar.gz)
+            ARCHIVE=''
+            if [ -f /tmp/restore-noithat/uploads.zip ]; then
+              ARCHIVE=zip
+            elif [ -f /tmp/restore-noithat/uploads.tar.gz ]; then
+              ARCHIVE=targz
+            else
+              echo 'No uploads backup found -- skip'
               exit 0
             fi
 
@@ -173,9 +189,93 @@ jobs:
             fi
 
             echo \"Restoring uploads to \$UPLOADS_PATH...\"
-            unzip -qo \$ZIP -d \$UPLOADS_PATH
+            if [ \"\$ARCHIVE\" = 'zip' ]; then
+              unzip -qo /tmp/restore-noithat/uploads.zip -d \$UPLOADS_PATH
+            else
+              tar xzf /tmp/restore-noithat/uploads.tar.gz -C \$UPLOADS_PATH
+            fi
             FILE_COUNT=\$(find \$UPLOADS_PATH -type f | wc -l)
             echo \"Restored \$FILE_COUNT files\"
+          "
+
+      - name: Run DB changelog (upgrade schema)
+        if: inputs.run_migrations && inputs.restore_db
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ env.SSH_PORT }}"
+
+          if [ ! -d "db/changelog" ]; then
+            echo "No changelog directory -- skip"
+            exit 0
+          fi
+
+          MYSQL_CMD="docker exec -e MYSQL_PWD=${NOITHAT_DB_PASSWORD} -i shared-mysql mysql -u ${DB_USER} ${DB_NAME}"
+
+          # 1. Ensure changelog table
+          echo "[1/3] Ensuring schema_changelog table..."
+          sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD" < db/changelog/_init/001__schema_changelog.sql 2>/dev/null || true
+
+          # 2. Get already applied
+          echo "[2/3] Checking applied migrations..."
+          APPLIED=$(sshpass -e ssh -p $PORT $VPS \
+            "docker exec -e MYSQL_PWD=${NOITHAT_DB_PASSWORD} shared-mysql mysql -u ${DB_USER} ${DB_NAME} -N -e \"SELECT CONCAT(version, '/', filename) FROM schema_changelog\"" 2>/dev/null || echo "")
+          if [ -n "$APPLIED" ]; then
+            echo "  Already applied: $(echo "$APPLIED" | wc -l) migrations"
+          else
+            echo "  No migrations applied yet"
+          fi
+
+          # 3. Run pending migrations
+          echo "[3/3] Running pending migrations..."
+          PASS=0; SKIP=0; FAIL=0
+
+          for ver_dir in $(find db/changelog -mindepth 1 -maxdepth 1 -type d ! -name '_init' | sort); do
+            VER=$(basename "$ver_dir")
+            echo ""
+            echo "-- $VER --"
+            for f in $(find "$ver_dir" -name '*.sql' -type f | sort); do
+              FNAME=$(basename "$f")
+              KEY="${VER}/${FNAME}"
+              if echo "$APPLIED" | grep -qF "$KEY"; then
+                echo "  $FNAME ... SKIP"
+                SKIP=$((SKIP + 1))
+                continue
+              fi
+              echo -n "  $FNAME ... "
+              if sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD" < "$f" 2>&1; then
+                DESC=$(echo "$FNAME" | sed 's/^[0-9]*__//; s/\.sql$//; s/_/ /g')
+                CHECKSUM=$(sha256sum "$f" | cut -d' ' -f1)
+                sshpass -e ssh -p $PORT $VPS \
+                  "docker exec -e MYSQL_PWD=${NOITHAT_DB_PASSWORD} shared-mysql mysql -u ${DB_USER} ${DB_NAME} -e \"INSERT INTO schema_changelog (version, filename, description, applied_by, checksum) VALUES ('$VER', '$FNAME', '$DESC', 'restore', '$CHECKSUM')\"" 2>/dev/null
+                echo "OK"
+                PASS=$((PASS + 1))
+              else
+                echo "FAILED"
+                FAIL=$((FAIL + 1))
+              fi
+            done
+          done
+          echo ""
+          echo "Changelog: $PASS applied, $SKIP skipped, $FAIL failed"
+          if [ $FAIL -gt 0 ]; then
+            echo "::warning::Some migrations failed. App may need manual intervention."
+          fi
+
+      - name: Run TypeORM migrations
+        if: inputs.run_migrations && inputs.restore_db
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ env.SSH_PORT }}"
+
+          sshpass -e ssh -p $PORT $VPS "
+            if docker ps --filter name=noithat-api --filter status=running --format '{{.Names}}' | grep -q noithat-api; then
+              echo 'Running TypeORM migrations...'
+              docker exec noithat-api npm run migration:run:prod 2>&1 || echo 'No pending TypeORM migrations'
+            else
+              echo 'noithat-api not running -- skip TypeORM migrations'
+            fi
           "
 
       - name: Restart services
@@ -213,13 +313,14 @@ jobs:
         run: |
           VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
           PORT="${{ env.SSH_PORT }}"
-          sshpass -e ssh -p $PORT $VPS "rm -rf /tmp/restore-noithat" 2>/dev/null || true
+          sshpass -e ssh -p $PORT $VPS "rm -rf /tmp/restore-noithat /tmp/pre-restore-noithat-*" 2>/dev/null || true
 
       - name: Summary
         run: |
           echo "======================================="
           echo "Restore completed -- NoiThat2026"
-          echo "  Date:      ${{ steps.resolve.outputs.date }}"
-          echo "  DB:        ${{ inputs.restore_db }}"
-          echo "  Uploads:   ${{ inputs.restore_uploads }}"
+          echo "  Date:       ${{ steps.resolve.outputs.date }}"
+          echo "  DB:         ${{ inputs.restore_db }}"
+          echo "  Uploads:    ${{ inputs.restore_uploads }}"
+          echo "  Migrations: ${{ inputs.run_migrations }}"
           echo "======================================="
