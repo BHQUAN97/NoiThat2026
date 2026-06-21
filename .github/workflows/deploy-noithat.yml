@@ -200,6 +200,18 @@ jobs:
             echo '--- Run migrations ---'
             docker compose -f docker-compose.prod.yml exec -T backend npm run migration:run:prod 2>&1 || echo 'Migrations: nothing to run'
 
+            echo '--- Seed data (if tables empty) ---'
+            DB_PWD=\$(grep '^DB_PASSWORD=' ${APP_DIR}/.env | cut -d= -f2-)
+            UCOUNT=\$(docker exec shared-mysql mysql -u noithat -p\"\$DB_PWD\" noithat2026 -N -e 'SELECT COUNT(*) FROM users' 2>/dev/null | tr -d '[:space:]' || echo '0')
+            if [ \"\$UCOUNT\" = '0' ] || [ -z \"\$UCOUNT\" ]; then
+              echo 'Tables empty — running seed...'
+              docker compose -f docker-compose.prod.yml exec -T backend npm run seed:admin:prod 2>&1 || echo 'seed:admin warning'
+              docker compose -f docker-compose.prod.yml exec -T backend npm run seed:prod 2>&1 || echo 'seed:noithat warning'
+              echo 'Seed done'
+            else
+              echo \"Users table has \$UCOUNT rows — skip seed\"
+            fi
+
             echo '--- Reload nginx ---'
             cp nginx/conf.d/duymanh.bhquan.store.conf ${INFRA_DIR}/nginx/conf.d/
             docker network connect noithat_frontend shared-nginx 2>/dev/null || true
