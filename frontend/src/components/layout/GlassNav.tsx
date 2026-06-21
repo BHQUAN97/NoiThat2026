@@ -155,7 +155,7 @@ export function GlassNav({ logoUrl }: { logoUrl?: string | null }) {
               <img
                 src={logoUrl}
                 alt={SITE_NAME}
-                className="h-9 w-auto object-contain"
+                className="h-10 max-h-12 max-w-[200px] w-auto object-contain md:h-11"
               />
             ) : (
               <>
