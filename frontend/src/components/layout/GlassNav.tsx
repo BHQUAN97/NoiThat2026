@@ -51,7 +51,7 @@ function NavDropdownItem({
             'relative rounded-lg px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-all duration-200 xl:px-4',
             isActive
               ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
+              : 'text-on-surface-variant hover:bg-primary/15 hover:text-primary',
           )}
         >
           {link.label}
@@ -76,7 +76,7 @@ function NavDropdownItem({
           'flex items-center gap-0.5 rounded-lg px-3 py-2 font-label text-label-lg uppercase tracking-label-wide transition-all duration-200 xl:px-4',
           isActive || open
             ? 'bg-primary/10 text-primary'
-            : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
+            : 'text-on-surface-variant hover:bg-primary/15 hover:text-primary',
         )}
       >
         {link.label}
@@ -93,7 +93,7 @@ function NavDropdownItem({
           <Link
             href={link.href}
             onClick={() => setOpen(false)}
-            className="mb-1 flex items-center border-b border-outline-variant/40 px-4 py-2.5 text-body-sm font-medium text-on-surface-variant transition-all duration-150 hover:bg-primary/8 hover:text-primary"
+            className="mb-1 flex items-center border-b border-outline-variant/40 px-4 py-2.5 text-body-sm font-medium text-on-surface-variant transition-all duration-150 hover:bg-primary/15 hover:text-primary"
           >
             Tất cả {link.label}
           </Link>
@@ -106,7 +106,7 @@ function NavDropdownItem({
                 'flex items-center px-4 py-2.5 text-body-sm transition-all duration-150',
                 pathname === sub.href
                   ? 'bg-primary/10 font-semibold text-primary'
-                  : 'text-on-surface-variant hover:bg-primary/8 hover:text-primary',
+                  : 'text-on-surface-variant hover:bg-primary/15 hover:text-primary',
               )}
             >
               {sub.label}
