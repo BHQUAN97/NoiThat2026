@@ -2,13 +2,20 @@
 
 import { createContext, useContext } from 'react'
 
-const PageBannerContext = createContext<Record<string, string>>({})
+export interface PageBannerData {
+  image?: string
+  title?: string
+  subtitle?: string
+  label?: string
+}
 
-export function PageBannerProvider({ banners, children }: { banners: Record<string, string>; children: React.ReactNode }) {
+const PageBannerContext = createContext<Record<string, PageBannerData>>({})
+
+export function PageBannerProvider({ banners, children }: { banners: Record<string, PageBannerData>; children: React.ReactNode }) {
   return <PageBannerContext.Provider value={banners}>{children}</PageBannerContext.Provider>
 }
 
-export function usePageBanner(slug: string): string | null {
+export function usePageBanner(slug: string): PageBannerData {
   const banners = useContext(PageBannerContext)
-  return banners[slug] || null
+  return banners[slug] || {}
 }

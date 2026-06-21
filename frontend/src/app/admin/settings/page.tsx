@@ -717,15 +717,15 @@ function LogoSection({ value, onChange }: { value: string; onChange: (url: strin
 // ─── Page Banners section ────────────────────────────────────────────────────
 
 const PAGE_BANNER_ITEMS = [
-  { slug: 'tu-bep', label: 'Tủ Bếp' },
-  { slug: 'noi-that-khac', label: 'Nội Thất Khác' },
-  { slug: 'du-an-thuc-te', label: 'Dự Án Thực Tế' },
-  { slug: 'video-cong-trinh', label: 'Video Công Trình' },
-  { slug: 'tin-tuc', label: 'Tin Tức' },
-  { slug: 'danh-gia-khach-hang', label: 'Đánh Giá Khách Hàng' },
-  { slug: 'bao-gia', label: 'Báo Giá' },
-  { slug: 'lien-he', label: 'Liên Hệ' },
-  { slug: 'gioi-thieu', label: 'Giới Thiệu' },
+  { slug: 'tu-bep', name: 'Tủ Bếp', defaultTitle: 'Tủ bếp thiết kế theo không gian thật', defaultSubtitle: 'Sản xuất theo kích thước thực tế, tư vấn vật liệu dựa trên thói quen sử dụng và ngân sách của từng gia đình.', defaultLabel: 'Danh mục sản phẩm' },
+  { slug: 'noi-that-khac', name: 'Nội Thất Khác', defaultTitle: 'Nội thất khác', defaultSubtitle: 'Tủ quần áo, vách Tivi, phòng ngủ và các hạng mục đóng theo kích thước thực tế.', defaultLabel: 'Danh mục sản phẩm' },
+  { slug: 'du-an-thuc-te', name: 'Dự Án Thực Tế', defaultTitle: 'Dự án thực tế', defaultSubtitle: 'Các công trình tủ bếp và nội thất đã hoàn thành tại Hà Nội và các tỉnh lân cận.', defaultLabel: 'Portfolio' },
+  { slug: 'video-cong-trinh', name: 'Video Công Trình', defaultTitle: 'Video công trình', defaultSubtitle: 'Theo dõi quá trình thi công, bàn giao và khảo sát thực tế qua video.', defaultLabel: 'Video' },
+  { slug: 'tin-tuc', name: 'Tin Tức', defaultTitle: 'Tin tức & Kinh nghiệm', defaultSubtitle: 'Chia sẻ kiến thức, kinh nghiệm chọn vật liệu và xu hướng nội thất mới nhất.', defaultLabel: 'Blog' },
+  { slug: 'danh-gia-khach-hang', name: 'Đánh Giá', defaultTitle: 'Đánh giá khách hàng', defaultSubtitle: '', defaultLabel: 'Phản hồi' },
+  { slug: 'bao-gia', name: 'Báo Giá', defaultTitle: 'Bảng giá tủ bếp', defaultSubtitle: 'Chọn gói vật liệu phù hợp để gửi yêu cầu. Giá chính xác được chốt sau khi khảo sát và đo đạc miễn phí.', defaultLabel: 'Giá tham khảo' },
+  { slug: 'lien-he', name: 'Liên Hệ', defaultTitle: 'Liên Hệ Với Chúng Tôi', defaultSubtitle: 'Sẵn sàng tư vấn miễn phí — Thứ 2 đến Chủ Nhật, 8h-18h', defaultLabel: 'Liên Hệ' },
+  { slug: 'gioi-thieu', name: 'Giới Thiệu', defaultTitle: 'Nội Thất Duy Mạnh', defaultSubtitle: 'Hơn 10 năm đồng hành cùng các gia đình tại Hà Nội, tập trung vào tủ bếp và nội thất bền, dễ dùng.', defaultLabel: 'Về chúng tôi' },
 ]
 
 function PageBannersSection({
@@ -734,6 +734,8 @@ function PageBannersSection({
   values: Record<string, string>
   setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
 }) {
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+
   return (
     <div className="rounded-2xl border border-violet-200 bg-white shadow-sm">
       <div className="flex items-center gap-3 border-b border-stone-100 px-6 py-4">
@@ -741,18 +743,23 @@ function PageBannersSection({
           <ImageLucide className="h-4 w-4" />
         </div>
         <div>
-          <h2 className="font-semibold text-stone-800">Ảnh bìa các trang</h2>
-          <p className="text-xs text-stone-400">Ảnh nền phần header mỗi trang. Nên dùng ảnh ngang, kích thước tối thiểu 1920×600px.</p>
+          <h2 className="font-semibold text-stone-800">Ảnh bìa & nội dung header các trang</h2>
+          <p className="text-xs text-stone-400">Ảnh nền và text hiển thị ở phần header mỗi trang. Bấm vào card để chỉnh sửa nội dung.</p>
         </div>
       </div>
       <div className="p-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PAGE_BANNER_ITEMS.map(({ slug, label }) => (
-            <BannerUploadCard
-              key={slug}
-              label={label}
-              value={values[`page_banner_${slug}`] || ''}
-              onChange={(url) => setValues(p => ({ ...p, [`page_banner_${slug}`]: url }))}
+          {PAGE_BANNER_ITEMS.map((item) => (
+            <BannerCard
+              key={item.slug}
+              item={item}
+              imageUrl={values[`page_banner_${item.slug}`] || ''}
+              title={values[`page_title_${item.slug}`] || ''}
+              subtitle={values[`page_subtitle_${item.slug}`] || ''}
+              label={values[`page_label_${item.slug}`] || ''}
+              expanded={expandedSlug === item.slug}
+              onToggle={() => setExpandedSlug(expandedSlug === item.slug ? null : item.slug)}
+              onChange={(field, val) => setValues(p => ({ ...p, [`${field}_${item.slug}`]: val }))}
             />
           ))}
         </div>
@@ -761,7 +768,16 @@ function PageBannersSection({
   )
 }
 
-function BannerUploadCard({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+function BannerCard({ item, imageUrl, title, subtitle, label, expanded, onToggle, onChange }: {
+  item: typeof PAGE_BANNER_ITEMS[number]
+  imageUrl: string
+  title: string
+  subtitle: string
+  label: string
+  expanded: boolean
+  onToggle: () => void
+  onChange: (field: string, val: string) => void
+}) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -771,21 +787,24 @@ function BannerUploadCard({ label, value, onChange }: { label: string; value: st
     setUploading(true)
     try {
       const media = await uploadMedia(file)
-      onChange(media.preview_url || media.original_url)
+      onChange('page_banner', media.preview_url || media.original_url)
     } catch { /* skip */ }
     setUploading(false)
   }
 
+  const hasCustomText = title || subtitle || label
+
   return (
-    <div className="overflow-hidden rounded-xl border border-stone-200">
+    <div className={cn('overflow-hidden rounded-xl border transition-all', expanded ? 'border-violet-300 ring-1 ring-violet-200' : 'border-stone-200')}>
+      {/* Image preview */}
       <div className="relative h-24 bg-stone-100">
-        {value ? (
+        {imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt={label} className="h-full w-full object-cover" />
+            <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
             <button
               type="button"
-              onClick={() => onChange('')}
+              onClick={() => onChange('page_banner', '')}
               className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-500/80 text-white hover:bg-red-600"
             >
               <X className="h-3 w-3" />
@@ -797,8 +816,14 @@ function BannerUploadCard({ label, value, onChange }: { label: string; value: st
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between px-3 py-2">
-        <span className="text-sm font-medium text-stone-700">{label}</span>
+
+      {/* Header row */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-stone-100">
+        <button type="button" onClick={onToggle} className="flex items-center gap-1.5 text-left min-w-0">
+          <span className="text-sm font-medium text-stone-700 truncate">{item.name}</span>
+          {hasCustomText && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-violet-400" />}
+          {expanded ? <ChevronUp className="h-3 w-3 shrink-0 text-stone-400" /> : <ChevronDown className="h-3 w-3 shrink-0 text-stone-400" />}
+        </button>
         <div>
           <input
             ref={inputRef}
@@ -814,10 +839,47 @@ function BannerUploadCard({ label, value, onChange }: { label: string; value: st
             className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-700 disabled:opacity-50"
           >
             {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-            {value ? 'Đổi' : 'Upload'}
+            {imageUrl ? 'Đổi ảnh' : 'Upload'}
           </button>
         </div>
       </div>
+
+      {/* Expanded text fields */}
+      {expanded && (
+        <div className="space-y-3 px-3 py-3 bg-stone-50/50">
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-stone-500">Nhãn nhỏ (label)</label>
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => onChange('page_label', e.target.value)}
+              placeholder={item.defaultLabel}
+              className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-800 placeholder:text-stone-300 focus:border-violet-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-stone-500">Tiêu đề lớn</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => onChange('page_title', e.target.value)}
+              placeholder={item.defaultTitle}
+              className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-800 placeholder:text-stone-300 focus:border-violet-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-stone-500">Mô tả ngắn</label>
+            <textarea
+              value={subtitle}
+              onChange={(e) => onChange('page_subtitle', e.target.value)}
+              placeholder={item.defaultSubtitle || 'Mô tả ngắn cho trang này...'}
+              rows={2}
+              className="w-full resize-none rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-800 placeholder:text-stone-300 focus:border-violet-400 focus:outline-none"
+            />
+          </div>
+          <p className="text-[10px] text-stone-400">Để trống → dùng nội dung mặc định (placeholder)</p>
+        </div>
+      )}
     </div>
   )
 }

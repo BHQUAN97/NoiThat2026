@@ -6,15 +6,22 @@ import { usePageBanner } from '@/lib/page-banner-context'
 
 interface PageBannerProps {
   slug: string
+  /** Fallback title — admin setting overrides this */
   title: string
+  /** Fallback subtitle */
   subtitle?: string
+  /** Fallback label */
   label?: string
   breadcrumb?: { label: string; href?: string }[]
   children?: React.ReactNode
 }
 
-export function PageBanner({ slug, title, subtitle, label, breadcrumb, children }: PageBannerProps) {
-  const bannerUrl = usePageBanner(slug)
+export function PageBanner({ slug, title: defaultTitle, subtitle: defaultSubtitle, label: defaultLabel, breadcrumb, children }: PageBannerProps) {
+  const cfg = usePageBanner(slug)
+  const bannerUrl = cfg.image || null
+  const title = cfg.title || defaultTitle
+  const subtitle = cfg.subtitle || defaultSubtitle
+  const label = cfg.label || defaultLabel
 
   return (
     <section className="relative overflow-hidden bg-surface px-4 py-20 lg:px-8 lg:py-24">
