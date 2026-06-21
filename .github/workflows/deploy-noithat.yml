@@ -100,6 +100,60 @@ jobs:
             rm -f /tmp/ensure_noithat.sql
           "
 
+      - name: Run DB changelog
+        env:
+          NOITHAT_DB_PASSWORD: ${{ secrets.NOITHAT_DB_PASSWORD }}
+        run: |
+          VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          PORT="${{ secrets.VPS_PORT || '22' }}"
+          MYSQL_RUNNING=$(sshpass -e ssh -p $PORT $VPS \
+            "docker ps --filter name=shared-mysql --filter status=running --format '{{.Names}}'" 2>/dev/null || echo "")
+          if [ -z "$MYSQL_RUNNING" ]; then
+            echo "::warning::shared-mysql not running — skip DB changelog"
+            exit 0
+          fi
+
+          MYSQL_CMD="docker exec -i shared-mysql mysql -u noithat -p${NOITHAT_DB_PASSWORD} noithat2026"
+
+          # Ensure schema_changelog table
+          sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD" < db/changelog/_init/001__schema_changelog.sql 2>/dev/null || true
+
+          # Get applied migrations
+          APPLIED=$(sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD -N -e \"SELECT CONCAT(version, '/', filename) FROM schema_changelog\"" 2>/dev/null || echo "")
+
+          echo "=== NoiThat2026 DB Changelog ==="
+          PASS=0; SKIP=0; FAIL=0
+
+          for ver_dir in $(find db/changelog -mindepth 1 -maxdepth 1 -type d ! -name '_init' | sort); do
+            VER=$(basename "$ver_dir")
+            echo "── Version $VER ──"
+            for f in $(find "$ver_dir" -name '*.sql' -type f | sort); do
+              FNAME=$(basename "$f")
+              KEY="${VER}/${FNAME}"
+
+              if echo "$APPLIED" | grep -qF "$KEY"; then
+                echo "  [SKIP] $FNAME"
+                SKIP=$((SKIP + 1))
+                continue
+              fi
+
+              echo -n "  [RUN] $FNAME ... "
+              if sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD" < "$f" 2>&1; then
+                CHECKSUM=$(sha256sum "$f" | awk '{print $1}')
+                DESC=$(echo "$FNAME" | sed 's/^[0-9]*__//; s/\.sql$//; s/_/ /g')
+                sshpass -e ssh -p $PORT $VPS "$MYSQL_CMD -e \"INSERT INTO schema_changelog (version, filename, description, applied_by, checksum) VALUES ('$VER', '$FNAME', '$DESC', 'ci', '$CHECKSUM')\"" 2>/dev/null
+                echo "OK"
+                PASS=$((PASS + 1))
+              else
+                echo "FAILED"
+                FAIL=$((FAIL + 1))
+                exit 1
+              fi
+            done
+          done
+
+          echo "=== Changelog done: $PASS applied, $SKIP skipped, $FAIL failed ==="
+
       - name: Deploy
         run: |
           VPS="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
