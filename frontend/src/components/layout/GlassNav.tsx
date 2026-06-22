@@ -170,17 +170,17 @@ export function GlassNav({ logoUrl, siteName }: { logoUrl?: string | null; siteN
           {/* Logo */}
           <Link
             href="/"
-            className="group flex items-center gap-2 shrink-0"
+            className="group flex min-w-0 items-center gap-2"
           >
             {logoUrl ? (
-              <span className="flex items-center gap-1.5 sm:gap-2.5">
+              <span className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logoUrl}
                   alt={siteName || SITE_NAME}
-                  className="h-9 w-auto max-w-[40px] object-contain sm:h-10 sm:max-w-[48px] md:h-12 md:max-w-[56px]"
+                  className="h-9 w-auto shrink-0 max-w-[40px] object-contain sm:h-10 sm:max-w-[48px] md:h-12 md:max-w-[56px]"
                 />
-                <span className="font-headline text-sm font-bold tracking-tight text-primary sm:text-title-md md:text-headline-sm">
+                <span className="truncate font-headline text-[13px] font-bold leading-tight tracking-tight text-primary sm:text-title-md md:text-headline-sm">
                   {siteName || SITE_NAME}
                 </span>
               </span>
