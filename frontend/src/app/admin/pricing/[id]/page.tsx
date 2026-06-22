@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, X } from 'lucide-react'
+import { ArrowLeft, Plus, X, Search, ExternalLink, FileText, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import api from '@/lib/api'
-import { getResponseData } from '@/lib/api-response'
-import type { PricingItem, PricingTable } from '@/types'
+import { getResponseData, getListData } from '@/lib/api-response'
+import type { PricingItem, PricingTable, News } from '@/types'
 
 type FormState = {
   name: string
   description: string
+  detail_url: string
   items: PricingItem[]
   sort_order: string
   is_active: boolean
@@ -20,6 +21,7 @@ type FormState = {
 const empty: FormState = {
   name: '',
   description: '',
+  detail_url: '',
   items: [],
   sort_order: '0',
   is_active: true,
@@ -69,6 +71,7 @@ export default function PricingEditorPage() {
         setForm({
           name: pricing.name,
           description: pricing.description || '',
+          detail_url: pricing.detail_url || '',
           items: Array.isArray(pricing.items) ? pricing.items : [],
           sort_order: String(pricing.sort_order),
           is_active: pricing.is_active,
@@ -111,6 +114,7 @@ export default function PricingEditorPage() {
       const body = {
         name: form.name.trim(),
         description: form.description.trim() || null,
+        detail_url: form.detail_url.trim() || null,
         items,
         sort_order: Number(form.sort_order) || 0,
         is_active: form.is_active,
@@ -198,6 +202,10 @@ export default function PricingEditorPage() {
                 placeholder="Giá tham khảo, chưa bao gồm VAT. Thực tế phụ thuộc kích thước và thiết kế."
               />
             </div>
+            <ArticlePicker
+              value={form.detail_url}
+              onChange={(url) => setForm((prev) => ({ ...prev, detail_url: url }))}
+            />
           </div>
         </div>
 
@@ -319,6 +327,177 @@ export default function PricingEditorPage() {
           <Link href="/admin/pricing"><Button type="button" variant="outline">Hủy</Button></Link>
         </div>
       </form>
+    </div>
+  )
+}
+
+// ─── Article Picker ──────────────────────────────────────────────────────────
+
+function ArticlePicker({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [articles, setArticles] = useState<News[]>([])
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<'article' | 'manual'>(value && !value.startsWith('/tin-tuc/') ? 'manual' : 'article')
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await api.get('/news/admin/all?limit=100') as unknown
+        setArticles(getListData<News>(res))
+      } catch { /* keep empty */ }
+    }
+    load()
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const selectedSlug = value?.startsWith('/tin-tuc/') ? value.slice('/tin-tuc/'.length) : null
+  const selectedArticle = selectedSlug ? articles.find((a) => a.slug === selectedSlug) : null
+
+  const filtered = articles.filter((a) =>
+    !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.slug.includes(search.toLowerCase()),
+  )
+
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-stone-700">Link xem chi tiết</label>
+
+      {/* Mode tabs */}
+      <div className="mb-2 flex gap-1">
+        <button
+          type="button"
+          onClick={() => setMode('article')}
+          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${mode === 'article' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+        >
+          Chọn bài viết
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('manual')}
+          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${mode === 'manual' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+        >
+          Nhập URL thủ công
+        </button>
+      </div>
+
+      {mode === 'manual' ? (
+        <>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+            placeholder="/tin-tuc/bai-viet-slug hoặc URL đầy đủ"
+          />
+          <p className="mt-1 text-xs text-stone-400">Để trống = ẩn nút "Xem chi tiết" trên trang Báo Giá.</p>
+        </>
+      ) : (
+        <div ref={ref} className="relative">
+          {/* Selected article display / trigger */}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex w-full items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-stone-300"
+          >
+            <FileText className="h-4 w-4 shrink-0 text-stone-400" />
+            {selectedArticle ? (
+              <span className="flex-1 truncate text-stone-800">{selectedArticle.title}</span>
+            ) : value && selectedSlug ? (
+              <span className="flex-1 truncate text-stone-500">{value}</span>
+            ) : (
+              <span className="flex-1 text-stone-400">Chọn bài viết...</span>
+            )}
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-stone-400" />
+          </button>
+
+          {/* Dropdown */}
+          {open && (
+            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-lg">
+              {/* Search */}
+              <div className="flex items-center gap-2 border-b border-stone-100 px-3 py-2">
+                <Search className="h-4 w-4 text-stone-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
+                  placeholder="Tìm bài viết..."
+                  autoFocus
+                />
+              </div>
+
+              {/* Article list */}
+              <div className="max-h-52 overflow-y-auto">
+                {/* Clear option */}
+                <button
+                  type="button"
+                  onClick={() => { onChange(''); setOpen(false) }}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-stone-400 hover:bg-stone-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Bỏ chọn (ẩn nút)
+                </button>
+
+                {filtered.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-sm text-stone-400">Không tìm thấy bài viết</p>
+                ) : (
+                  filtered.map((article) => (
+                    <button
+                      key={article.id}
+                      type="button"
+                      onClick={() => { onChange(`/tin-tuc/${article.slug}`); setOpen(false); setSearch('') }}
+                      className={`flex w-full items-start gap-2 px-3 py-2.5 text-left transition-colors hover:bg-amber-50 ${selectedSlug === article.slug ? 'bg-amber-50' : ''}`}
+                    >
+                      {article.thumbnail_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={article.thumbnail_url} alt="" className="mt-0.5 h-8 w-12 shrink-0 rounded object-cover" />
+                      ) : (
+                        <div className="mt-0.5 flex h-8 w-12 shrink-0 items-center justify-center rounded bg-stone-100">
+                          <FileText className="h-3.5 w-3.5 text-stone-400" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-stone-800">{article.title}</p>
+                        <p className="truncate text-xs text-stone-400">/tin-tuc/{article.slug}</p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {/* Create new article */}
+              <div className="border-t border-stone-100 p-2">
+                <a
+                  href="/admin/news/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-amber-700"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Tạo bài viết mới
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Current URL hint */}
+          {value && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-stone-400">
+              <span>Link:</span>
+              <code className="rounded bg-stone-100 px-1 font-mono">{value}</code>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

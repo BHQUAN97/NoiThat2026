@@ -14,6 +14,9 @@ export class PricingTable {
   @Column({ type: 'json', nullable: true })
   items?: Array<{ label: string; price: string; unit?: string; note?: string }>
 
+  @Column({ length: 500, nullable: true })
+  detail_url?: string
+
   @Column({ default: 0 })
   sort_order!: number
 

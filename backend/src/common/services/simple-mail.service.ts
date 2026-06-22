@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Resend } from 'resend'
+import { SettingsService } from '../../modules/settings/settings.service'
 
 export interface FormNotificationData {
   formType: 'quote' | 'contact'
@@ -10,48 +11,73 @@ export interface FormNotificationData {
   content?: Record<string, unknown>
 }
 
-// Email service đơn giản — không phụ thuộc EmailLog entity
 @Injectable()
 export class SimpleMailService {
   private readonly logger = new Logger(SimpleMailService.name)
-  private readonly resend: Resend | null = null
-  private readonly from: string
-  private readonly adminEmail: string
+  private resend: Resend | null = null
+  private lastApiKey = ''
 
-  constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('mail.apiKey')
-    if (apiKey) {
-      this.resend = new Resend(apiKey)
-    } else {
-      this.logger.warn('RESEND_API_KEY not set — emails will not be sent')
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly settingsService: SettingsService,
+  ) {
+    const envKey = this.configService.get<string>('mail.apiKey')
+    if (envKey) {
+      this.resend = new Resend(envKey)
+      this.lastApiKey = envKey
     }
-    this.from = 'Nội Thất Duy Mạnh <noreply@duymanhnoithat.vn>'
-    this.adminEmail = this.configService.get<string>('mail.adminEmail') || 'duymanhnoithat@gmail.com'
   }
 
-  // Gửi thông báo admin khi có form mới
+  // Đọc config từ DB settings trước, fallback .env
+  private async getMailConfig() {
+    const [dbApiKey, dbFrom, dbAdminEmail] = await Promise.all([
+      this.settingsService.get('resend_api_key'),
+      this.settingsService.get('resend_from'),
+      this.settingsService.get('admin_email'),
+    ])
+
+    const apiKey = dbApiKey || this.configService.get<string>('mail.apiKey') || ''
+    const from = dbFrom || this.configService.get<string>('mail.from') || 'Nội Thất Duy Mạnh <noreply@duymanhnoithat.vn>'
+    const adminEmail = dbAdminEmail || this.configService.get<string>('mail.adminEmail') || 'duymanhnoithat@gmail.com'
+
+    // Tạo lại Resend client nếu key thay đổi
+    if (apiKey && apiKey !== this.lastApiKey) {
+      this.resend = new Resend(apiKey)
+      this.lastApiKey = apiKey
+    } else if (!apiKey) {
+      this.resend = null
+      this.lastApiKey = ''
+    }
+
+    return { apiKey, from, adminEmail }
+  }
+
   async notifyAdmin(data: FormNotificationData): Promise<void> {
+    const { from, adminEmail } = await this.getMailConfig()
     const subject = data.formType === 'quote'
       ? `[Báo Giá Mới] ${data.name} — ${data.phone}`
       : `[Liên Hệ Mới] ${data.name} — ${data.phone}`
 
     const html = this.buildAdminNotificationHtml(data)
-    await this.send(this.adminEmail, subject, html)
+    await this.send(adminEmail, subject, html, from)
   }
 
-  // Gửi xác nhận cho khách hàng (nếu có email)
   async confirmToCustomer(data: FormNotificationData): Promise<void> {
     if (!data.email) return
+    const { from } = await this.getMailConfig()
     const subject = 'Xác nhận yêu cầu — Nội Thất Duy Mạnh'
     const html = this.buildCustomerConfirmHtml(data.name)
-    await this.send(data.email, subject, html)
+    await this.send(data.email, subject, html, from)
   }
 
-  private async send(to: string, subject: string, html: string): Promise<void> {
-    if (!this.resend) return
+  private async send(to: string, subject: string, html: string, from: string): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend API key not configured — email not sent')
+      return
+    }
 
     try {
-      const { error } = await this.resend.emails.send({ from: this.from, to: [to], subject, html })
+      const { error } = await this.resend.emails.send({ from, to: [to], subject, html })
       if (error) throw new Error(error.message)
       this.logger.log(`Email sent to ${to}: ${subject}`)
     } catch (err: any) {

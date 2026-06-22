@@ -133,6 +133,7 @@ export interface PricingTable {
   name: string
   description?: string | null
   items?: PricingItem[] | null
+  detail_url?: string | null
   sort_order: number
   is_active: boolean
   created_at: string

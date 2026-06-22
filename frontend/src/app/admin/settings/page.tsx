@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import {
   Save, ImageIcon, Loader2, X, Building2, Search, Mail, Image as ImageLucide,
   ChevronDown, ChevronUp, MapPin, ExternalLink, Info,
-  CheckCircle2, Circle, Eye, EyeOff, AlertTriangle,
+  CheckCircle2, Circle, Eye, EyeOff, AlertTriangle, Palette,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -22,7 +22,7 @@ type FieldDef = {
   placeholder: string
   hint: string
   textarea?: boolean
-  type?: 'text' | 'url' | 'email'
+  type?: 'text' | 'url' | 'email' | 'password' | 'color'
   wide?: boolean        // chiếm full width trong grid 2 cột
   mapsPreview?: boolean // hiện iframe preview inline
 }
@@ -103,6 +103,22 @@ const SECTIONS: SectionDef[] = [
     ],
   },
   {
+    id: 'theme',
+    title: 'Giao diện',
+    icon: Palette,
+    accent: 'amber',
+    description: 'Tuỳ chỉnh màu sắc chủ đạo của website.',
+    fields: [
+      {
+        key: 'primary_color',
+        label: 'Màu chủ đạo',
+        placeholder: '#4B3528',
+        type: 'color',
+        hint: 'Màu chính dùng cho header, nút bấm, link, viền nhấn. Mặc định: #4B3528 (nâu gỗ). Nhập mã HEX hoặc chọn từ bảng màu.',
+      },
+    ],
+  },
+  {
     id: 'seo',
     title: 'SEO & Mạng xã hội',
     icon: Search,
@@ -148,12 +164,20 @@ const SECTIONS: SectionDef[] = [
           <li className="flex gap-2"><span className="shrink-0 font-bold">2.</span><span>Vào <strong>Domains → Add Domain</strong> → nhập domain của bạn (VD: duymanhnoithat.vn)</span></li>
           <li className="flex gap-2"><span className="shrink-0 font-bold">3.</span><span>Thêm các bản ghi DNS được cung cấp vào nhà cung cấp tên miền (Nhân Hòa, Namecheap...)</span></li>
           <li className="flex gap-2"><span className="shrink-0 font-bold">4.</span><span>Vào <strong>API Keys → Create API Key</strong> → chọn quyền <em>Sending Access</em></span></li>
-          <li className="flex gap-2"><span className="shrink-0 font-bold">5.</span><span>Copy key (dạng <code className="rounded bg-green-100 px-1 font-mono text-xs">re_xxx...</code>) → thêm vào file <code className="rounded bg-green-100 px-1 font-mono text-xs">.env</code> của backend: <code className="rounded bg-green-100 px-1 font-mono text-xs">RESEND_API_KEY=re_xxx</code></span></li>
+          <li className="flex gap-2"><span className="shrink-0 font-bold">5.</span><span>Copy key (dạng <code className="rounded bg-green-100 px-1 font-mono text-xs">re_xxx...</code>) → dán vào ô <strong>"Resend API Key"</strong> bên dưới</span></li>
           <li className="flex gap-2"><span className="shrink-0 font-bold">6.</span><span>Điền "Email gửi đi" bên dưới theo đúng domain đã xác minh (VD: <em>no-reply@duymanhnoithat.vn</em>)</span></li>
         </ol>
       </div>
     ),
     fields: [
+      {
+        key: 'resend_api_key',
+        label: 'Resend API Key',
+        placeholder: 're_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        type: 'password',
+        wide: true,
+        hint: 'API key từ resend.com. Vào Dashboard → API Keys → Create API Key → chọn quyền Sending Access → copy key dán vào đây. Key bắt đầu bằng "re_".',
+      },
       {
         key: 'admin_email',
         label: 'Email nhận thông báo form',
@@ -180,7 +204,7 @@ const CHECKLIST_ITEMS = [
   { label: 'Zalo & Facebook', keys: ['zalo_url', 'facebook_url'] },
   { label: 'Google Maps embed URL', keys: ['google_maps_embed_url'] },
   { label: 'Meta Title & Description (SEO)', keys: ['meta_title', 'meta_description'] },
-  { label: 'Email nhận thông báo', keys: ['admin_email', 'resend_from'] },
+  { label: 'Email & Resend API Key', keys: ['admin_email', 'resend_from', 'resend_api_key'] },
   { label: 'Logo website', keys: ['logo_url'] },
 ]
 
@@ -474,6 +498,7 @@ function FieldRow({
 }) {
   const [showPreview, setShowPreview] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const isMapsField = field.key === 'google_maps_embed_url'
   const mapsUrlInvalid = isMapsField && value.length > 0 && !isValidMapsEmbedUrl(value)
@@ -499,6 +524,16 @@ function FieldRow({
         >
           <Info className="h-3.5 w-3.5" />
         </button>
+        {field.type === 'password' && value && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(v => !v)}
+            className="ml-auto flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600"
+          >
+            {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {showPassword ? 'Ẩn' : 'Hiện'}
+          </button>
+        )}
         {field.mapsPreview && mapsUrlValid && (
           <button
             type="button"
@@ -576,13 +611,45 @@ function FieldRow({
           rows={3}
           placeholder={field.placeholder}
         />
+      ) : field.type === 'color' ? (
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={value || '#4B3528'}
+            onChange={e => onChange(e.target.value)}
+            className="h-10 w-14 cursor-pointer rounded-lg border border-stone-200 bg-stone-50 p-1"
+          />
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className={cn(inputClass, 'flex-1 font-mono text-xs')}
+            placeholder={field.placeholder}
+          />
+          {value && value !== '#4B3528' && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="rounded-lg px-2 py-1.5 text-xs text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+            >
+              Reset mặc định
+            </button>
+          )}
+          <div className="flex items-center gap-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-500">
+            <span>Xem trước:</span>
+            <span className="rounded px-2 py-1 text-white font-medium" style={{ backgroundColor: value || '#4B3528' }}>
+              Nút bấm
+            </span>
+          </div>
+        </div>
       ) : (
         <input
-          type={field.type ?? 'text'}
+          type={field.type === 'password' && !showPassword ? 'password' : (field.type === 'password' ? 'text' : (field.type ?? 'text'))}
           value={value}
           onChange={e => onChange(e.target.value)}
-          className={inputClass}
+          className={cn(inputClass, field.type === 'password' && 'font-mono text-xs')}
           placeholder={field.placeholder}
+          autoComplete={field.type === 'password' ? 'off' : undefined}
         />
       )}
 
@@ -646,7 +713,7 @@ function LogoSection({ value, onChange }: { value: string; onChange: (url: strin
         </div>
         <div>
           <h2 className="font-semibold text-stone-800">Logo website</h2>
-          <p className="text-xs text-stone-400">Hiển thị ở header. PNG/WebP nền trong suốt, cao 40–60px.</p>
+          <p className="text-xs text-stone-400">Hiển thị ở header trên mọi trang.</p>
         </div>
       </div>
 
@@ -702,12 +769,27 @@ function LogoSection({ value, onChange }: { value: string; onChange: (url: strin
         </div>
 
         {/* Logo hint */}
-        <div className="mt-4 flex gap-2 rounded-lg bg-stone-50 px-3 py-2.5 text-xs text-stone-500">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-300" />
-          <span>
-            Nếu không có logo, website tự động hiển thị tên (site_name) dạng text có kiểu chữ thương hiệu.
-            Nên dùng file PNG hoặc WebP có nền trong suốt để logo không có viền trắng.
-          </span>
+        <div className="mt-4 space-y-2 rounded-xl border border-amber-100 bg-amber-50 p-3.5 text-xs text-amber-800">
+          <p className="font-semibold">Hướng dẫn chọn logo đẹp nhất</p>
+          <ul className="space-y-1.5 text-amber-700">
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-amber-500">&#10003;</span>
+              <span><strong>Kích thước lý tưởng:</strong> 400×120 px (tỷ lệ ngang ~3:1). Logo ngang hiển thị đẹp nhất trên header.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-amber-500">&#10003;</span>
+              <span><strong>Định dạng:</strong> PNG hoặc WebP, nền trong suốt. Tránh JPEG (có nền trắng).</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-bold text-amber-500">&#10003;</span>
+              <span><strong>Nội dung:</strong> Chỉ giữ tên thương hiệu + icon. Bỏ slogan/tagline vì sẽ quá nhỏ trên header.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 text-red-500 font-bold">&#10007;</span>
+              <span><strong>Tránh:</strong> Logo hình vuông (1:1) hoặc dọc — sẽ bị thu nhỏ và khó đọc trên thanh điều hướng.</span>
+            </li>
+          </ul>
+          <p className="text-amber-600">Nếu không có logo, website tự động hiển thị tên (site_name) dạng text có kiểu chữ thương hiệu.</p>
         </div>
       </div>
     </div>
@@ -747,7 +829,14 @@ function PageBannersSection({
           <p className="text-xs text-stone-400">Ảnh nền và text hiển thị ở phần header mỗi trang. Bấm vào card để chỉnh sửa nội dung.</p>
         </div>
       </div>
-      <div className="p-6">
+
+      <div className="px-6 pt-4 pb-2">
+        <div className="rounded-lg bg-violet-50 px-3 py-2.5 text-xs text-violet-700">
+          <strong>Kích thước ảnh bìa lý tưởng:</strong> 1920×500 px (tỷ lệ ~4:1). Dùng ảnh ngang, rõ nét, không có chi tiết quan trọng ở mép trên/dưới vì sẽ bị crop trên mobile. Định dạng: JPG hoặc WebP, dưới 500KB.
+        </div>
+      </div>
+
+      <div className="p-6 pt-2">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PAGE_BANNER_ITEMS.map((item) => (
             <BannerCard

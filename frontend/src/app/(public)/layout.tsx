@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { DynamicFavicon } from '@/components/layout/DynamicFavicon'
 import { GlassNav } from '@/components/layout/GlassNav'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
@@ -9,7 +10,12 @@ import { PageBannerProvider } from '@/lib/page-banner-context'
 import { getServerApiUrl } from '@/lib/api-url'
 
 async function getPublicSettings() {
-  const empty = { logoUrl: null as string | null, mapsUrl: null as string | null, pageBanners: {} as Record<string, import('@/lib/page-banner-context').PageBannerData> }
+  const empty = {
+    logoUrl: null as string | null,
+    mapsUrl: null as string | null,
+    primaryColor: null as string | null,
+    pageBanners: {} as Record<string, import('@/lib/page-banner-context').PageBannerData>,
+  }
   try {
     const res = await fetch(`${getServerApiUrl()}/settings/public`, {
       next: { revalidate: 3600, tags: ['settings'] },
@@ -34,6 +40,7 @@ async function getPublicSettings() {
     return {
       logoUrl: data?.logo_url || null,
       mapsUrl: data?.google_maps_embed_url || null,
+      primaryColor: data?.primary_color || null,
       pageBanners: banners,
     }
   } catch {
@@ -42,10 +49,15 @@ async function getPublicSettings() {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const { logoUrl, mapsUrl, pageBanners } = await getPublicSettings()
+  const { logoUrl, mapsUrl, primaryColor, pageBanners } = await getPublicSettings()
+
+  const colorOverride = primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor)
+    ? { '--color-primary': primaryColor } as React.CSSProperties
+    : undefined
 
   return (
-    <>
+    <div style={colorOverride}>
+      <DynamicFavicon logoUrl={logoUrl} />
       <TrafficTracker />
       <GlassNav logoUrl={logoUrl} />
       <main className="pt-[var(--nav-height)] pb-14 md:pb-0 min-h-screen">
@@ -56,6 +68,6 @@ export default async function PublicLayout({ children }: { children: React.React
       <Footer mapsUrl={mapsUrl} />
       <FloatingButtons />
       <BottomNav />
-    </>
+    </div>
   )
 }

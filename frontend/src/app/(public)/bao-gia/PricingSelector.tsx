@@ -13,7 +13,7 @@ export interface PricingOption {
   highlight?: boolean
   items: Array<{ name: string; price: string; unit?: string }>
   note: string
-  articleSlug?: string
+  detailUrl?: string | null
 }
 
 interface PricingSelectorProps {
@@ -48,6 +48,7 @@ export function PricingSelector({ tables }: PricingSelectorProps) {
               highlight: index === 1,
               items,
               note: table.description || 'Giá thực tế phụ thuộc kích thước, vật liệu và phụ kiện.',
+              detailUrl: table.detail_url,
             }
           })
 
@@ -124,13 +125,15 @@ export function PricingSelector({ tables }: PricingSelectorProps) {
                     <MessageCircle className="h-3.5 w-3.5" />
                     Nhận báo giá
                   </button>
-                  <a
-                    href={table.articleSlug ? `/tin-tuc/${table.articleSlug}` : '/tin-tuc'}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-outline-variant px-4 py-3 font-label text-xs font-bold uppercase tracking-widest text-on-surface transition-colors hover:border-primary hover:text-primary"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    Xem chi tiết
-                  </a>
+                  {table.detailUrl && (
+                    <a
+                      href={table.detailUrl}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-outline-variant px-4 py-3 font-label text-xs font-bold uppercase tracking-widest text-on-surface transition-colors hover:border-primary hover:text-primary"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Xem chi tiết
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
