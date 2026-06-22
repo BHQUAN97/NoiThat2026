@@ -39,27 +39,10 @@ export function PageBanner({ slug, title: defaultTitle, subtitle: defaultSubtitl
       )}
 
       <div className="relative mx-auto max-w-content">
-        {breadcrumb && breadcrumb.length > 0 && (
-          <nav className="mb-7 font-label text-xs uppercase tracking-widest">
-            {breadcrumb.map((item, i) => (
-              <span key={i}>
-                {i > 0 && <span className={`mx-3 ${bannerUrl ? 'text-white/50' : 'text-outline'}`}>/</span>}
-                {item.href ? (
-                  <Link href={item.href} className={`transition hover:text-primary ${bannerUrl ? 'text-white/70 hover:text-white' : 'text-on-surface-variant'}`}>
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span className={bannerUrl ? 'text-white' : 'text-primary'}>{item.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
-        )}
-
         <div className="grid items-end gap-8 lg:grid-cols-[0.8fr_1fr]">
           <div>
             {label && (
-              <p className={`mb-4 font-label text-xs uppercase tracking-[0.22em] ${bannerUrl ? 'text-white/70' : 'text-tertiary'}`}>
+              <p className={`mb-3 font-label text-xs uppercase tracking-[0.22em] ${bannerUrl ? 'text-white/70' : 'text-tertiary'}`}>
                 {label}
               </p>
             )}
