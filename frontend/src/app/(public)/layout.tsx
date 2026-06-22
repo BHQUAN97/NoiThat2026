@@ -1,10 +1,11 @@
+import type { Metadata } from 'next'
 import { GlassNav } from '@/components/layout/GlassNav'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { TrafficTracker } from '@/components/layout/TrafficTracker'
 import { PageBannerProvider } from '@/lib/page-banner-context'
-import { getServerApiUrl } from '@/lib/api-url'
+import { getServerApiUrl, resolveMediaUrl } from '@/lib/api-url'
 
 function hexToHsl(hex: string): [number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16) / 255
@@ -74,13 +75,13 @@ async function getPublicSettings() {
         if (k.startsWith(prefix)) {
           const slug = k.slice(prefix.length)
           if (!banners[slug]) banners[slug] = {}
-          ;(banners[slug] as any)[field] = v
+          ;(banners[slug] as any)[field] = field === 'image' ? resolveMediaUrl(v) : v
         }
       }
     }
 
     return {
-      logoUrl: data?.logo_url || null,
+      logoUrl: resolveMediaUrl(data?.logo_url) || null,
       siteName: data?.site_name || null,
       mapsUrl: data?.google_maps_embed_url || null,
       primaryColor: data?.primary_color || null,
@@ -89,6 +90,12 @@ async function getPublicSettings() {
   } catch {
     return empty
   }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { logoUrl } = await getPublicSettings()
+  if (!logoUrl) return {}
+  return { icons: { icon: logoUrl } }
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -100,7 +107,6 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <div style={colorOverride}>
-      {logoUrl && <link rel="icon" href={logoUrl} />}
       <TrafficTracker />
       <GlassNav logoUrl={logoUrl} siteName={siteName} />
       <main className="pt-[var(--nav-height)] pb-14 md:pb-0 min-h-screen">
