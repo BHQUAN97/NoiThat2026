@@ -94,8 +94,7 @@ async function getPublicSettings() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { logoUrl } = await getPublicSettings()
-  if (!logoUrl) return {}
-  return { icons: { icon: logoUrl } }
+  return { icons: { icon: logoUrl || '/favicon.ico' } }
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
