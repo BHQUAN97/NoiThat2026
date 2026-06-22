@@ -34,12 +34,15 @@ function NavDropdownItem({
   const subLinks = NAV_DROPDOWNS[link.href]
   const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
 
-  function handleEnter() {
+  function cancelClose() {
     if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null }
+  }
+  function handleEnter() {
+    cancelClose()
     setOpen(true)
   }
   function handleLeave() {
-    closeTimer.current = setTimeout(() => setOpen(false), 150)
+    closeTimer.current = setTimeout(() => setOpen(false), 300)
   }
 
   useEffect(() => {
@@ -47,8 +50,16 @@ function NavDropdownItem({
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function keyHandler(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('keydown', keyHandler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('keydown', keyHandler)
+      cancelClose()
+    }
   }, [open])
 
   if (!subLinks) {
@@ -98,7 +109,7 @@ function NavDropdownItem({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 pt-2">
+        <div className="absolute left-0 top-full z-50 pt-2" onMouseEnter={cancelClose} onMouseLeave={handleLeave}>
         <div className="min-w-[210px] rounded-xl border border-outline-variant bg-surface py-1 shadow-ambient-lg">
           <Link
             href={link.href}
