@@ -120,9 +120,12 @@ export default async function HomePage() {
           subtitle={heroConfig?.subtitle as string | undefined}
           imageUrl={heroImg?.url}
           imagePosition={heroImg?.pos}
+          bgImages={heroImages.length > 1 ? heroImages : undefined}
           ctaPrimaryText={heroConfig?.cta_primary_text as string | undefined}
           ctaPrimaryLink={heroConfig?.cta_primary_link as string | undefined}
           badge={heroConfig?.badge as string | undefined}
+          autoplay={heroConfig?.autoplay !== false}
+          autoplayInterval={typeof heroConfig?.autoplay_interval === 'number' ? heroConfig.autoplay_interval : 6}
         />
       )}
 
@@ -182,6 +185,8 @@ export default async function HomePage() {
           title={reviewsConfig?.title as string | undefined}
           desc={reviewsConfig?.desc as string | undefined}
           limit={reviewsConfig?.limit as number | undefined}
+          autoplay={reviewsConfig?.autoplay !== false}
+          autoplayInterval={typeof reviewsConfig?.autoplay_interval === 'number' ? reviewsConfig.autoplay_interval : 5}
         />
       )}
 

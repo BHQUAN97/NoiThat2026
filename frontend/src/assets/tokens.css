@@ -10,6 +10,7 @@
 :root {
   /* -- COLORS: Core Palette --------------------------------- */
   --color-primary: #4B3528;
+  --color-primary-dark: #332219;
   --color-primary-container: #7A5A44;
   --color-on-primary: #FFFFFF;
   --color-on-primary-container: #F6D7C2;

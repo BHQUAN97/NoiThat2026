@@ -9,10 +9,10 @@ const config: Config = {
     extend: {
       // --- Material Design 3 Color Tokens ---
       colors: {
-        'primary':                    '#4B3528',
-        'primary-container':          '#7A5A44',
-        'on-primary':                 '#FFFFFF',
-        'on-primary-container':       '#F6D7C2',
+        'primary':                    'var(--color-primary)',
+        'primary-container':          'var(--color-primary-container)',
+        'on-primary':                 'var(--color-on-primary)',
+        'on-primary-container':       'var(--color-on-primary-container)',
 
         'secondary':                  '#6B5C52',
         'secondary-container':        '#E9D9CB',
@@ -49,12 +49,12 @@ const config: Config = {
 
         'inverse-surface':            '#2A211B',
         'inverse-on-surface':         '#F7EFE6',
-        'inverse-primary':            '#D8AE91',
+        'inverse-primary':            'var(--color-inverse-primary)',
 
-        'primary-fixed':              '#F6D7C2',
-        'primary-fixed-dim':          '#D8AE91',
-        'on-primary-fixed':           '#24140C',
-        'on-primary-fixed-variant':   '#5B3F2E',
+        'primary-fixed':              'var(--color-primary-fixed)',
+        'primary-fixed-dim':          'var(--color-primary-fixed-dim)',
+        'on-primary-fixed':           'var(--color-on-primary-fixed)',
+        'on-primary-fixed-variant':   'var(--color-on-primary-fixed-variant)',
 
         'secondary-fixed':            '#F7DECF',
         'secondary-fixed-dim':        '#DAC2B4',
@@ -67,8 +67,8 @@ const config: Config = {
         'on-tertiary-fixed-variant':  '#2D4B54',
 
         'background':                 '#FBF7F0',
-        'brand':                      '#4B3528',
-        'primary-dark':               '#332219',
+        'brand':                      'var(--color-primary)',
+        'primary-dark':               'var(--color-primary-dark)',
         'border':                     '#DDCEC0',
         'danger':                     '#BA1A1A',
 

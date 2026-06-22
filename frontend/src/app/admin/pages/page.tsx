@@ -660,11 +660,20 @@ function SectionEditor({ type, config, onUpdate }: {
             <FInput label="Nút CTA — Link" value={config.cta_primary_link || ''} onChange={(v) => onUpdate('cta_primary_link', v)} placeholder="/bao-gia" />
           </div>
           <FImageList
-            label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = slideshow)"
+            label="Ảnh nền (1 ảnh = tĩnh, nhiều ảnh = slideshow tự động)"
             images={(config.bg_images || []).map(toImgItem)}
             onChange={(items) => onUpdate('bg_images', items)}
             max={10}
           />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 flex items-center gap-2 font-label text-label-md text-on-surface-variant">
+                <input type="checkbox" checked={config.autoplay !== false} onChange={(e) => onUpdate('autoplay', e.target.checked)} className="h-4 w-4 rounded" />
+                Tự động chuyển ảnh
+              </label>
+            </div>
+            <FNumber label="Thời gian chuyển (giây)" value={config.autoplay_interval || 6} onChange={(v) => onUpdate('autoplay_interval', v)} min={2} max={15} />
+          </div>
         </div>
       )
 
@@ -834,7 +843,16 @@ function SectionEditor({ type, config, onUpdate }: {
           </div>
           <FInput label="Mô tả" value={config.desc || ''} onChange={(v) => onUpdate('desc', v)} multiline />
           <FNumber label="Số đánh giá hiển thị" value={config.limit || 6} onChange={(v) => onUpdate('limit', v)} min={1} max={12} />
-          <p className="text-body-sm text-on-surface-variant/60">Đánh giá được lấy từ danh sách reviews có đánh dấu "nổi bật" trong hệ thống.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 flex items-center gap-2 font-label text-label-md text-on-surface-variant">
+                <input type="checkbox" checked={config.autoplay !== false} onChange={(e) => onUpdate('autoplay', e.target.checked)} className="h-4 w-4 rounded" />
+                Tự động chuyển slide
+              </label>
+            </div>
+            <FNumber label="Thời gian chuyển (giây)" value={config.autoplay_interval || 5} onChange={(v) => onUpdate('autoplay_interval', v)} min={2} max={15} />
+          </div>
+          <p className="text-body-sm text-on-surface-variant/60">Đánh giá được lấy từ danh sách reviews có đánh dấu "nổi bật". Nhiều hơn 3 → hiển thị dạng carousel.</p>
         </div>
       )
 

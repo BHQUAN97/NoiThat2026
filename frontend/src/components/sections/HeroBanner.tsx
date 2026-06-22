@@ -1,15 +1,23 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Phone } from 'lucide-react'
 import { CONTACT } from '@/lib/constants'
+
+interface BgImage { url: string; pos?: string }
 
 interface HeroBannerProps {
   title?: string
   subtitle?: string
   imageUrl?: string
   imagePosition?: string
+  bgImages?: BgImage[]
   ctaPrimaryText?: string
   ctaPrimaryLink?: string
   badge?: string
+  autoplay?: boolean
+  autoplayInterval?: number
 }
 
 const DEFAULT_HERO_IMAGE =
@@ -20,19 +28,45 @@ export function HeroBanner({
   subtitle = 'Xưởng tủ bếp và nội thất Duy Mạnh kế thừa tinh thần VietNet: ảnh công trình làm trung tâm, vật liệu rõ ràng, thi công gọn và tư vấn trực tiếp.',
   imageUrl = DEFAULT_HERO_IMAGE,
   imagePosition = 'center',
+  bgImages,
   ctaPrimaryText = 'Bắt đầu dự án',
   ctaPrimaryLink = '/bao-gia',
   badge = 'Xưởng sản xuất trực tiếp',
+  autoplay = true,
+  autoplayInterval = 6,
 }: HeroBannerProps) {
+  const images: BgImage[] = bgImages && bgImages.length > 0
+    ? bgImages
+    : [{ url: imageUrl, pos: imagePosition }]
+  const hasSlideshow = images.length > 1
+
+  const [current, setCurrent] = useState(0)
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % images.length)
+  }, [images.length])
+
+  useEffect(() => {
+    if (!hasSlideshow || !autoplay) return
+    const id = setInterval(next, autoplayInterval * 1000)
+    return () => clearInterval(id)
+  }, [hasSlideshow, autoplay, autoplayInterval, next])
+
   return (
     <section className="relative flex min-h-[calc(100vh-var(--nav-height))] items-center justify-center overflow-hidden bg-primary">
       <div className="absolute inset-0">
-        <img
-          src={imageUrl}
-          alt="Không gian nội thất cao cấp"
-          className="h-full w-full scale-105 object-cover"
-          style={{ objectPosition: imagePosition }}
-        />
+        {images.map((img, i) => (
+          <img
+            key={img.url}
+            src={img.url}
+            alt="Không gian nội thất cao cấp"
+            className="absolute inset-0 h-full w-full scale-105 object-cover transition-opacity duration-1000"
+            style={{
+              objectPosition: img.pos || 'center',
+              opacity: i === current ? 1 : 0,
+            }}
+          />
+        ))}
         <div className="absolute inset-0 bg-primary/25 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/75 via-primary/20 to-transparent" />
       </div>
@@ -66,6 +100,20 @@ export function HeroBanner({
           </a>
         </div>
       </div>
+
+      {/* Slideshow dots */}
+      {hasSlideshow && (
+        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'}`}
+              aria-label={`Ảnh ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

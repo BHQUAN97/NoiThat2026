@@ -118,7 +118,7 @@ function NavDropdownItem({
   )
 }
 
-export function GlassNav({ logoUrl }: { logoUrl?: string | null }) {
+export function GlassNav({ logoUrl, siteName }: { logoUrl?: string | null; siteName?: string | null }) {
   const pathname = usePathname()
   const { isScrolled } = useScrollPosition()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -151,14 +151,24 @@ export function GlassNav({ logoUrl }: { logoUrl?: string | null }) {
             className="group flex items-center gap-2 shrink-0"
           >
             {logoUrl ? (
-              <LogoImage src={logoUrl} alt={SITE_NAME} />
+              <span className="flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoUrl}
+                  alt={siteName || SITE_NAME}
+                  className="h-10 w-auto max-w-[48px] object-contain md:h-12 md:max-w-[56px]"
+                />
+                <span className="hidden font-headline text-title-md tracking-tight text-primary sm:block md:text-headline-sm">
+                  {siteName || SITE_NAME}
+                </span>
+              </span>
             ) : (
               <>
                 <span className="hidden h-9 w-9 items-center justify-center rounded-lg bg-primary/5 transition-colors duration-300 group-hover:bg-primary/10 md:flex">
                   <span className="font-headline text-title-md text-primary">D</span>
                 </span>
                 <span className="font-headline text-title-md uppercase tracking-[0.1em] text-primary transition-opacity duration-300 hover:opacity-80 md:text-headline-sm md:normal-case md:tracking-tight">
-                  {SITE_NAME}
+                  {siteName || SITE_NAME}
                 </span>
               </>
             )}
@@ -316,32 +326,3 @@ export function GlassNav({ logoUrl }: { logoUrl?: string | null }) {
   )
 }
 
-// Logo tự thích ứng: ngang → hiển thị lớn, vuông/dọc → giới hạn + kèm tên
-function LogoImage({ src, alt }: { src: string; alt: string }) {
-  const [ratio, setRatio] = useState<'wide' | 'square' | null>(null)
-
-  return (
-    <span className="flex items-center gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        onLoad={(e) => {
-          const img = e.currentTarget
-          setRatio(img.naturalWidth / img.naturalHeight >= 2 ? 'wide' : 'square')
-        }}
-        className={cn(
-          'w-auto object-contain',
-          ratio === 'wide'
-            ? 'h-10 max-w-[160px] md:h-[48px] md:max-w-[260px]'
-            : 'h-9 max-w-[44px] md:h-11 md:max-w-[52px]',
-        )}
-      />
-      {ratio === 'square' && (
-        <span className="hidden font-headline text-title-md tracking-tight text-primary sm:block md:text-headline-sm">
-          {SITE_NAME}
-        </span>
-      )}
-    </span>
-  )
-}
