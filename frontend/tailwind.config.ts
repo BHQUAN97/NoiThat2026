@@ -9,10 +9,10 @@ const config: Config = {
     extend: {
       // --- Material Design 3 Color Tokens ---
       colors: {
-        'primary':                    'var(--color-primary)',
-        'primary-container':          'var(--color-primary-container)',
-        'on-primary':                 'var(--color-on-primary)',
-        'on-primary-container':       'var(--color-on-primary-container)',
+        'primary':                    'rgb(var(--color-primary) / <alpha-value>)',
+        'primary-container':          'rgb(var(--color-primary-container) / <alpha-value>)',
+        'on-primary':                 'rgb(var(--color-on-primary) / <alpha-value>)',
+        'on-primary-container':       'rgb(var(--color-on-primary-container) / <alpha-value>)',
 
         'secondary':                  '#6B5C52',
         'secondary-container':        '#E9D9CB',
@@ -49,12 +49,12 @@ const config: Config = {
 
         'inverse-surface':            '#2A211B',
         'inverse-on-surface':         '#F7EFE6',
-        'inverse-primary':            'var(--color-inverse-primary)',
+        'inverse-primary':            'rgb(var(--color-inverse-primary) / <alpha-value>)',
 
-        'primary-fixed':              'var(--color-primary-fixed)',
-        'primary-fixed-dim':          'var(--color-primary-fixed-dim)',
-        'on-primary-fixed':           'var(--color-on-primary-fixed)',
-        'on-primary-fixed-variant':   'var(--color-on-primary-fixed-variant)',
+        'primary-fixed':              'rgb(var(--color-primary-fixed) / <alpha-value>)',
+        'primary-fixed-dim':          'rgb(var(--color-primary-fixed-dim) / <alpha-value>)',
+        'on-primary-fixed':           'rgb(var(--color-on-primary-fixed) / <alpha-value>)',
+        'on-primary-fixed-variant':   'rgb(var(--color-on-primary-fixed-variant) / <alpha-value>)',
 
         'secondary-fixed':            '#F7DECF',
         'secondary-fixed-dim':        '#DAC2B4',
@@ -67,8 +67,8 @@ const config: Config = {
         'on-tertiary-fixed-variant':  '#2D4B54',
 
         'background':                 '#FBF7F0',
-        'brand':                      'var(--color-primary)',
-        'primary-dark':               'var(--color-primary-dark)',
+        'brand':                      'rgb(var(--color-primary) / <alpha-value>)',
+        'primary-dark':               'rgb(var(--color-primary-dark) / <alpha-value>)',
         'border':                     '#DDCEC0',
         'danger':                     '#BA1A1A',
 

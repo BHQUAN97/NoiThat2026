@@ -23,30 +23,33 @@ function hexToHsl(hex: string): [number, number, number] {
   return [h * 360, s * 100, l * 100]
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+function hslToRgb(h: number, s: number, l: number): string {
   s /= 100; l /= 100
   const a = s * Math.min(l, 1 - l)
   const f = (n: number) => {
     const k = (n + h / 30) % 12
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
-    return Math.round(255 * color).toString(16).padStart(2, '0')
+    return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)))
   }
-  return `#${f(0)}${f(8)}${f(4)}`
+  return `${f(0)} ${f(8)} ${f(4)}`
+}
+
+function hexToRgbTriplet(hex: string): string {
+  return `${parseInt(hex.slice(1, 3), 16)} ${parseInt(hex.slice(3, 5), 16)} ${parseInt(hex.slice(5, 7), 16)}`
 }
 
 function generatePalette(hex: string): Record<string, string> {
   const [h, s, l] = hexToHsl(hex)
   return {
-    '--color-primary': hex,
-    '--color-primary-dark': hslToHex(h, s, Math.max(l - 12, 5)),
-    '--color-primary-container': hslToHex(h, Math.max(s - 10, 10), Math.min(l + 18, 55)),
-    '--color-on-primary': '#FFFFFF',
-    '--color-on-primary-container': hslToHex(h, Math.max(s - 20, 5), Math.min(l + 55, 90)),
-    '--color-primary-fixed': hslToHex(h, Math.max(s - 30, 5), Math.min(l + 50, 88)),
-    '--color-primary-fixed-dim': hslToHex(h, Math.max(s - 15, 10), Math.min(l + 35, 72)),
-    '--color-on-primary-fixed': hslToHex(h, s, Math.max(l - 10, 3)),
-    '--color-on-primary-fixed-variant': hslToHex(h, Math.max(s - 5, 10), Math.min(l + 8, 40)),
-    '--color-inverse-primary': hslToHex(h, Math.max(s - 15, 10), Math.min(l + 40, 75)),
+    '--color-primary': hexToRgbTriplet(hex),
+    '--color-primary-dark': hslToRgb(h, s, Math.max(l - 12, 5)),
+    '--color-primary-container': hslToRgb(h, Math.max(s - 10, 10), Math.min(l + 18, 55)),
+    '--color-on-primary': '255 255 255',
+    '--color-on-primary-container': hslToRgb(h, Math.max(s - 20, 5), Math.min(l + 55, 90)),
+    '--color-primary-fixed': hslToRgb(h, Math.max(s - 30, 5), Math.min(l + 50, 88)),
+    '--color-primary-fixed-dim': hslToRgb(h, Math.max(s - 15, 10), Math.min(l + 35, 72)),
+    '--color-on-primary-fixed': hslToRgb(h, s, Math.max(l - 10, 3)),
+    '--color-on-primary-fixed-variant': hslToRgb(h, Math.max(s - 5, 10), Math.min(l + 8, 40)),
+    '--color-inverse-primary': hslToRgb(h, Math.max(s - 15, 10), Math.min(l + 40, 75)),
   }
 }
 
@@ -100,7 +103,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const { logoUrl, siteName, mapsUrl, primaryColor, pageBanners } = await getPublicSettings()
 
-  const colorOverride = primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor)
+  const DEFAULT_PRIMARY = '#4b3528'
+  const colorOverride = primaryColor
+    && /^#[0-9A-Fa-f]{6}$/.test(primaryColor)
+    && primaryColor.toLowerCase() !== DEFAULT_PRIMARY
     ? generatePalette(primaryColor) as React.CSSProperties
     : undefined
 
