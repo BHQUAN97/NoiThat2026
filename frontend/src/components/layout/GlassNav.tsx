@@ -10,14 +10,14 @@ import { cn } from '@/lib/utils'
 
 const NAV_DROPDOWNS: Record<string, Array<{ label: string; href: string }>> = {
   '/tu-bep': [
-    { label: 'Tủ Bếp Inox 304', href: '/tu-bep/tu-bep-inox-304' },
-    { label: 'Tủ Bếp Cánh Kính', href: '/tu-bep/tu-bep-canh-kinh' },
-    { label: 'Tủ Bếp Acrylic', href: '/tu-bep/tu-bep-acrylic' },
+    { label: 'Tủ Bếp Inox 304', href: '/tu-bep?loai=tu-bep-inox-304' },
+    { label: 'Tủ Bếp Cánh Kính', href: '/tu-bep?loai=tu-bep-canh-kinh' },
+    { label: 'Tủ Bếp Acrylic', href: '/tu-bep?loai=tu-bep-acrylic' },
   ],
   '/noi-that-khac': [
-    { label: 'Tủ Quần Áo', href: '/noi-that-khac/tu-quan-ao' },
-    { label: 'Vách Tivi', href: '/noi-that-khac/vach-tivi' },
-    { label: 'Nội Thất Phòng Ngủ', href: '/noi-that-khac/noi-that-phong-ngu' },
+    { label: 'Tủ Quần Áo', href: '/noi-that-khac?loai=tu-quan-ao' },
+    { label: 'Vách Tivi', href: '/noi-that-khac?loai=vach-tivi' },
+    { label: 'Nội Thất Phòng Ngủ', href: '/noi-that-khac?loai=noi-that-phong-ngu' },
   ],
 }
 

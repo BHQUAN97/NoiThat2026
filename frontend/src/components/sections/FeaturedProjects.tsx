@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
@@ -39,6 +42,8 @@ export function FeaturedProjects({
 }: FeaturedProjectsProps) {
   const displayProjects = projects.length > 0 ? projects.slice(0, limit) : FALLBACK_PROJECTS.slice(0, limit)
 
+  if (displayProjects.length === 0) return null
+
   return (
     <section className="bg-surface-container-low px-4 py-20 md:px-8 md:py-32">
       <div className="mx-auto max-w-7xl">
@@ -62,34 +67,42 @@ export function FeaturedProjects({
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {displayProjects.map((project, index) => (
-            <Link
-              key={project.id}
-              href="/du-an-thuc-te"
-              className={index === 1 ? 'group md:mt-12' : 'group'}
-            >
-              <div className="relative h-[500px] overflow-hidden rounded-xl bg-surface">
-                <img
-                  src={project.thumbnail_url || PROJECT_IMAGES[index % PROJECT_IMAGES.length]}
-                  alt={project.title}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-70 transition-opacity group-hover:opacity-85" />
-                <div className="absolute bottom-0 left-0 w-full translate-y-4 p-8 transition-transform group-hover:translate-y-0">
-                  <p className="mb-2 font-label text-[10px] uppercase tracking-[0.2em] text-surface/70">
-                    {project.province}
-                  </p>
-                  <h3 className="mb-4 font-headline text-2xl font-bold text-surface">
-                    {project.title}
-                  </h3>
-                  <p className="text-body-sm leading-relaxed text-surface/0 transition-colors duration-500 group-hover:text-surface/80">
-                    Không gian được hoàn thiện theo vật liệu, kích thước và thói quen sử dụng thực tế của gia chủ.
-                  </p>
-                </div>
-              </div>
-            </Link>
+            <ProjectCard key={project.id} project={project} index={index} />
           ))}
         </div>
       </div>
     </section>
+  )
+}
+
+function ProjectCard({ project, index }: { project: Project; index: number }) {
+  const [imgSrc, setImgSrc] = useState(project.thumbnail_url || PROJECT_IMAGES[index % PROJECT_IMAGES.length])
+
+  return (
+    <Link
+      href="/du-an-thuc-te"
+      className={index === 1 ? 'group md:mt-12' : 'group'}
+    >
+      <div className="relative h-[500px] overflow-hidden rounded-xl bg-surface">
+        <img
+          src={imgSrc}
+          alt={project.title}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          onError={() => setImgSrc(PROJECT_IMAGES[index % PROJECT_IMAGES.length])}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-70 transition-opacity group-hover:opacity-85" />
+        <div className="absolute bottom-0 left-0 w-full translate-y-4 p-8 transition-transform group-hover:translate-y-0">
+          <p className="mb-2 font-label text-[10px] uppercase tracking-[0.2em] text-surface/70">
+            {project.province}
+          </p>
+          <h3 className="mb-4 font-headline text-2xl font-bold text-surface">
+            {project.title}
+          </h3>
+          <p className="text-body-sm leading-relaxed text-surface/0 transition-colors duration-500 group-hover:text-surface/80">
+            Không gian được hoàn thiện theo vật liệu, kích thước và thói quen sử dụng thực tế của gia chủ.
+          </p>
+        </div>
+      </div>
+    </Link>
   )
 }

@@ -68,7 +68,7 @@ export function CustomerReviews({
   const displayReviews = reviews.length > 0 ? reviews.slice(0, limit) : PLACEHOLDER_REVIEWS.slice(0, limit)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
-  const hasCarousel = displayReviews.length > 3
+  const hasCarousel = displayReviews.length > 1
 
   const scroll = useCallback((dir: 'left' | 'right') => {
     const el = scrollRef.current

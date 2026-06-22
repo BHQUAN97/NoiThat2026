@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Camera, Grid3x3 } from 'lucide-react'
 import { Lightbox } from '@/components/ui/Lightbox'
 
@@ -13,11 +13,20 @@ export function ProjectGallery({ images, altPrefix = 'Hình ảnh' }: ProjectGal
   const [tab, setTab] = useState<'carousel' | 'grid'>('carousel')
   const [current, setCurrent] = useState(0)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [paused, setPaused] = useState(false)
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
 
   const goPrev = useCallback(() => setCurrent((i) => Math.max(0, i - 1)), [])
   const goNext = useCallback(() => setCurrent((i) => Math.min(images.length - 1, i + 1)), [images.length])
+
+  useEffect(() => {
+    if (tab !== 'carousel' || images.length <= 1 || paused || lightboxIndex !== null) return
+    const id = setInterval(() => {
+      setCurrent((i) => (i + 1) % images.length)
+    }, 4000)
+    return () => clearInterval(id)
+  }, [tab, images.length, paused, lightboxIndex])
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
@@ -74,9 +83,11 @@ export function ProjectGallery({ images, altPrefix = 'Hình ảnh' }: ProjectGal
         <div>
           <div
             className="relative overflow-hidden rounded-2xl bg-surface-container shadow-card cursor-pointer"
-            onTouchStart={handleTouchStart}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchStart={(e) => { setPaused(true); handleTouchStart(e) }}
             onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            onTouchEnd={() => { handleTouchEnd(); setTimeout(() => setPaused(false), 3000) }}
             onClick={() => setLightboxIndex(current)}
           >
             {/* Counter badge */}
