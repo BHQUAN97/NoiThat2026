@@ -173,7 +173,7 @@ const SECTIONS: SectionDef[] = [
       {
         key: 'resend_api_key',
         label: 'Resend API Key',
-        placeholder: 're_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        placeholder: 're_xxx...',
         type: 'password',
         wide: true,
         hint: 'API key từ resend.com. Vào Dashboard → API Keys → Create API Key → chọn quyền Sending Access → copy key dán vào đây. Key bắt đầu bằng "re_".',
