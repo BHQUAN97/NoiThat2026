@@ -60,7 +60,7 @@ async function getPublicSettings() {
   }
   try {
     const res = await fetch(`${getServerApiUrl()}/settings/public`, {
-      next: { revalidate: 3600, tags: ['settings'] },
+      next: { revalidate: 60, tags: ['settings'] },
       signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return empty

@@ -8,7 +8,7 @@ interface RevalidateBody {
 }
 
 // Whitelist cac path/tag duoc phep revalidate — tranh DoS bang revalidate "/" lien tuc
-const ALLOWED_PATH_PREFIXES = ['/', '/articles', '/projects', '/catalog', '/about', '/contact']
+const ALLOWED_PATH_PREFIXES = ['/', '/articles', '/projects', '/catalog', '/about', '/contact', '/tin-tuc', '/tu-bep', '/noi-that-khac', '/du-an-thuc-te', '/video-cong-trinh', '/bao-gia', '/lien-he', '/gioi-thieu', '/danh-gia-khach-hang']
 const ALLOWED_TAG_PATTERN = /^[a-z0-9_-]+(-[a-z0-9_-]+)?$/i
 const MAX_ITEMS_PER_REQUEST = 50
 
