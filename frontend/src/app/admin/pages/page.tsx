@@ -381,6 +381,16 @@ function SectionCard({ section, isFirst, isLast, expanded, onToggleExpand, onTog
           <button onClick={onToggleVisible} title={section.visible ? 'Ẩn' : 'Hiện'} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high">
             {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
+          <button
+            onClick={() => {
+              const def = DEFAULT_CONFIGS[section.type]
+              if (def) Object.entries(def).forEach(([k, v]) => onUpdate(k, v))
+            }}
+            title="Lấy lại mặc định"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-warning-container hover:text-on-warning-container"
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
           <button onClick={onRemove} className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container">
             <Trash2 className="h-4 w-4" />
           </button>

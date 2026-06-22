@@ -25,6 +25,7 @@ type FieldDef = {
   type?: 'text' | 'url' | 'email' | 'password' | 'color'
   wide?: boolean        // chiếm full width trong grid 2 cột
   mapsPreview?: boolean // hiện iframe preview inline
+  defaultValue?: string // giá trị mặc định — hiện nút "Lấy lại mặc định" khi khác
 }
 
 type SectionDef = {
@@ -49,18 +50,21 @@ const SECTIONS: SectionDef[] = [
         key: 'site_name',
         label: 'Tên website',
         placeholder: 'Nội Thất Duy Mạnh',
+        defaultValue: 'Nội Thất Duy Mạnh',
         hint: 'Tên hiển thị ở header, tab trình duyệt và email tự động. Nên ngắn gọn, dưới 30 ký tự.',
       },
       {
         key: 'hotline',
         label: 'Hotline',
         placeholder: '094.872.8091',
+        defaultValue: '094.872.8091',
         hint: 'Số điện thoại chính. Hiển thị ở header, footer và nút "Gọi ngay". Định dạng: 094.872.8091 hoặc 0948728091.',
       },
       {
         key: 'address',
         label: 'Địa chỉ showroom',
         placeholder: 'Vân Nam - Phúc Thọ - Hà Nội',
+        defaultValue: 'Vân Nam - Phúc Thọ - Hà Nội',
         hint: 'Địa chỉ đầy đủ hiển thị ở footer và trang Liên hệ. VD: Thôn Vân Nam, Xã Vân Nam, H. Phúc Thọ, Hà Nội.',
         wide: true,
       },
@@ -68,12 +72,14 @@ const SECTIONS: SectionDef[] = [
         key: 'working_hours',
         label: 'Giờ làm việc',
         placeholder: '8h00 - 18h00, Thứ 2 - Chủ nhật',
+        defaultValue: '8h00 - 18h00, Thứ 2 - Chủ nhật',
         hint: 'Hiển thị ở footer bên cạnh địa chỉ.',
       },
       {
         key: 'email_contact',
         label: 'Email liên hệ công khai',
         placeholder: 'duymanhnoithat@gmail.com',
+        defaultValue: 'duymanhnoithat@gmail.com',
         type: 'email',
         hint: 'Email hiển thị công khai để khách hàng liên hệ trực tiếp. Khác với email nhận thông báo form (ở mục Email bên dưới).',
       },
@@ -81,6 +87,7 @@ const SECTIONS: SectionDef[] = [
         key: 'zalo_url',
         label: 'Zalo URL',
         placeholder: 'https://zalo.me/0948728091',
+        defaultValue: 'https://zalo.me/0948728091',
         type: 'url',
         hint: 'Link chat Zalo. Cách lấy: mở Zalo trên máy tính → Trang cá nhân → Copy link trang. Hoặc dùng: https://zalo.me/{số_điện_thoại}',
       },
@@ -113,6 +120,7 @@ const SECTIONS: SectionDef[] = [
         key: 'primary_color',
         label: 'Màu chủ đạo',
         placeholder: '#4B3528',
+        defaultValue: '#4B3528',
         type: 'color',
         hint: 'Màu chính dùng cho header, nút bấm, link, viền nhấn. Mặc định: #4B3528 (nâu gỗ). Nhập mã HEX hoặc chọn từ bảng màu.',
       },
@@ -129,6 +137,7 @@ const SECTIONS: SectionDef[] = [
         key: 'meta_title',
         label: 'Meta Title',
         placeholder: 'Nội Thất Duy Mạnh - Tủ Bếp Đẹp Hà Nội',
+        defaultValue: 'Nội Thất Duy Mạnh - Tủ Bếp Đẹp Hà Nội',
         wide: true,
         hint: 'Tiêu đề hiển thị trên tab trình duyệt và kết quả tìm kiếm Google. Tối ưu: 50–60 ký tự. Nên chứa từ khóa chính (tủ bếp, nội thất) và địa điểm (Hà Nội, Phúc Thọ).',
       },
@@ -182,6 +191,7 @@ const SECTIONS: SectionDef[] = [
         key: 'admin_email',
         label: 'Email nhận thông báo form',
         placeholder: 'duymanhnoithat@gmail.com',
+        defaultValue: 'duymanhnoithat@gmail.com',
         type: 'email',
         hint: 'Email nhận thông báo mỗi khi có khách hàng điền form liên hệ hoặc yêu cầu báo giá. Có thể là Gmail, Outlook hoặc email doanh nghiệp.',
       },
@@ -189,6 +199,7 @@ const SECTIONS: SectionDef[] = [
         key: 'resend_from',
         label: 'Email gửi đi — Resend "From"',
         placeholder: 'no-reply@duymanhnoithat.vn',
+        defaultValue: 'no-reply@duymanhnoithat.vn',
         type: 'email',
         hint: 'Địa chỉ "From" trong các email tự động gửi đến khách hàng. Phải là domain đã xác minh trên Resend. Nếu dùng domain chưa xác minh, email sẽ không gửi được.',
       },
@@ -503,6 +514,7 @@ function FieldRow({
   const isMapsField = field.key === 'google_maps_embed_url'
   const mapsUrlInvalid = isMapsField && value.length > 0 && !isValidMapsEmbedUrl(value)
   const mapsUrlValid = isMapsField && value.length > 0 && isValidMapsEmbedUrl(value)
+  const canReset = field.defaultValue && value && value.toLowerCase() !== field.defaultValue.toLowerCase()
 
   const inputClass = cn(
     'w-full rounded-lg border bg-stone-50 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-300 focus:bg-white focus:outline-none transition-colors',
@@ -524,6 +536,15 @@ function FieldRow({
         >
           <Info className="h-3.5 w-3.5" />
         </button>
+        {canReset && field.type !== 'color' && (
+          <button
+            type="button"
+            onClick={() => onChange(field.defaultValue!)}
+            className="ml-auto rounded px-1.5 py-0.5 text-[10px] font-medium text-stone-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+          >
+            Mặc định
+          </button>
+        )}
         {field.type === 'password' && value && (
           <button
             type="button"
@@ -615,7 +636,7 @@ function FieldRow({
         <div className="flex items-center gap-3">
           <input
             type="color"
-            value={value || '#4B3528'}
+            value={value || field.defaultValue || '#4B3528'}
             onChange={e => onChange(e.target.value)}
             className="h-10 w-14 cursor-pointer rounded-lg border border-stone-200 bg-stone-50 p-1"
           />
@@ -626,19 +647,22 @@ function FieldRow({
             className={cn(inputClass, 'flex-1 font-mono text-xs')}
             placeholder={field.placeholder}
           />
-          {value && value !== '#4B3528' && (
+          {canReset && (
             <button
               type="button"
-              onClick={() => onChange('')}
-              className="rounded-lg px-2 py-1.5 text-xs text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+              onClick={() => onChange(field.defaultValue!)}
+              className="shrink-0 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs text-stone-500 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors"
             >
-              Reset mặc định
+              Mặc định
             </button>
           )}
           <div className="flex items-center gap-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-500">
             <span>Xem trước:</span>
-            <span className="rounded px-2 py-1 text-white font-medium" style={{ backgroundColor: value || '#4B3528' }}>
+            <span className="rounded px-2 py-1 text-white font-medium" style={{ backgroundColor: value || field.defaultValue || '#4B3528' }}>
               Nút bấm
+            </span>
+            <span className="rounded px-2 py-1 font-medium border" style={{ borderColor: value || field.defaultValue || '#4B3528', color: value || field.defaultValue || '#4B3528' }}>
+              Viền
             </span>
           </div>
         </div>
