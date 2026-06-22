@@ -17,6 +17,7 @@ async function getMapsUrl(): Promise<string> {
   try {
     const res = await fetch(`${getServerApiUrl()}/settings/public`, {
       next: { revalidate: 3600, tags: ['settings'] },
+      signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return DEFAULT_MAPS_URL
     const json = await res.json()
