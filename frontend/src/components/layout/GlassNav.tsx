@@ -30,8 +30,17 @@ function NavDropdownItem({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLLIElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const subLinks = NAV_DROPDOWNS[link.href]
   const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
+
+  function handleEnter() {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null }
+    setOpen(true)
+  }
+  function handleLeave() {
+    closeTimer.current = setTimeout(() => setOpen(false), 150)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -67,8 +76,8 @@ function NavDropdownItem({
     <li
       ref={ref}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
     >
       <button
         onClick={() => setOpen((v) => !v)}
@@ -89,7 +98,8 @@ function NavDropdownItem({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[210px] rounded-xl border border-outline-variant bg-surface py-1 shadow-ambient-lg">
+        <div className="absolute left-0 top-full z-50 pt-2">
+        <div className="min-w-[210px] rounded-xl border border-outline-variant bg-surface py-1 shadow-ambient-lg">
           <Link
             href={link.href}
             onClick={() => setOpen(false)}
@@ -112,6 +122,7 @@ function NavDropdownItem({
               {sub.label}
             </Link>
           ))}
+        </div>
         </div>
       )}
     </li>

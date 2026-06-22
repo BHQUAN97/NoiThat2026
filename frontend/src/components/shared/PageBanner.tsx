@@ -23,7 +23,7 @@ export function PageBanner({ slug, title: defaultTitle, subtitle: defaultSubtitl
   const label = cfg.label || defaultLabel
 
   return (
-    <section className="relative overflow-hidden bg-surface px-4 py-20 lg:px-8 lg:py-24">
+    <section className="relative overflow-hidden bg-surface px-4 py-16 lg:px-8 lg:py-20">
       {bannerUrl ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,12 +63,12 @@ export function PageBanner({ slug, title: defaultTitle, subtitle: defaultSubtitl
                 {label}
               </p>
             )}
-            <h1 className={`font-headline text-4xl font-bold leading-tight md:text-6xl ${bannerUrl ? 'text-white' : 'text-primary'}`}>
+            <h1 className={`font-headline text-3xl font-bold leading-tight md:text-5xl ${bannerUrl ? 'text-white' : 'text-primary'}`}>
               {title}
             </h1>
           </div>
           {subtitle && (
-            <p className={`max-w-xl text-body-lg leading-relaxed lg:justify-self-end ${bannerUrl ? 'text-white/80' : 'text-on-surface-variant'}`}>
+            <p className={`max-w-xl text-body-md leading-relaxed lg:text-body-lg lg:justify-self-end ${bannerUrl ? 'text-white/80' : 'text-on-surface-variant'}`}>
               {subtitle}
             </p>
           )}
