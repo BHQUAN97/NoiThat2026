@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { ADMIN_NAV_ITEMS, SITE_NAME } from '@/lib/constants'
 import { useAuth } from '@/contexts/auth.context'
 import { useNotificationsContext } from '@/contexts/notifications.context'
+import api from '@/lib/api'
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -49,6 +50,16 @@ export function AdminSidebar() {
   const { user, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const { unreadCount } = useNotificationsContext()
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [siteName, setSiteName] = useState(SITE_NAME)
+
+  useEffect(() => {
+    api.get('/settings/public').then((res: any) => {
+      const data: Record<string, string> = res?.data ?? res
+      if (data?.logo_url) setLogoUrl(data.logo_url)
+      if (data?.site_name) setSiteName(data.site_name)
+    }).catch(() => {})
+  }, [])
 
   const sidebarContent = (
     <>
@@ -56,13 +67,18 @@ export function AdminSidebar() {
       <div className="flex h-[var(--nav-height)] items-center justify-between px-5">
         <Link
           href="/"
-          className="flex items-center gap-2.5 font-headline text-title-lg text-primary transition-opacity hover:opacity-80"
+          className="flex min-w-0 items-center gap-2.5 font-headline text-title-lg text-primary transition-opacity hover:opacity-80"
           onClick={() => setMobileOpen(false)}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <span className="font-headline text-body-md text-primary">D</span>
-          </span>
-          {SITE_NAME}
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={siteName} className="h-8 w-auto max-w-[36px] shrink-0 object-contain" />
+          ) : (
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <span className="font-headline text-body-md text-primary">{siteName.charAt(0)}</span>
+            </span>
+          )}
+          <span className="truncate">{siteName}</span>
         </Link>
         <button
           onClick={() => setMobileOpen(false)}

@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { GlassNav } from '@/components/layout/GlassNav'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingButtons } from '@/components/layout/FloatingButtons'
@@ -93,11 +92,6 @@ async function getPublicSettings() {
   } catch {
     return empty
   }
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { logoUrl } = await getPublicSettings()
-  return { icons: { icon: logoUrl || '/favicon.ico' } }
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
