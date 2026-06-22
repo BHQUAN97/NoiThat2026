@@ -647,13 +647,22 @@ function FieldRow({
             className={cn(inputClass, 'flex-1 font-mono text-xs')}
             placeholder={field.placeholder}
           />
-          {canReset && (
+          {field.defaultValue && (!value || value.toLowerCase() !== field.defaultValue.toLowerCase()) && (
             <button
               type="button"
               onClick={() => onChange(field.defaultValue!)}
               className="shrink-0 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs text-stone-500 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors"
             >
               Mặc định
+            </button>
+          )}
+          {canReset && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="shrink-0 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+            >
+              Xóa
             </button>
           )}
           <div className="flex items-center gap-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-500">
