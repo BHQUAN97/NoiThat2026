@@ -1,6 +1,6 @@
 # ============================================
 # NoiThat Duy Manh 2026 — PRODUCTION (Shared VPS)
-# Domain: duymanh.bhquan.store
+# Domain: noithatduymanh.com
 # Dung chung MySQL (shared-mysql), Nginx (shared-nginx)
 # tu /opt/infra/docker-compose.yml
 # ============================================
@@ -30,8 +30,8 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY}
       MAIL_FROM: ${MAIL_FROM:-Noi That Duy Manh <noreply@duymanhnoithat.vn>}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-duymanhnoithat@gmail.com}
-      ALLOWED_ORIGINS: https://duymanh.bhquan.store
-      FRONTEND_URL: https://duymanh.bhquan.store
+      ALLOWED_ORIGINS: https://noithatduymanh.com
+      FRONTEND_URL: https://noithatduymanh.com
       LOG_LEVEL: info
     volumes:
       - noithat_uploads:/app/uploads
@@ -57,7 +57,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: /api
-        NEXT_PUBLIC_SITE_URL: https://duymanh.bhquan.store
+        NEXT_PUBLIC_SITE_URL: https://noithatduymanh.com
     container_name: noithat-frontend
     restart: always
     ports:
@@ -65,7 +65,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: /api
-      NEXT_PUBLIC_SITE_URL: https://duymanh.bhquan.store
+      NEXT_PUBLIC_SITE_URL: https://noithatduymanh.com
       INTERNAL_API_URL: http://backend:4000/api
     depends_on:
       backend:

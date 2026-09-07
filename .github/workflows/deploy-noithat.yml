@@ -170,7 +170,7 @@ jobs:
             fi
 
             echo '--- Reload nginx ---'
-            cp nginx/conf.d/duymanh.bhquan.store.conf ${INFRA_DIR}/nginx/conf.d/
+            cp nginx/conf.d/noithatduymanh.com.conf ${INFRA_DIR}/nginx/conf.d/
             docker network connect noithat_frontend shared-nginx 2>/dev/null || true
             docker exec shared-nginx nginx -t && docker exec shared-nginx nginx -s reload
 
